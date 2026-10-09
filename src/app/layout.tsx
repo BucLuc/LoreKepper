@@ -1,29 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Header, Footer } from "@/components/chrome";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
+import "./historical.css";
+import "./editions.css";
+import "./refined-editions.css";
 export const metadata: Metadata = {
-  title: "Lorekeeper",
-  description: "Lorekeeper",
+  title: {
+    default: "LoreKeeper — The Hall of Fame",
+    template: "%s · LoreKeeper",
+  },
+  description:
+    "A monument to questionable wisdom. The legendary messages of Luc and Liri, preserved in unnecessary glory.",
+  robots: { index: false, follow: false },
 };
-
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" data-scroll-behavior="smooth">
+      <body id="top">
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
+        <Header />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

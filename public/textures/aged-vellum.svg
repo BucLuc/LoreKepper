@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" preserveAspectRatio="none">
+<defs>
+ <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".56" numOctaves="3" seed="17" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+ <radialGradient id="edge"><stop stop-color="#d7c4a0" stop-opacity="0" offset=".62"/><stop stop-color="#65492e" stop-opacity=".44" offset="1"/></radialGradient>
+ <radialGradient id="stain"><stop stop-color="#725232" stop-opacity=".18"/><stop stop-color="#755537" stop-opacity=".08" offset=".55"/><stop stop-color="#a88c62" stop-opacity="0" offset="1"/></radialGradient>
+ <radialGradient id="water"><stop stop-color="#886b46" stop-opacity="0" offset=".7"/><stop stop-color="#836542" stop-opacity=".14" offset=".82"/><stop stop-color="#937047" stop-opacity="0" offset="1"/></radialGradient>
+ <pattern id="fibres" width="43" height="67" patternUnits="userSpaceOnUse"><path d="M2 9l4 1m18 23 8-1M7 58l7 2m20-47-3 1" stroke="#705639" stroke-width=".4" opacity=".19"/><circle cx="29" cy="52" r=".7" fill="#53432b" opacity=".24"/></pattern>
+</defs>
+<rect width="900" height="1200" fill="#ded0af"/>
+<rect width="900" height="1200" filter="url(#grain)" opacity=".13" style="mix-blend-mode:multiply"/>
+<rect width="900" height="1200" fill="url(#fibres)"/>
+<rect width="900" height="1200" fill="url(#edge)"/>
+<ellipse cx="24" cy="160" rx="155" ry="240" fill="url(#stain)"/><ellipse cx="830" cy="970" rx="185" ry="285" fill="url(#stain)"/><ellipse cx="500" cy="70" rx="220" ry="105" fill="url(#water)"/><ellipse cx="110" cy="880" rx="180" ry="250" fill="url(#water)"/><ellipse cx="780" cy="430" rx="125" ry="160" fill="url(#water)"/>
+<path d="M447 0c-8 140 10 280 0 410s9 350 0 460 5 200 0 330" stroke="#675338" stroke-width="2" opacity=".035" fill="none"/><path d="M450 0c-8 140 10 280 0 410s9 350 0 460 5 200 0 330" stroke="#fffbe6" stroke-width="2" opacity=".1" fill="none"/>
+<g fill="#59452d" opacity=".15"><circle cx="78" cy="38" r="3"/><circle cx="802" cy="102" r="2"/><circle cx="851" cy="930" r="4"/><circle cx="31" cy="643" r="2"/><circle cx="154" cy="1137" r="2"/><circle cx="765" cy="1168" r="3"/><circle cx="88" cy="235" r="1.5"/><circle cx="594" cy="84" r="1.4"/></g>
+</svg>

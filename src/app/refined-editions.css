@@ -1,0 +1,385 @@
+.epic-sigil {
+  display: block;
+  width: min(320px, 75%);
+  height: auto;
+  margin: 0 auto;
+}
+/* A monumental gold-framed chronicle. */
+.theme-glorious {
+  background:
+    radial-gradient(ellipse at 50% 0, #50432366, transparent 55%),
+    linear-gradient(120deg, #1c211a, #13180f 65%, #202519);
+  border: 5px double #b89b58;
+  outline: 1px solid #b89b584d;
+  outline-offset: 8px;
+  padding: 60px;
+  box-shadow:
+    0 18px 70px #0009,
+    inset 0 0 70px #0005;
+}
+.theme-glorious:before,
+.theme-glorious:after {
+  top: 20px;
+  font-size: 52px;
+  color: #c7ab6c;
+}
+.theme-glorious .document-header {
+  position: relative;
+  padding: 35px 24px 45px;
+  margin: 0 0 45px;
+  border: 1px solid #c8aa6559;
+  border-radius: 160px 160px 0 0;
+  background: radial-gradient(ellipse at 50% 40%, #b69b4421, transparent 65%);
+}
+.theme-glorious .document-ornament {
+  display: block;
+  color: #d0b577;
+  filter: drop-shadow(0 0 20px #dfbf6155);
+  margin: 0 0 22px;
+}
+.theme-glorious .document-header h2 {
+  font-size: clamp(36px, 4.5vw, 60px);
+  font-weight: 400;
+  font-variant: small-caps;
+  color: #f0e0b6;
+  line-height: 1.15;
+  text-shadow: 0 2px 2px #000;
+  letter-spacing: 0.4px;
+}
+.theme-glorious .document-label {
+  color: #d8bc80;
+  letter-spacing: 3px;
+}
+.theme-glorious .document-meta {
+  color: #b5a584;
+  letter-spacing: 2px;
+}
+.theme-glorious .document-body {
+  max-width: 740px;
+  margin: auto;
+}
+.theme-glorious .message-prose,
+.theme-glorious .message-text {
+  color: #dedccb;
+  line-height: 2;
+  font-family: "Fell English", Georgia, serif;
+}
+.theme-glorious .message-prose > p:first-child:first-letter {
+  font:
+    70px/0.9 "Unifraktur",
+    Georgia,
+    serif;
+  color: #d0b577;
+  padding: 6px 12px 4px 0;
+}
+.theme-glorious .document-footer {
+  margin-top: 45px;
+  border-top: 3px double #b5995555;
+  padding-top: 30px;
+}
+/* A found leaf from an ancient collection, with classical rather than medieval lettering. */
+.stage-poetry {
+  padding: 25px;
+  background: linear-gradient(140deg, #2d2a24, #191b18);
+  box-shadow: 0 20px 70px #0008;
+}
+.theme-poetry {
+  position: relative;
+  background: #d6c69b url("/textures/aged-vellum.svg") center/cover;
+  color: #443322;
+  padding: 60px;
+  border: 0;
+  outline: 1px solid #71593b66;
+  outline-offset: -17px;
+  box-shadow:
+    inset 0 0 70px #5c42283d,
+    2px 5px 14px #0008;
+  clip-path: polygon(
+    0.5% 0,
+    99% 0.4%,
+    100% 28%,
+    99.6% 64%,
+    99.8% 99.6%,
+    68% 100%,
+    30% 99.5%,
+    0 100%,
+    0.3% 67%,
+    0 23%
+  );
+}
+.theme-poetry .document-header {
+  border: 0;
+  border-bottom: 4px double #745d4059;
+  padding-bottom: 30px;
+  margin-bottom: 30px;
+}
+.theme-poetry .document-ornament {
+  display: block;
+  color: #74532e;
+  margin-bottom: 18px;
+}
+.theme-poetry .epic-sigil {
+  width: min(270px, 80%);
+}
+.theme-poetry .document-header h2 {
+  color: #4e3624;
+  font-family: "Fell English", Georgia, serif;
+  font-size: clamp(34px, 4.5vw, 56px);
+  font-style: normal;
+  font-variant: small-caps;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 1px;
+}
+.theme-poetry .document-label,
+.theme-poetry .document-meta {
+  color: #785e40;
+  letter-spacing: 2px;
+}
+.poetry-invocation {
+  color: #7d6748;
+  font-size: 27px;
+  margin: 0 0 38px;
+  border-bottom: 1px solid #8a725d33;
+  padding-bottom: 25px;
+}
+.poetry-invocation span {
+  color: #695039;
+  font:
+    italic 17px "Fell English",
+    Georgia,
+    serif;
+}
+.theme-poetry .document-body {
+  max-width: 620px;
+  margin: auto;
+  border-left: 1px solid #8a6c4536;
+  padding-left: 28px;
+}
+.theme-poetry .message-prose,
+.theme-poetry .message-text {
+  color: #433426;
+  font-family: "Fell English", Georgia, serif;
+  font-size: calc(var(--reading-size) + 2px);
+  line-height: 2;
+}
+.theme-poetry .message-prose > p {
+  margin-bottom: 2em;
+}
+.theme-poetry .message-attribution,
+.theme-poetry .message-speaker,
+.theme-poetry .message-timestamp {
+  color: #796047;
+}
+.theme-poetry .edition-message-label {
+  color: #715535;
+  opacity: 0.8;
+  letter-spacing: 3px;
+}
+.theme-poetry .story-message + .story-message:before {
+  color: #785537;
+}
+.theme-poetry .document-footer {
+  color: #7b6244;
+  border-top: 4px double #8a705949;
+}
+/* An eclipse seal above an inscription in a deep celestial vault. */
+.theme-prophecy {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 15%, #6350844d, transparent 55%),
+    radial-gradient(circle at 12% 6%, #c6bdd880 0 1px, transparent 2px),
+    radial-gradient(circle at 89% 11%, #c6bdd880 0 1px, transparent 2px),
+    radial-gradient(circle at 27% 32%, #c6bdd840 0 1px, transparent 2px),
+    linear-gradient(150deg, #211d37, #100f20 70%);
+  border: 5px double #9481b1;
+  outline: 1px solid #9481b133;
+  outline-offset: 9px;
+  padding: 60px;
+  box-shadow:
+    0 25px 65px #0009,
+    inset 0 0 70px #0007;
+  color: #e1d8ee;
+}
+.theme-prophecy .document-ornament {
+  display: block;
+  color: #c6acd9;
+  filter: drop-shadow(0 0 20px #9474cd55);
+  margin: 0 0 24px;
+}
+.theme-prophecy .epic-sigil {
+  width: min(340px, 85%);
+}
+.theme-prophecy .document-header {
+  border: 0;
+  border-bottom: 3px double #a18bad66;
+  padding-bottom: 35px;
+}
+.theme-prophecy .document-header h2 {
+  font-family: "Fell English", Georgia, serif;
+  font-size: clamp(38px, 5vw, 64px);
+  font-weight: 400;
+  line-height: 1.15;
+  color: #eee3f6;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #000;
+}
+.theme-prophecy .document-label,
+.theme-prophecy .document-meta {
+  color: #bca9cb;
+  letter-spacing: 3px;
+}
+.prophecy-orbit {
+  margin: 0 0 35px;
+  border: 0;
+  padding: 0;
+}
+.prophecy-orbit strong {
+  font-size: 24px;
+  letter-spacing: 15px;
+}
+.theme-prophecy .document-body {
+  max-width: 680px;
+}
+.theme-prophecy .message-prose,
+.theme-prophecy .message-text {
+  font-family: "Fell English", Georgia, serif;
+  color: #dfd6e9;
+  font-size: calc(var(--reading-size) + 2px);
+  line-height: 2;
+}
+.theme-prophecy .message-attribution {
+  color: #a896ba;
+}
+.theme-prophecy .document-footer {
+  border-top: 3px double #9475a066;
+  padding-top: 30px;
+}
+/* Restrained newsroom typography, a clear archive dateline, and a report band. */
+.theme-news {
+  background: #fff;
+  color: #20252b;
+  border: 1px solid #c5c9ce;
+  border-top: 7px solid #982737;
+}
+.theme-news .document-header {
+  background: #fff;
+  color: #1d232a;
+  padding: 42px;
+  border-bottom: 1px solid #c9cdd2;
+}
+.theme-news .document-label {
+  background: none;
+  padding: 0;
+  color: #942737;
+  font:
+    bold 12px Arial,
+    sans-serif;
+  letter-spacing: 2px;
+}
+.theme-news .document-header h2 {
+  font:
+    700 clamp(32px, 4vw, 50px)/1.12 Georgia,
+    serif;
+  color: #1f2429;
+  letter-spacing: -0.5px;
+  text-shadow: none;
+}
+.theme-news .document-meta {
+  color: #606975;
+  letter-spacing: 1px;
+  font-size: 10px;
+}
+.news-live {
+  background: #f0f1f3;
+  border-bottom: 1px solid #d5d8dc;
+  gap: 15px;
+}
+.news-live strong {
+  background: #872b37;
+  color: #fff;
+  font:
+    bold 10px Arial,
+    sans-serif;
+  letter-spacing: 1.5px;
+  padding: 16px 20px;
+}
+.news-live span {
+  color: #59616c;
+  font:
+    10px Arial,
+    sans-serif;
+  letter-spacing: 0.5px;
+}
+.theme-news .document-body {
+  padding: 40px;
+  max-width: 810px;
+  margin: auto;
+}
+.theme-news .message-prose,
+.theme-news .message-text {
+  color: #272d34;
+  font-family: Georgia, serif;
+  font-size: var(--reading-size);
+  line-height: 1.85;
+}
+.theme-news .message-attribution {
+  color: #68717d;
+  border-bottom: 1px solid #e0e2e5;
+  padding-bottom: 15px;
+}
+.theme-news .message-speaker,
+.theme-news .message-timestamp {
+  color: #68717d;
+}
+.theme-news .document-footer {
+  background: #f2f3f4;
+  color: #666f7b;
+  border-top: 1px solid #d5d9dd;
+  padding: 25px;
+}
+.theme-news .end-news {
+  background: none;
+  color: #4f5966;
+  border-bottom: 1px solid #d0d5db;
+  padding: 0 0 16px;
+  font:
+    10px/1.8 Arial,
+    sans-serif;
+  letter-spacing: 1px;
+}
+@media (max-width: 800px) {
+  .theme-glorious,
+  .theme-prophecy,
+  .theme-poetry {
+    padding: 28px;
+    outline-offset: 3px;
+  }
+  .theme-glorious .document-header {
+    padding: 30px 14px;
+    border-radius: 90px 90px 0 0;
+    margin: 0 0 28px;
+  }
+  .theme-glorious .document-header h2,
+  .theme-prophecy .document-header h2,
+  .theme-poetry .document-header h2 {
+    font-size: 34px;
+    overflow-wrap: normal;
+  }
+  .stage-poetry {
+    padding: 12px;
+  }
+  .theme-poetry .document-body {
+    padding-left: 14px;
+  }
+  .theme-news .document-header,
+  .theme-news .document-body {
+    padding: 26px;
+  }
+  .theme-news .document-header h2 {
+    font-size: 30px;
+  }
+  .epic-sigil {
+    width: min(250px, 90%);
+  }
+}

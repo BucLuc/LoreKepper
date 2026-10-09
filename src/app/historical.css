@@ -1,0 +1,926 @@
+/* Historical editions only. The modern editions keep their own styling. */
+@font-face {
+  font-family: "Unifraktur";
+  src: url("/fonts/UnifrakturMaguntia.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fell English";
+  src: url("/fonts/IMFellEnglish.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+/* Italics inherit the story's ink instead of the site's decorative gold. */
+.message-prose em,
+.message-prose blockquote,
+.message-prose q {
+  color: inherit;
+}
+.edition-stage:is(.stage-manuscript, .stage-scroll, .stage-decree) {
+  position: relative;
+  isolation: isolate;
+  margin-bottom: 12px;
+}
+.artifact-decoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.artifact-corner {
+  position: absolute;
+  width: 115px;
+  height: 115px;
+  color: #6d3528;
+  opacity: 0.65;
+}
+.corner-nw {
+  top: 20px;
+  left: 18px;
+}
+.corner-ne {
+  top: 20px;
+  right: 18px;
+  transform: scaleX(-1);
+}
+.corner-sw {
+  bottom: 20px;
+  left: 18px;
+  transform: scaleY(-1);
+}
+.corner-se {
+  bottom: 20px;
+  right: 18px;
+  transform: scale(-1);
+}
+.artifact-folio {
+  position: absolute;
+  top: 26px;
+  right: 44px;
+  font-family: "Fell English", Georgia, serif;
+  font-size: 12px;
+  color: #3a2c21;
+  opacity: 0.65;
+  font-style: italic;
+  letter-spacing: 1px;
+}
+.scribe-margin {
+  position: absolute;
+  left: 18px;
+  top: 40%;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: "Fell English", Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #48382980;
+}
+.theme-manuscript,
+.theme-scroll,
+.theme-decree {
+  color-scheme: light;
+  --ink: #30291f;
+  --accent: #5f302c;
+  font-family: "Fell English", Georgia, serif;
+  overflow: visible;
+}
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .document-header,
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .document-body,
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .document-footer {
+  position: relative;
+  z-index: 1;
+}
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .message-prose,
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .message-text {
+  font-family: "Fell English", Georgia, serif;
+  font-size: calc(var(--reading-size) + 2px);
+  line-height: 1.85;
+  color: var(--ink);
+  text-align: left;
+}
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .message-prose em {
+  color: inherit;
+}
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .message-attribution {
+  font-family: "Fell English", Georgia, serif;
+  font-size: 13px;
+  color: #42382d;
+  letter-spacing: 0.2px;
+}
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .message-timestamp {
+  font-size: 11px;
+  opacity: 0.65;
+}
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .document-label {
+  font-family: "Fell English", Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 2.2px;
+  font-variant: small-caps;
+}
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .document-meta {
+  font-family: "Fell English", Georgia, serif;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  opacity: 0.8;
+}
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .document-footer small {
+  font-family: "Fell English", Georgia, serif;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+}
+/* A weathered leaf from a hand-bound, illuminated codex. */
+.stage-manuscript {
+  padding: 14px 8px 20px;
+  filter: drop-shadow(4px 15px 18px #0007);
+}
+.theme-manuscript {
+  padding: 72px 70px 58px;
+  background-image: url("/textures/aged-vellum.svg");
+  background-size: 100% 100%;
+  border: 0;
+  outline: 0;
+  border-radius: 2px;
+  clip-path: polygon(
+    0.4% 0.3%,
+    13% 0,
+    22% 0.25%,
+    38% 0.1%,
+    50% 0.3%,
+    67% 0,
+    81% 0.2%,
+    97% 0,
+    99.6% 0.3%,
+    99.5% 15%,
+    100% 28%,
+    99.6% 44%,
+    99.8% 70%,
+    99.3% 91%,
+    99.5% 99.7%,
+    84% 99.5%,
+    66% 100%,
+    48% 99.7%,
+    31% 99.8%,
+    13% 99.5%,
+    0.3% 99.8%,
+    0.6% 81%,
+    0.2% 65%,
+    0.5% 40%,
+    0 25%
+  );
+  box-shadow:
+    inset 9px 0 16px #65523828,
+    inset -3px 0 6px #5f4c2426;
+}
+.theme-manuscript:before {
+  content: "";
+  position: absolute;
+  inset: 13px 17px;
+  pointer-events: none;
+  border: 1px solid #694c3030;
+  box-shadow:
+    inset 3px 0 #71583b08,
+    inset -1px 0 #fff6d62b;
+}
+.theme-manuscript .document-header {
+  padding: 7px 12px 29px;
+  margin-bottom: 34px;
+  border: 0;
+  border-bottom: 3px double #7d48324d;
+}
+.theme-manuscript .document-ornament {
+  font-size: 52px;
+  color: #434b38;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.theme-manuscript .document-label {
+  color: #603729;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.theme-manuscript .document-header h2 {
+  font-family: "Unifraktur", Georgia, serif;
+  font-variant: normal;
+  font-size: clamp(38px, 4.5vw, 58px);
+  line-height: 1.17;
+  color: #482726;
+  letter-spacing: 0.2px;
+  margin: 19px 0 22px;
+  font-weight: 400;
+  text-wrap: balance;
+  text-shadow: 0.3px 0.7px #47232120;
+}
+.theme-manuscript .document-header:after {
+  display: none;
+}
+.theme-manuscript .document-body {
+  border-left: 1px solid #4b5b7024;
+  border-right: 1px solid #4b5b7024;
+  padding: 0 22px;
+}
+.theme-manuscript .message-prose > p:first-child:first-letter {
+  float: left;
+  font-family: "Unifraktur", Georgia, serif;
+  font-size: 4.25em;
+  line-height: 0.94;
+  color: #722f2a;
+  text-shadow: 1px 1px #efe3bd;
+  padding: 7px 11px 8px;
+  margin: 6px 13px 1px 0;
+  border: 3px double #4b5b65;
+  background:
+    repeating-linear-gradient(45deg, #59615312 0 1px, transparent 1px 6px),
+    linear-gradient(#b8a06b33, #ded0ac);
+  box-shadow:
+    0 0 0 2px #8d764d4d,
+    inset 0 0 0 2px #ded0ac;
+}
+.theme-manuscript .document-footer {
+  margin-top: 42px;
+  padding-top: 23px;
+  border-top: 3px double #7d48324d;
+}
+.theme-manuscript .document-footer > span {
+  font-family: "Unifraktur", Georgia, serif;
+  font-size: 38px;
+  color: #433d2c;
+  margin-bottom: 8px;
+}
+.theme-manuscript .document-footer:after {
+  content: "Finis.";
+  display: block;
+  font-family: "Unifraktur", Georgia, serif;
+  font-size: 29px;
+  color: #4b3027;
+  margin-top: 13px;
+}
+/* A continuous vellum roll wound around turned wooden rods. */
+.stage-scroll {
+  padding: 52px 29px 57px;
+  margin-top: 10px;
+  filter: drop-shadow(0 15px 22px #0007);
+}
+.scroll-spindle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 34px;
+  border-radius: 17px;
+  background:
+    repeating-linear-gradient(92deg, #2c190811 0 1px, transparent 1px 8px),
+    linear-gradient(
+      180deg,
+      #302216 0,
+      #81613b 15%,
+      #ad8150 29%,
+      #5f3f21 48%,
+      #342416 78%,
+      #1e160e 100%
+    );
+  box-shadow:
+    inset 0 2px 2px #d9b38633,
+    0 4px 9px #0007;
+  z-index: -1;
+}
+.spindle-top {
+  top: 15px;
+}
+.spindle-bottom {
+  bottom: 16px;
+}
+.scroll-spindle:before,
+.scroll-spindle:after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  width: 22px;
+  height: 48px;
+  border-radius: 45%;
+  border-left: 2px solid #c2a16b40;
+  border-right: 2px solid #1d120c99;
+  background: linear-gradient(
+    180deg,
+    #32261b,
+    #b39157 20%,
+    #503721 46%,
+    #271b12 85%,
+    #6f4e2d
+  );
+  box-shadow: 0 2px 5px #0006;
+}
+.scroll-spindle:before {
+  left: 2px;
+}
+.scroll-spindle:after {
+  right: 2px;
+}
+.theme-scroll {
+  padding: 48px 58px 42px;
+  border: 0;
+  outline: 0;
+  border-radius: 1px;
+  --ink: #362b20;
+  --accent: #514332;
+  background-image:
+    linear-gradient(
+      90deg,
+      #5f48264d,
+      transparent 7%,
+      transparent 93%,
+      #5f48264d
+    ),
+    url("/textures/aged-vellum.svg");
+  background-size: 100% 100%;
+  box-shadow:
+    inset 5px 0 8px #5b412b33,
+    inset -5px 0 8px #5b412b33;
+  position: relative;
+}
+.theme-scroll:before,
+.theme-scroll:after {
+  content: "";
+  position: absolute;
+  left: -13px;
+  right: -13px;
+  height: 53px;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 50% / 15%;
+  background-image:
+    linear-gradient(
+      180deg,
+      #5d4329 0%,
+      #a68958 6%,
+      #d4c095 17%,
+      #efe0bb 40%,
+      #c7b081 70%,
+      #97805a 92%,
+      #6b5130 100%
+    ),
+    url("/textures/aged-vellum.svg");
+  background-blend-mode: multiply;
+  box-shadow:
+    0 7px 10px #4932194d,
+    inset 0 2px 4px #ede0bc99,
+    inset 0 -3px 5px #45301b66;
+}
+.theme-scroll:before {
+  top: -34px;
+  transform: rotate(-0.4deg);
+}
+.theme-scroll:after {
+  bottom: -34px;
+  transform: rotate(0.35deg);
+  background-image:
+    linear-gradient(
+      180deg,
+      #6b5130,
+      #a78f65 8%,
+      #d8c39a 29%,
+      #f0e0b6 61%,
+      #c2a87a 83%,
+      #6c5030 100%
+    ),
+    url("/textures/aged-vellum.svg");
+  box-shadow:
+    0 5px 8px #0006,
+    inset 0 3px 5px #71553255;
+}
+.theme-scroll .document-header {
+  padding: 7px 0 28px;
+  border-bottom: 1px solid #5d483b55;
+  margin-bottom: 34px;
+}
+.theme-scroll .document-ornament {
+  font-size: 38px;
+  line-height: 1;
+  color: #655038;
+  margin-bottom: 15px;
+}
+.theme-scroll .document-label {
+  letter-spacing: 2px;
+  color: #594b37;
+  font-size: 10px;
+}
+.theme-scroll .document-header h2 {
+  font-family: "Fell English", Georgia, serif;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+  line-height: 1.25;
+  font-size: 37px;
+  margin: 20px 0;
+  color: #37261e;
+  font-weight: 400;
+}
+.theme-scroll .document-header:after {
+  display: none;
+}
+.theme-scroll .message-prose > p:first-child:first-letter {
+  font-family: "Unifraktur", Georgia, serif;
+  float: left;
+  font-size: 3.5em;
+  line-height: 1;
+  padding: 4px 10px 2px 0;
+  color: #45332a;
+}
+.theme-scroll .document-footer {
+  border-top: 1px solid #5d483b55;
+  padding-top: 22px;
+  margin-top: 34px;
+}
+.theme-scroll .document-footer > span {
+  font-size: 24px;
+  color: #615038;
+}
+/* An illuminated royal charter, framed in gilding and sealed in crimson wax. */
+.stage-decree {
+  padding: 16px;
+  background:
+    repeating-linear-gradient(125deg, #e2c99005 0 1px, transparent 1px 7px),
+    radial-gradient(ellipse at 50% 0, #702534, #270c14 80%);
+  border: 1px solid #a18046;
+  box-shadow:
+    inset 0 0 0 4px #290f18,
+    inset 0 0 0 5px #a1804650,
+    0 12px 50px #0005;
+}
+.theme-decree {
+  --ink: #32241f;
+  --accent: #722436;
+  background:
+    linear-gradient(#f4ecda55, #f4ecda55), url("/textures/aged-vellum.svg");
+  background-size: 100% 100%;
+  padding: 26px 53px 48px;
+  outline: 0;
+  border: 6px double #a48245;
+  box-shadow:
+    inset 0 0 0 2px #ede0bc,
+    inset 0 0 0 3px #8f6b3a55;
+}
+.theme-decree .artifact-corner {
+  width: 85px;
+  height: 85px;
+  color: #815a2b;
+  opacity: 0.65;
+}
+.theme-decree .corner-nw,
+.theme-decree .corner-ne {
+  top: 14px;
+}
+.theme-decree .corner-nw,
+.theme-decree .corner-sw {
+  left: 12px;
+}
+.theme-decree .corner-ne,
+.theme-decree .corner-se {
+  right: 12px;
+}
+.theme-decree .artifact-folio {
+  display: none;
+}
+.theme-decree .document-header {
+  background: radial-gradient(ellipse at 50% 15%, #6c2737, #36111b 85%);
+  margin: 0 -22px 38px;
+  padding: 32px 26px 35px;
+  border: 1px solid #ab884c;
+  box-shadow:
+    inset 0 0 0 5px #481725,
+    inset 0 0 0 6px #a781424d,
+    0 4px 9px #39221120;
+}
+.theme-decree .document-ornament {
+  display: block;
+  margin: 0 auto 9px;
+  color: #dcc18a;
+  line-height: 1;
+}
+.royal-crest {
+  display: block;
+  width: 210px;
+  height: 154px;
+  margin: auto;
+  filter: drop-shadow(0 1px 1px #10060a80);
+}
+.theme-decree .document-label {
+  color: #dcc59a;
+  font-size: 11px;
+  letter-spacing: 3px;
+}
+.theme-decree .document-header h2 {
+  font-family: Georgia, serif;
+  font-size: clamp(28px, 3.1vw, 42px);
+  font-variant: small-caps;
+  letter-spacing: 1.5px;
+  line-height: 1.35;
+  color: #f2e6cd;
+  font-weight: 400;
+  margin: 18px 0 23px;
+  text-shadow: 0 2px 5px #12030760;
+}
+.theme-decree .document-meta {
+  color: #dfcba5;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+}
+.theme-decree .document-header:after {
+  background: linear-gradient(90deg, transparent, #cba66a, transparent);
+  width: 150px;
+  opacity: 0.7;
+  margin-top: 24px;
+}
+.theme-decree .document-body {
+  max-width: 650px;
+  margin: auto;
+  padding: 0 5px;
+}
+.theme-decree .message-prose,
+.theme-decree .message-text {
+  line-height: 1.95;
+  text-align: left;
+}
+.theme-decree .message-attribution {
+  justify-content: center;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #a482454d;
+  margin-bottom: 23px;
+  color: #5e3030;
+}
+.theme-decree .message-prose > p:first-child:first-letter {
+  font-family: "Unifraktur", Georgia, serif;
+  font-size: 3.5em;
+  line-height: 1;
+  float: left;
+  margin: 3px 10px 0 0;
+  padding: 6px 12px 8px;
+  background: #dbc59826;
+  border: 1px solid #9b783b80;
+  outline: 1px solid #9b783b40;
+  outline-offset: 3px;
+  color: #6a2131;
+}
+.theme-decree .document-footer {
+  margin-top: 40px;
+  padding-top: 23px;
+  border-top: 3px double #a4824555;
+  color: #533828;
+}
+.theme-decree .document-footer > span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 29px;
+  border: 5px double #c56e65;
+  border-radius: 44% 48% 45% 47%;
+  outline: 2px solid #6a1d2b;
+  background: radial-gradient(circle at 30% 22%, #a43a4b, #792335 55%, #4b101e);
+  box-shadow:
+    inset 0 0 0 4px #7d2631,
+    inset 0 0 0 5px #c27b6f60,
+    inset 0 2px 3px #dc9a8355,
+    3px 6px 7px #4820174d;
+  transform: rotate(-8deg);
+  font-family: Georgia, serif;
+  font-size: 38px;
+  color: #d6a18d;
+  text-shadow:
+    1px 2px #3e0d17,
+    -1px -1px #d7958766;
+  z-index: 1;
+}
+.theme-decree .document-footer > span:before,
+.theme-decree .document-footer > span:after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 22px;
+  height: 72px;
+  top: 54px;
+  background: linear-gradient(90deg, #551426, #913347 45%, #631d30);
+  border-left: 1px solid #b46b7955;
+  border-right: 1px solid #38121b;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 88%, 0 100%);
+}
+.theme-decree .document-footer > span:before {
+  left: 14px;
+  transform: rotate(17deg);
+}
+.theme-decree .document-footer > span:after {
+  right: 10px;
+  transform: rotate(-17deg);
+}
+.theme-decree .document-footer > small {
+  display: block;
+  margin-top: 44px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+@media (max-width: 1050px) {
+  .theme-manuscript {
+    padding: 65px 44px 45px;
+  }
+  .theme-manuscript .document-body {
+    padding: 0 14px;
+  }
+  .artifact-corner {
+    width: 88px;
+    height: 88px;
+  }
+  .theme-scroll {
+    padding: 45px 36px 35px;
+  }
+  .theme-decree {
+    padding: 23px 33px 40px;
+  }
+  .theme-decree .document-header {
+    margin-left: -12px;
+    margin-right: -12px;
+    padding: 28px 22px 30px;
+  }
+  .theme-decree .document-label {
+    letter-spacing: 2px;
+  }
+  .royal-crest {
+    width: 185px;
+    height: 136px;
+  }
+  .theme-manuscript .document-header h2 {
+    font-size: 44px;
+  }
+}
+@media (max-width: 800px) {
+  .theme-manuscript {
+    padding: 70px 60px 45px;
+  }
+  .theme-manuscript .document-header h2 {
+    font-size: 49px;
+  }
+  .theme-scroll {
+    padding: 48px 47px 38px;
+  }
+  .theme-decree {
+    padding: 26px 44px 44px;
+  }
+  .theme-decree .document-header {
+    margin-left: -15px;
+    margin-right: -15px;
+  }
+  .royal-crest {
+    width: 210px;
+    height: 154px;
+  }
+}
+@media (max-width: 540px) {
+  .stage-manuscript {
+    padding: 5px 1px 10px;
+  }
+  .theme-manuscript {
+    padding: 51px 27px 32px;
+    clip-path: polygon(
+      0.5% 0.15%,
+      25% 0,
+      55% 0.1%,
+      98% 0,
+      99.5% 0.2%,
+      99.2% 35%,
+      100% 70%,
+      99.4% 99.8%,
+      70% 99.9%,
+      37% 99.8%,
+      0.5% 100%,
+      0.3% 72%,
+      0.6% 45%,
+      0 22%
+    );
+  }
+  .artifact-corner {
+    width: 65px;
+    height: 65px;
+    opacity: 0.55;
+  }
+  .corner-nw,
+  .corner-ne {
+    top: 13px;
+  }
+  .corner-sw,
+  .corner-se {
+    bottom: 13px;
+  }
+  .corner-nw,
+  .corner-sw {
+    left: 10px;
+  }
+  .corner-ne,
+  .corner-se {
+    right: 10px;
+  }
+  .artifact-folio {
+    top: 23px;
+    right: 28px;
+    font-size: 9px;
+  }
+  .scribe-margin {
+    left: 11px;
+    font-size: 9px;
+  }
+  .theme-manuscript .document-header {
+    padding: 0 1px 24px;
+    margin-bottom: 25px;
+  }
+  .theme-manuscript .document-header h2 {
+    font-size: 38px;
+    line-height: 1.2;
+    margin: 17px 0;
+  }
+  .theme-manuscript .document-ornament {
+    font-size: 40px;
+  }
+  .theme-manuscript .document-label {
+    font-size: 9px;
+    letter-spacing: 1.3px;
+  }
+  .theme-manuscript .document-body {
+    padding: 0 8px;
+  }
+  .theme-manuscript .message-prose > p:first-child:first-letter {
+    font-size: 3.6em;
+    padding: 6px 9px;
+    margin: 5px 9px 0 0;
+  }
+  .theme-manuscript .document-footer {
+    margin-top: 30px;
+  }
+  .stage-scroll {
+    padding: 43px 17px 47px;
+  }
+  .scroll-spindle {
+    height: 27px;
+  }
+  .scroll-spindle:before,
+  .scroll-spindle:after {
+    width: 17px;
+    height: 40px;
+    top: -6px;
+  }
+  .spindle-top {
+    top: 12px;
+  }
+  .spindle-bottom {
+    bottom: 12px;
+  }
+  .theme-scroll {
+    padding: 39px 24px 32px;
+  }
+  .theme-scroll:before,
+  .theme-scroll:after {
+    left: -7px;
+    right: -7px;
+    height: 42px;
+  }
+  .theme-scroll:before {
+    top: -27px;
+  }
+  .theme-scroll:after {
+    bottom: -27px;
+  }
+  .theme-scroll .document-header {
+    padding: 3px 0 23px;
+    margin-bottom: 26px;
+  }
+  .theme-scroll .document-header h2 {
+    font-size: 29px;
+    line-height: 1.3;
+    letter-spacing: 0.3px;
+  }
+  .theme-scroll .document-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .theme-scroll .document-ornament {
+    font-size: 28px;
+  }
+  .stage-decree {
+    padding: 9px;
+  }
+  .theme-decree {
+    padding: 16px 25px 34px;
+    border-width: 4px;
+  }
+  .theme-decree .document-header {
+    margin: 0 -11px 29px;
+    padding: 23px 17px 25px;
+  }
+  .theme-decree .document-header h2 {
+    font-size: 26px;
+    line-height: 1.35;
+    letter-spacing: 0.4px;
+  }
+  .royal-crest {
+    width: 160px;
+    height: 117px;
+  }
+  .theme-decree .document-label {
+    font-size: 9px;
+    letter-spacing: 1.6px;
+  }
+  .theme-decree .document-meta {
+    font-size: 8px;
+    letter-spacing: 0.7px;
+  }
+  .theme-decree .artifact-corner {
+    width: 52px;
+    height: 52px;
+    opacity: 0.5;
+  }
+  .theme-decree .document-body {
+    padding: 0;
+  }
+  .theme-decree .message-prose > p:first-child:first-letter {
+    font-size: 3em;
+    padding: 5px 8px;
+  }
+  .theme-decree .message-attribution {
+    font-size: 11px;
+    gap: 6px;
+  }
+  .theme-decree .document-footer > span {
+    width: 78px;
+    height: 78px;
+    font-size: 32px;
+  }
+  .theme-decree .document-footer > span:before,
+  .theme-decree .document-footer > span:after {
+    top: 45px;
+    height: 66px;
+  }
+  .theme-decree .document-footer > small {
+    margin-top: 44px;
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  :is(.theme-manuscript, .theme-scroll, .theme-decree) .message-prose,
+  :is(.theme-manuscript, .theme-scroll, .theme-decree) .message-text {
+    font-size: calc(var(--reading-size) + 1px);
+    line-height: 1.8;
+  }
+  :is(.theme-manuscript, .theme-scroll, .theme-decree) .message-timestamp {
+    font-size: 9px;
+  }
+  :is(.theme-manuscript, .theme-scroll, .theme-decree) .document-meta {
+    font-size: 8px;
+    letter-spacing: 0.8px;
+  }
+  :is(.theme-manuscript, .theme-scroll, .theme-decree) .document-footer small {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+}
+@media print {
+  .edition-stage:is(.stage-manuscript, .stage-scroll, .stage-decree) {
+    padding: 0;
+    filter: none;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .scroll-spindle,
+  .artifact-decoration {
+    display: none;
+  }
+  .theme-manuscript {
+    clip-path: none;
+    box-shadow: none;
+  }
+  .theme-scroll:before,
+  .theme-scroll:after {
+    display: none;
+  }
+  .theme-decree .document-header {
+    print-color-adjust: exact;
+  }
+  .theme-decree .document-header h2 {
+    color: #f2e6cd;
+  }
+  .theme-manuscript,
+  .theme-scroll,
+  .theme-decree {
+    padding: 30px;
+    border: 0;
+    outline: 0;
+  }
+  .theme-decree .document-footer > span {
+    print-color-adjust: exact;
+  }
+}
+
+:is(.theme-manuscript, .theme-scroll, .theme-decree) .message-text.ascii-art {
+  font-family: Consolas, monospace;
+  white-space: pre;
+  line-height: 1.3;
+  font-size: calc(var(--reading-size) - 4px);
+}

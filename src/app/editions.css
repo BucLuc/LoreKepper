@@ -1,0 +1,944 @@
+/* Additional editions are scoped so the established editions remain untouched. */
+:is(
+  .theme-museum,
+  .theme-court,
+  .theme-poetry,
+  .theme-tavern,
+  .theme-wanted,
+  .theme-card,
+  .theme-space,
+  .theme-prophecy,
+  .theme-academic,
+  .theme-news,
+  .theme-bug,
+  .theme-lyrics
+) {
+  overflow-wrap: anywhere;
+}
+.edition-message-label {
+  font:
+    10px/1.4 Arial,
+    sans-serif;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+  opacity: 0.65;
+}
+.edition-end {
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+}
+:is(.theme-museum, .theme-court, .theme-wanted, .theme-academic, .theme-bug)
+  .message-prose,
+:is(.theme-museum, .theme-court, .theme-wanted, .theme-academic, .theme-bug)
+  .message-text {
+  color: inherit;
+}
+:is(.theme-museum, .theme-court, .theme-wanted, .theme-academic, .theme-bug)
+  .document-header
+  h2 {
+  color: inherit;
+}
+:is(.theme-museum, .theme-court, .theme-wanted, .theme-academic, .theme-bug)
+  .document-label,
+:is(.theme-museum, .theme-court, .theme-wanted, .theme-academic, .theme-bug)
+  .document-meta {
+  color: inherit;
+  opacity: 0.65;
+}
+:is(.theme-museum, .theme-court, .theme-wanted, .theme-academic, .theme-bug)
+  .message-speaker,
+:is(.theme-museum, .theme-court, .theme-wanted, .theme-academic, .theme-bug)
+  .message-timestamp {
+  color: inherit;
+}
+/* Quiet gallery lighting, stone mat, and a separate accession plaque. */
+.theme-museum {
+  background: #d9d6ce;
+  color: #33352f;
+  padding: 45px;
+  border: 14px solid #484a44;
+  box-shadow: 0 20px 60px #0009;
+}
+.theme-museum .document-header {
+  text-align: left;
+  border: 0;
+  padding-bottom: 20px;
+}
+.theme-museum .document-ornament {
+  color: #737a65;
+}
+.theme-museum .document-header h2 {
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 400;
+}
+.theme-museum .document-body {
+  background: #f3f0e6;
+  padding: 45px;
+  border: 1px solid #b5b2a8;
+  box-shadow: 0 6px 16px #4442;
+}
+.museum-label {
+  background: #f9f7f0;
+  padding: 24px 28px;
+  border-left: 4px solid #626b58;
+  margin: 0 0 32px;
+  max-width: 540px;
+  font-family: Arial, sans-serif;
+}
+.museum-label span,
+.museum-label strong {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.museum-label strong {
+  font-size: 18px;
+  letter-spacing: 0;
+}
+.museum-label p {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.museum-label small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.8;
+  margin-top: 16px;
+  color: #686b62;
+}
+.theme-museum .document-footer {
+  color: #62665a;
+}
+/* A ruled transcript with marginal paragraph numbers and evidence stamps. */
+.theme-court {
+  background: #f7f5ed;
+  color: #252a31;
+  font-family: "Courier New", monospace;
+  padding: 55px;
+  border: 1px solid #b3b5b3;
+}
+.theme-court .document-header {
+  border-bottom: 4px double #333;
+}
+.theme-court .document-ornament {
+  color: #293a4d;
+}
+.theme-court .document-header h2 {
+  font-family: Georgia, serif;
+  text-transform: uppercase;
+  font-size: 30px;
+}
+.court-case {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  border-bottom: 2px solid #444;
+  padding: 20px 0;
+  margin-bottom: 35px;
+  font-size: 11px;
+}
+.court-case strong {
+  flex-basis: 100%;
+  font-weight: 400;
+  font-size: 14px;
+  margin-top: 8px;
+}
+.theme-court .message-prose {
+  font-family: "Courier New", monospace;
+  line-height: 2;
+  counter-reset: testimony;
+  padding-left: 36px;
+  border-left: 1px solid #b85b5b80;
+}
+.theme-court .message-prose > p {
+  position: relative;
+  counter-increment: testimony;
+}
+.theme-court .message-prose > p:before {
+  content: counter(testimony, decimal-leading-zero);
+  position: absolute;
+  right: calc(100% + 13px);
+  color: #8c9399;
+  font:
+    11px/2 "Courier New",
+    monospace;
+  top: 6px;
+}
+.theme-court .edition-message-label {
+  background: #e4e6e7;
+  padding: 9px;
+  color: #243345;
+  opacity: 1;
+}
+.end-court {
+  display: inline-block;
+  border: 3px double #81413c;
+  color: #81413c;
+  padding: 12px;
+  transform: rotate(-3deg);
+}
+.theme-court .document-footer {
+  color: #555;
+}
+/* Verse-like breathing room without rewriting the poetry. */
+.theme-poetry {
+  background: linear-gradient(140deg, #283d40, #152629);
+  border: 1px solid #76979377;
+  color: #e2e9df;
+  padding: 65px;
+}
+.theme-poetry .document-header h2 {
+  color: #e8efdf;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(32px, 4vw, 54px);
+}
+.theme-poetry .document-ornament {
+  color: #a3bba4;
+}
+.theme-poetry .document-label,
+.theme-poetry .document-meta {
+  color: #a3bba4;
+}
+.poetry-invocation {
+  text-align: center;
+  font-size: 40px;
+  color: #9bb398;
+  margin: 0 0 40px;
+}
+.poetry-invocation span {
+  font:
+    italic 17px Georgia,
+    serif;
+}
+.theme-poetry .document-body {
+  max-width: 630px;
+  margin: auto;
+}
+.theme-poetry .message-prose {
+  color: #e2e9df;
+  font:
+    calc(var(--reading-size) + 2px)/2.1 "Fell English",
+    Georgia,
+    serif;
+}
+.theme-poetry .message-prose > p {
+  margin-bottom: 2.5em;
+}
+.theme-poetry .story-message + .story-message:before {
+  content: "❧";
+  display: block;
+  text-align: center;
+  color: #a6b697;
+  font-size: 32px;
+  margin: 40px;
+}
+/* Weathered notices pinned to a dark oak board. */
+.stage-tavern {
+  padding: 44px;
+  background: repeating-linear-gradient(
+    0deg,
+    #302116 0,
+    #302116 65px,
+    #21150f 67px,
+    #503824 71px
+  );
+  border: 12px ridge #493221;
+  box-shadow:
+    inset 0 0 90px #0008,
+    0 12px 50px #000a;
+}
+.theme-tavern {
+  position: relative;
+  background: #ceba8a url("/textures/aged-vellum.svg") center/cover;
+  color: #3f291e;
+  padding: 45px;
+  border: 0;
+  box-shadow: 0 8px 14px #0008;
+  transform: rotate(-0.35deg);
+}
+.theme-tavern .document-header h2 {
+  font-family: "Unifraktur", Georgia, serif;
+  font-size: 42px;
+  font-weight: 400;
+  color: #4f271a;
+}
+.theme-tavern .document-label,
+.theme-tavern .document-meta,
+.theme-tavern .document-ornament {
+  color: #714b2f;
+}
+.theme-tavern .message-prose,
+.theme-tavern .message-text {
+  color: #3f291e;
+  font-family: "Fell English", Georgia, serif;
+  font-style: italic;
+  line-height: 1.9;
+}
+.tavern-pin {
+  position: absolute;
+  top: 12px;
+  left: calc(50% - 13px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #d4b77b, #685132 60%, #332b22);
+  color: #211a13;
+  box-shadow: 2px 4px 4px #0008;
+  width: 26px;
+  height: 26px;
+  text-align: center;
+}
+.theme-tavern .document-footer {
+  color: #66482b;
+}
+/* Letterpress poster, strong borders, and a typographic reward. */
+.theme-wanted {
+  background: #ddc799 url("/textures/aged-vellum.svg") center/cover;
+  color: #492d20;
+  padding: 38px;
+  border: 10px double #543321;
+}
+.theme-wanted .document-label {
+  font:
+    bold clamp(45px, 8vw, 82px)/1 Impact,
+    "Arial Black",
+    serif;
+  opacity: 1;
+  letter-spacing: 7px;
+  color: #492d20;
+}
+.theme-wanted .document-ornament {
+  display: none;
+}
+.theme-wanted .document-header h2 {
+  font:
+    bold clamp(27px, 4vw, 42px)/1.2 Georgia,
+    serif;
+  text-transform: uppercase;
+}
+.wanted-reward {
+  text-align: center;
+  border-block: 5px double #65432c;
+  padding: 22px 10px;
+  margin: 0 0 32px;
+}
+.wanted-reward span,
+.wanted-reward strong,
+.wanted-reward small {
+  display: block;
+}
+.wanted-reward span {
+  font:
+    bold 10px Arial,
+    sans-serif;
+  letter-spacing: 2px;
+}
+.wanted-reward strong {
+  font:
+    bold 23px Georgia,
+    serif;
+  margin: 17px 0;
+}
+.wanted-reward small {
+  font:
+    italic 14px Georgia,
+    serif;
+}
+.theme-wanted .document-body {
+  border: 2px solid #6c4c3760;
+  padding: 24px;
+}
+.theme-wanted .message-prose {
+  font-family: "Fell English", Georgia, serif;
+}
+.theme-wanted .document-footer {
+  color: #66492c;
+}
+/* Foil collectible frame; each message retains its complete ability text. */
+.theme-card {
+  background: linear-gradient(130deg, #34476b, #513b6a 40%, #1b304d);
+  border: 8px ridge #bc9c62;
+  border-radius: 22px;
+  padding: 32px;
+  color: #e5e6f1;
+  box-shadow: 0 0 35px #8d72d32b;
+}
+.theme-card .document-header {
+  background: linear-gradient(120deg, #d2b782, #eee0ba, #bb9a62);
+  color: #342b27;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  border: 0;
+}
+.theme-card .document-header h2 {
+  color: #332b2a;
+  font-size: 32px;
+}
+.theme-card .document-ornament,
+.theme-card .document-label,
+.theme-card .document-meta {
+  color: #685632;
+}
+.card-rarity {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 25px;
+  font:
+    10px Arial,
+    sans-serif;
+  letter-spacing: 1px;
+  color: #e6cf98;
+}
+.card-rarity strong {
+  font:
+    30px Georgia,
+    serif;
+}
+.card-rarity small {
+  font:
+    9px Arial,
+    sans-serif;
+}
+.theme-card .story-message {
+  padding: 26px;
+  border-radius: 12px;
+  border: 1px solid #a9a0ce80;
+  background: linear-gradient(140deg, #ffffff16, #0002);
+  margin-bottom: 20px;
+}
+.theme-card .message-prose,
+.theme-card .message-text {
+  color: #e4e6f3;
+  font-family: Georgia, serif;
+}
+.theme-card .edition-message-label {
+  color: #eedaa6;
+  opacity: 1;
+  border-bottom: 1px solid #dac78a44;
+  padding-bottom: 12px;
+}
+/* Flight telemetry, signal grid, and restrained cyan instrumentation. */
+.theme-space {
+  background:
+    linear-gradient(#0e2029ed, #0c1922ed),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 24px,
+      #315b66 25px
+    );
+  border: 1px solid #447f91;
+  color: #c8e2e8;
+  padding: 40px;
+  font-family: Consolas, monospace;
+  box-shadow: inset 0 0 80px #061319;
+}
+.theme-space .document-header h2 {
+  font-family: Arial, sans-serif;
+  color: #d5edf0;
+  letter-spacing: 1px;
+  font-size: 34px;
+}
+.theme-space .document-ornament {
+  color: #73c0d2;
+  font-size: 62px;
+}
+.theme-space .document-label,
+.theme-space .document-meta {
+  color: #74b4c5;
+}
+.space-telemetry {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  font:
+    10px Consolas,
+    monospace;
+  color: #86bbca;
+  padding: 24px;
+  border: 1px solid #345c6c;
+  margin-bottom: 32px;
+  background: #0b161d;
+}
+.theme-space .message-prose,
+.theme-space .message-text {
+  color: #c8e2e8;
+  font-family: Consolas, monospace;
+  line-height: 1.85;
+}
+.theme-space .story-message {
+  border-left: 3px solid #508fa2;
+  padding-left: 24px;
+}
+.theme-space .message-speaker,
+.theme-space .message-timestamp {
+  color: #72b7c7;
+}
+.end-space {
+  color: #80c4d5;
+  text-align: left;
+  border-top: 1px solid #315663;
+  padding-top: 20px;
+}
+/* Indigo night, celestial geometry, and an oracle's inscription. */
+.theme-prophecy {
+  background: radial-gradient(ellipse at 50% 0, #39305b, #17182a 65%);
+  border: 1px solid #8d79bc88;
+  outline: 1px solid #74669333;
+  outline-offset: -13px;
+  padding: 60px;
+  color: #e0dced;
+}
+.theme-prophecy .document-header h2 {
+  font-weight: 400;
+  font-size: clamp(32px, 4vw, 50px);
+  color: #ebe2fa;
+  font-variant: small-caps;
+}
+.theme-prophecy .document-ornament {
+  display: none;
+}
+.theme-prophecy .document-label,
+.theme-prophecy .document-meta {
+  color: #afa1ce;
+}
+.prophecy-orbit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+  color: #b8a3e1;
+  border-block: 1px solid #8c79a04d;
+  padding: 22px;
+  margin-bottom: 40px;
+}
+.prophecy-orbit strong {
+  font-size: 46px;
+  font-weight: 400;
+  letter-spacing: 12px;
+}
+.theme-prophecy .document-body {
+  max-width: 670px;
+  margin: auto;
+}
+.theme-prophecy .message-prose,
+.theme-prophecy .message-text {
+  color: #e0dced;
+  font-family: "Fell English", Georgia, serif;
+  line-height: 2;
+}
+.theme-prophecy .message-prose > p {
+  margin-bottom: 2em;
+}
+.theme-prophecy .message-attribution {
+  text-align: center;
+}
+.end-prophecy {
+  color: #b8a3e1;
+}
+/* Scholarly paper with restrained title page and a source abstract. */
+.theme-academic {
+  background: #fffefa;
+  color: #262625;
+  border: 1px solid #dad9d1;
+  padding: 65px;
+}
+.theme-academic .document-ornament {
+  display: none;
+}
+.theme-academic .document-header {
+  border-top: 3px solid #333;
+  border-bottom: 1px solid #aaa;
+  padding-top: 24px;
+}
+.theme-academic .document-header h2 {
+  font:
+    bold 32px/1.3 Georgia,
+    serif;
+}
+.academic-abstract {
+  font:
+    14px/1.7 Georgia,
+    serif;
+  border-bottom: 1px solid #bbb;
+  padding: 0 0 25px;
+  margin-bottom: 35px;
+}
+.academic-abstract span,
+.academic-abstract strong {
+  display: block;
+}
+.academic-abstract span {
+  font:
+    9px Arial,
+    sans-serif;
+  letter-spacing: 1.5px;
+  margin-bottom: 25px;
+  color: #666;
+}
+.academic-abstract strong {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.academic-abstract p {
+  margin-top: 10px;
+}
+.theme-academic .message-prose {
+  font-family: Georgia, serif;
+  line-height: 1.9;
+}
+.theme-academic .edition-message-label {
+  color: #333;
+  font-weight: bold;
+  opacity: 1;
+}
+.end-academic {
+  text-align: left;
+  line-height: 1.7;
+  letter-spacing: 0;
+  font:
+    12px Georgia,
+    serif;
+}
+.theme-academic .document-footer {
+  color: #666;
+}
+/* Broadcast graphics: red alert, studio blue, and a static ticker. */
+.theme-news {
+  background: #f2f5fa;
+  color: #22314a;
+  padding: 0;
+  border: 1px solid #314665;
+  font-family: Arial, sans-serif;
+}
+.theme-news .document-header {
+  background: linear-gradient(135deg, #112d4c, #1c4a6b);
+  padding: 40px;
+  margin: 0;
+  border: 0;
+  text-align: left;
+}
+.theme-news .document-header h2 {
+  color: #fff;
+  font:
+    bold clamp(30px, 4vw, 46px)/1.2 Arial,
+    sans-serif;
+}
+.theme-news .document-label {
+  color: #fff;
+  background: #b72535;
+  display: inline-block;
+  padding: 9px 13px;
+  opacity: 1;
+  letter-spacing: 2px;
+}
+.theme-news .document-ornament {
+  display: none;
+}
+.theme-news .document-meta {
+  color: #9fc2da;
+}
+.news-live {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #e6ecf3;
+  font:
+    10px Arial,
+    sans-serif;
+}
+.news-live strong {
+  color: #fff;
+  background: #bb2636;
+  padding: 16px;
+  letter-spacing: 1px;
+}
+.news-live span {
+  padding: 10px;
+  color: #46546a;
+}
+.theme-news .document-body {
+  padding: 38px;
+}
+.theme-news .message-prose,
+.theme-news .message-text {
+  color: #26364c;
+  font-family: Arial, sans-serif;
+  line-height: 1.85;
+}
+.theme-news .message-speaker,
+.theme-news .message-timestamp {
+  color: #5a6c82;
+}
+.theme-news .document-footer {
+  background: #132c48;
+  color: #bdccdc;
+  padding: 24px;
+  margin: 0;
+  border: 0;
+}
+/* Issue tracker with real archive ID and explicit expected/actual fields. */
+.theme-bug {
+  background: #f6f8fb;
+  color: #2a3446;
+  border: 1px solid #bdc8d8;
+  border-radius: 10px;
+  padding: 38px;
+  font-family: Arial, sans-serif;
+}
+.theme-bug .document-header {
+  text-align: left;
+  border-bottom: 1px solid #cbd4e1;
+}
+.theme-bug .document-header h2 {
+  font:
+    bold 30px/1.3 Arial,
+    sans-serif;
+}
+.theme-bug .document-ornament {
+  color: #6885bd;
+}
+.bug-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 24px;
+  background: #eaf0f8;
+  border: 1px solid #ccd7e5;
+  border-radius: 8px;
+  margin-bottom: 35px;
+}
+.bug-fields dt {
+  color: #74829a;
+  text-transform: uppercase;
+  font:
+    9px Arial,
+    sans-serif;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.bug-fields dd {
+  margin: 0;
+  font:
+    13px/1.6 Arial,
+    sans-serif;
+}
+.theme-bug .message-prose {
+  font-family: Arial, sans-serif;
+  line-height: 1.85;
+}
+.theme-bug .edition-message-label {
+  background: #dce5f3;
+  display: inline-block;
+  padding: 7px 10px;
+  border-radius: 4px;
+  opacity: 1;
+  color: #43638f;
+}
+.end-bug {
+  color: #638270;
+  text-align: left;
+  font:
+    10px Consolas,
+    monospace;
+}
+.theme-bug .document-footer {
+  color: #758094;
+}
+/* Album sleeve, vinyl silhouette, and generous lyric spacing. */
+.theme-lyrics {
+  background: linear-gradient(145deg, #462c32, #241f2b 55%, #1b2330);
+  color: #eee3dd;
+  padding: 50px;
+  border: 1px solid #b7807255;
+}
+.theme-lyrics .document-header {
+  text-align: left;
+  border: 0;
+}
+.theme-lyrics .document-header h2 {
+  font:
+    bold clamp(30px, 4vw, 55px)/1.1 Arial,
+    sans-serif;
+  letter-spacing: -1px;
+  color: #f5e6df;
+}
+.theme-lyrics .document-ornament {
+  display: none;
+}
+.theme-lyrics .document-label,
+.theme-lyrics .document-meta {
+  color: #c39c92;
+}
+.album-art {
+  position: relative;
+  height: 220px;
+  margin: 0 0 45px;
+  background: radial-gradient(circle at 25% 30%, #aa6a60, #60414b 40%, #303248);
+  overflow: hidden;
+  border: 1px solid #be8f7b55;
+}
+.vinyl-record {
+  position: absolute;
+  width: 270px;
+  height: 270px;
+  border-radius: 50%;
+  right: 40px;
+  top: -25px;
+  background:
+    radial-gradient(
+      circle,
+      #16151b 0 5%,
+      #b27b61 5% 17%,
+      #30252b 17% 18%,
+      transparent 18%
+    ),
+    repeating-radial-gradient(circle, #18181d 0 3px, #25242a 4px 5px);
+  box-shadow: 0 10px 30px #0008;
+}
+.album-art > span {
+  position: absolute;
+  left: 25px;
+  bottom: 25px;
+  font:
+    bold 15px/1.8 Arial,
+    sans-serif;
+  letter-spacing: 3px;
+  color: #f5dfcd;
+}
+.theme-lyrics .document-body {
+  max-width: 660px;
+  margin: auto;
+}
+.theme-lyrics .message-prose,
+.theme-lyrics .message-text {
+  font-family: Arial, sans-serif;
+  color: #eee3dd;
+  line-height: 2;
+}
+.theme-lyrics .message-prose > p {
+  margin-bottom: 2.3em;
+}
+.theme-lyrics .message-attribution {
+  border-bottom: 1px solid #c39c9240;
+  padding-bottom: 15px;
+}
+.theme-lyrics .edition-message-label {
+  color: #cb9a8d;
+  opacity: 1;
+}
+/* Preserve code, wide art, and plain-text modes in every new edition. */
+.story-document .message-text.ascii-art {
+  font-family: Consolas, monospace;
+  white-space: pre;
+}
+.story-document.plain-mode .message-text {
+  font-family: Consolas, monospace;
+}
+@media (max-width: 800px) {
+  :is(
+    .theme-museum,
+    .theme-court,
+    .theme-poetry,
+    .theme-tavern,
+    .theme-wanted,
+    .theme-card,
+    .theme-space,
+    .theme-prophecy,
+    .theme-academic,
+    .theme-bug,
+    .theme-lyrics
+  ) {
+    padding: 28px;
+  }
+
+  .stage-tavern {
+    padding: 22px;
+    border-width: 8px;
+  }
+  .theme-museum .document-body {
+    padding: 24px;
+  }
+  .space-telemetry,
+  .bug-fields {
+    grid-template-columns: 1fr;
+  }
+  .theme-news .document-header,
+  .theme-news .document-body {
+    padding: 28px;
+  }
+  .news-live {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .prophecy-orbit {
+    gap: 12px;
+    padding: 18px 5px;
+  }
+  .prophecy-orbit strong {
+    font-size: 30px;
+    letter-spacing: 5px;
+  }
+  .vinyl-record {
+    right: -25px;
+  }
+  .theme-card .story-message,
+  .theme-wanted .document-body {
+    padding: 20px;
+  }
+}
+@media print {
+  .stage-tavern {
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+  .theme-tavern {
+    transform: none;
+  }
+}
+.collectible-portrait {
+  display: inline-grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 3px double #d3b882;
+  background: radial-gradient(circle at 30% 20%, #897397, #3d416b);
+  font:
+    bold 27px Georgia,
+    serif;
+  color: #f1dfb3;
+  margin-right: 15px;
+}
+.theme-card .message-attribution {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.theme-tavern .message-speaker,
+.theme-tavern .message-timestamp {
+  color: #66452f;
+}
+.theme-news .end-news {
+  background: #b72535;
+  color: #fff;
+  padding: 14px;
+  line-height: 1.7;
+  font:
+    bold 10px Arial,
+    sans-serif;
+  margin-bottom: 20px;
+}
+:is(.theme-museum, .theme-court, .theme-wanted, .theme-academic, .theme-bug)
+  .message-attribution {
+  color: inherit;
+}

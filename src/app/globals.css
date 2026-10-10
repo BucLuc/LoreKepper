@@ -3158,3 +3158,47 @@ html { scroll-padding-top:120px; }
 .entry-breadcrumb a:hover { color:var(--gold-bright);text-decoration:underline; }
 .entry-breadcrumb > span { color:inherit; }
 @media(max-width:540px) { .entry-breadcrumb { font-size:10px;letter-spacing:1.8px;gap:9px; } }
+.story-document:is(.theme-light, .theme-dark) {
+  --ink: #202124;
+  --accent: #60656d;
+  color: var(--ink);
+  background: #fff;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none;
+  padding: clamp(24px, 4vw, 56px);
+}
+.story-document.theme-dark {
+  --ink: #e6e7e9;
+  --accent: #a4a9b2;
+  background: #1b1d21;
+}
+.story-document:is(.theme-light, .theme-dark)::before,
+.story-document:is(.theme-light, .theme-dark)::after,
+.story-document:is(.theme-light, .theme-dark) .document-ornament,
+.story-document:is(.theme-light, .theme-dark) .document-label,
+.story-document:is(.theme-light, .theme-dark) .document-meta,
+.story-document:is(.theme-light, .theme-dark) .document-footer,
+.story-document:is(.theme-light, .theme-dark) .document-header::after {
+  display: none;
+}
+.story-document:is(.theme-light, .theme-dark) .document-header {
+  text-align: left;
+  margin-bottom: 32px;
+}
+.story-document:is(.theme-light, .theme-dark) .document-header h2 {
+  font-family: var(--sans);
+  color: var(--ink);
+  font-size: clamp(24px, 2.3vw, 32px);
+  letter-spacing: -0.6px;
+  text-wrap: pretty;
+  margin: 0;
+}
+.story-document:is(.theme-light, .theme-dark) :is(.message-prose, .message-text) {
+  font-family: var(--sans);
+  color: var(--ink);
+  line-height: 1.8;
+}
+.story-document:is(.theme-light, .theme-dark) .ascii-art {
+  font-family: monospace;
+}

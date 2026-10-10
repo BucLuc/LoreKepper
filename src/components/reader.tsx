@@ -9,11 +9,16 @@ import {
 } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { withoutEmojis } from "@/lib/emojis";
+import { readerFonts } from "@/lib/reader-fonts";
+import { storyPdfFilename } from "@/lib/export-pdf";
 import type { Exhibit, Message } from "@/lib/archive";
 import { authorName, dateLabel, displayTime, storyText } from "@/lib/format";
 import { Icon } from "./icon";
 import { HistoricalDecorations, RoyalCrest } from "./historical-art";
 import { EpicSigil } from "./epic-sigil";
+import { CompassRose } from "./compass-rose";
+import { PirateCrest } from "./pirate-crest";
 
 import {
   extraEditions,
@@ -22,6 +27,27 @@ import {
   EditionEnd,
 } from "./extra-editions";
 const styles = [
+  {
+    id: "captain",
+    name: "Captain’s Log",
+    mark: "⚓",
+    description: "Salt-stained pages. Questionable orders. Preserved at sea.",
+    label: "RECOVERED FROM THE CAPTAIN’S QUARTERS",
+  },
+  {
+    id: "light",
+    name: "Light",
+    mark: "○",
+    description: "A simple white page. Just the words.",
+    label: "",
+  },
+  {
+    id: "dark",
+    name: "Dark",
+    mark: "●",
+    description: "A quiet dark page. Just the words.",
+    label: "",
+  },
   ...extraEditions,
   {
     id: "glorious",
@@ -102,9 +128,10 @@ const styles = [
   },
 ];
 const editionGroups = [
+  { name: "Basic", ids: ["light", "dark"] },
   {
     name: "Legend & History",
-    ids: ["glorious", "manuscript", "scroll", "decree", "poetry", "prophecy"],
+    ids: ["glorious", "manuscript", "scroll", "decree", "poetry", "prophecy", "captain"],
   },
   { name: "Artifacts & Places", ids: ["museum", "tavern", "wanted", "card"] },
   {
@@ -117,6 +144,9 @@ const editionGroups = [
   },
   { name: "Technology & Sci-Fi", ids: ["terminal", "space", "bug"] },
 ];
+function EditionMark({ id, mark }: { id: string; mark: string }) {
+  return id === "captain" ? <Icon name="anchor" /> : <>{mark}</>;
+}
 function readPreferences() {
   try {
     return localStorage.getItem("lorekeeper-reader") ?? "";
@@ -132,7 +162,8 @@ function subscribeToPreferences(callback: () => void) {
     window.removeEventListener("lorekeeper-preferences", callback);
   };
 }
-function MessageBody({ message, plain }: { message: Message; plain: boolean }) {
+function MessageBody({ message, plain, showEmojis }: { message: Message; plain: boolean; showEmojis: boolean }) {
+  const displayText = (text: string) => showEmojis ? text : withoutEmojis(text);
   const looksLikeArt =
     /[╔╗╚╝║═┌┐└┘│─]/.test(message.content) ||
     message.content.split("\n").filter((l) => /^\s{4,}[^\w\s]{2,}/.test(l))
@@ -140,7 +171,7 @@ function MessageBody({ message, plain }: { message: Message; plain: boolean }) {
   if (plain || looksLikeArt)
     return (
       <pre className={`message-text ${looksLikeArt ? "ascii-art" : ""}`}>
-        {message.content}
+        {displayText(message.content)}
       </pre>
     );
   return (
@@ -156,7 +187,7 @@ function MessageBody({ message, plain }: { message: Message; plain: boolean }) {
           ),
         }}
       >
-        {message.presentation ?? message.content}
+        {displayText(message.presentation ?? message.content)}
       </Markdown>
     </div>
   );
@@ -189,13 +220,37 @@ export function Reader({
           ? (value.size as number)
           : 18,
         plain: value.plain === true,
+        showEmojis: value.showEmojis !== false,
+        fonts: value.fonts && typeof value.fonts === "object" ? value.fonts as Record<string, string> : {},
       };
     } catch {
-      return { style: "glorious", size: 18, plain: false };
+      return { style: "glorious", size: 18, plain: false, showEmojis: true, fonts: {} as Record<string, string> };
     }
   }, [saved]);
   const [override, setOverride] = useState<typeof stored | null>(null);
-  const { style, size, plain } = override ?? stored;
+  const { style, size, plain, showEmojis, fonts } = override ?? stored;
+  const fontOptions = readerFonts(style);
+  const selectedFont = fontOptions.find(font => font.id === fonts[style]) ?? fontOptions[0];
+  const [openMenu, setOpenMenu] = useState<"format" | "export" | null>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [copyingImage, setCopyingImage] = useState(false);
+  const [imageDownload, setImageDownload] = useState<string | null>(null);
+  useEffect(() => () => { if (imageDownload) URL.revokeObjectURL(imageDownload); }, [imageDownload]);
+  useEffect(() => {
+    if (!openMenu) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!toolbarRef.current?.contains(event.target as Node)) setOpenMenu(null);
+    };
+    const closeEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenMenu(null);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeEscape);
+    };
+  }, [openMenu]);
   const [expandedGroup, setExpandedGroup] = useState<string | null | undefined>(
     undefined,
   );
@@ -210,6 +265,7 @@ export function Reader({
   const [pdfDownload, setPdfDownload] = useState<{
     url: string;
     filename: string;
+    blob: Blob;
   } | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
   const maximizeRef = useRef<HTMLButtonElement>(null);
@@ -232,25 +288,61 @@ export function Reader({
   async function exportPdf() {
     if (!documentRef.current || exporting) return;
     setExporting(true);
-    setCopyStatus("Preparing your PDF…");
+    setPdfDownload(null);
+    setCopyStatus("Choose where to save your PDF…");
     try {
+      const pickerWindow = window as typeof window & {
+        showSaveFilePicker?: (options: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<{ createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }> }>;
+      };
+      const handle = pickerWindow.showSaveFilePicker ? await pickerWindow.showSaveFilePicker({
+        suggestedName: storyPdfFilename(entry.title, theme.name),
+        types: [{ description: "PDF document", accept: { "application/pdf": [".pdf"] } }],
+      }) : null;
+      setCopyStatus("Preparing your PDF…");
       const { exportStoryPdf } = await import("@/lib/export-pdf");
-      const download = await exportStoryPdf(
-        documentRef.current,
-        entry.title,
-        theme.name,
-      );
-      setPdfDownload(download);
-      setCopyStatus("Your PDF is ready.");
-    } catch {
-      setCopyStatus("PDF export failed. Please try again.");
+      const download = await exportStoryPdf(documentRef.current, entry.title, theme.name);
+      if (handle) {
+        const writable = await handle.createWritable();
+        await writable.write(download.blob);
+        await writable.close();
+        setCopyStatus("PDF saved.");
+      } else {
+        setPdfDownload(download);
+        setCopyStatus("Your browser does not support Save As. Your PDF is ready below.");
+      }
+    } catch (error) {
+      setCopyStatus(error instanceof DOMException && error.name === "AbortError" ? "PDF export cancelled." : "PDF export failed. Please try again.");
     } finally {
       setExporting(false);
     }
   }
-  function preferences(newStyle: string, newSize = size, newPlain = plain) {
+  async function copyImage() {
+    if (!documentRef.current || copyingImage) return;
+    const element = documentRef.current;
+    setCopyingImage(true);
+    setImageDownload(null);
+    setCopyStatus("Preparing image…");
+    const rendering = import("@/lib/export-pdf").then(module => module.exportStoryImage(element)).then(result => result.blob);
+    try {
+      if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") throw new Error("Image clipboard unavailable");
+      // Register the promise while the click still provides user activation.
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": rendering })]);
+      setCopyStatus("Entry copied as an image.");
+    } catch {
+      try {
+        setImageDownload(URL.createObjectURL(await rendering));
+        setCopyStatus("Your browser could not copy the image. Download it below instead.");
+      } catch {
+        setCopyStatus("Image rendering failed. Please try again.");
+      }
+    } finally {
+      setCopyingImage(false);
+    }
+  }
+  function preferences(newStyle: string, newSize = size, newPlain = plain, newShowEmojis = showEmojis, newFonts = fonts) {
     setPdfDownload(null);
-    const value = { style: newStyle, size: newSize, plain: newPlain };
+    setImageDownload(null);
+    const value = { style: newStyle, size: newSize, plain: newPlain, showEmojis: newShowEmojis, fonts: newFonts };
     setOverride(value);
     try {
       localStorage.setItem("lorekeeper-reader", JSON.stringify(value));
@@ -260,7 +352,7 @@ export function Reader({
     }
   }
   useEffect(() => {
-    if (!copyStatus) return;
+    if (!copyStatus || /PDF/i.test(copyStatus)) return;
     const timeout = setTimeout(() => setCopyStatus(""), 4000);
     return () => clearTimeout(timeout);
   }, [copyStatus]);
@@ -276,6 +368,16 @@ export function Reader({
     } catch {
       setFallback(text);
       setCopyStatus("Select the text below and copy it manually.");
+    }
+  }
+  async function shareLink() {
+    const url = `${window.location.origin}/stories/${entry.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyStatus("Story link copied.");
+    } catch {
+      setFallback(url);
+      setCopyStatus("Copy the story link below.");
     }
   }
   const theme = styles.find((s) => s.id === style)!;
@@ -334,7 +436,7 @@ export function Reader({
             aria-label="Story presentation"
           >
             <div className="selected-edition">
-              {theme.mark} {theme.name}
+              <EditionMark id={theme.id} mark={theme.mark} /> {theme.name}
             </div>
             {editionGroups.map((group, groupIndex) => (
               <div className="edition-group" key={group.name}>
@@ -371,7 +473,7 @@ export function Reader({
                         onClick={() => preferences(s.id)}
                       >
                         <span className="style-mark" aria-hidden="true">
-                          {s.mark}
+                          <EditionMark id={s.id} mark={s.mark} />
                         </span>
                         <span>{s.name}</span>
                         {style === s.id && (
@@ -386,42 +488,14 @@ export function Reader({
           <div className="recommended">
             <span className="eyebrow">CURATOR’S SUGGESTION</span>
             <button onClick={() => preferences(recommended.id)}>
-              {recommended.mark} {recommended.name} <span>↗</span>
+              <EditionMark id={recommended.id} mark={recommended.mark} /> {recommended.name} <span>↗</span>
             </button>
-          </div>
-          <div className="reader-options">
-            <span className="eyebrow">READING COMFORT</span>
-            <div className="size-controls">
-              <button
-                aria-label="Decrease text size"
-                disabled={size === 16}
-                onClick={() => preferences(style, size - 2)}
-              >
-                A−
-              </button>
-              <span>{size}px</span>
-              <button
-                aria-label="Increase text size"
-                disabled={size === 22}
-                onClick={() => preferences(style, size + 2)}
-              >
-                A+
-              </button>
-            </div>
-            <label className="plain-toggle">
-              <input
-                type="checkbox"
-                checked={plain}
-                onChange={(e) => preferences(style, size, e.target.checked)}
-              />
-              <span>Show unformatted text</span>
-            </label>
           </div>
         </aside>
         <div className="reader-main">
-          <div className="reader-toolbar">
+          <div className="reader-toolbar" ref={toolbarRef}>
             <div>
-              <span aria-hidden="true">{theme.mark}</span> {theme.name}
+              <span aria-hidden="true"><EditionMark id={theme.id} mark={theme.mark} /></span> {theme.name}
             </div>
             <div className="copy-actions">
               {maximized && <Link href="/#collection" className="maximized-hall-link">← Back to the Hall</Link>}
@@ -432,35 +506,41 @@ export function Reader({
               >
                 {maximized ? "↙ Restore" : "↗ Maximize"}
               </button>
-              <button onClick={() => copy()}>
-                <Icon
-                  name={copyStatus.startsWith("Original") ? "check" : "copy"}
-                />{" "}
-                Copy Text
-              </button>
-              {entry.messages.length > 1 && (
-                <button onClick={() => copy(true)}>Copy transcript</button>
-              )}
-              <button
-                onClick={exportPdf}
-                disabled={exporting}
-                aria-busy={exporting}
-              >
-                {exporting ? "Exporting…" : "Export as PDF"}
-              </button>
+              <div className="toolbar-menu">
+                <button aria-expanded={openMenu === "format"} aria-controls="format-panel"
+                  onClick={() => setOpenMenu(openMenu === "format" ? null : "format")}><Icon name="format" />Format</button>
+                {openMenu === "format" && <div id="format-panel" className="toolbar-panel" role="group" aria-label="Formatting options">
+                  <label className="format-check"><span>Show emojis</span><input type="checkbox" checked={showEmojis} onChange={e => preferences(style, size, plain, e.target.checked)} /></label>
+                  <label className="format-check"><span>Show formatted text</span><input type="checkbox" checked={!plain} onChange={e => preferences(style, size, !e.target.checked)} /></label>
+                  <div className="format-size"><span>Font size</span><div className="size-controls">
+                    <button aria-label="Decrease text size" disabled={size === 16} onClick={() => preferences(style, size - 2)}>A−</button>
+                    <span>{size}px</span>
+                    <button aria-label="Increase text size" disabled={size === 22} onClick={() => preferences(style, size + 2)}>A+</button>
+                  </div></div>
+                  <label className="format-font" htmlFor="reader-font">Font
+                    <select id="reader-font" value={selectedFont.id} onChange={e => preferences(style, size, plain, showEmojis, { ...fonts, [style]: e.target.value })}>
+                      {fontOptions.map(font => <option key={font.id} value={font.id}>{font.name}</option>)}
+                    </select>
+                  </label>
+                </div>}
+              </div>
+              <div className="toolbar-menu">
+                <button aria-expanded={openMenu === "export"} aria-controls="export-panel"
+                  onClick={() => setOpenMenu(openMenu === "export" ? null : "export")}><Icon name="export" />Export</button>
+                {openMenu === "export" && <div id="export-panel" className="toolbar-panel export-panel" role="group" aria-label="Export options">
+                  <button onClick={() => { void copy(); setOpenMenu(null); }}><Icon name="copy" /> Copy Text</button>
+                  <button onClick={() => { void copyImage(); setOpenMenu(null); }} disabled={copyingImage} aria-busy={copyingImage}>{copyingImage ? "Preparing image…" : "Copy Image"}</button>
+                  {entry.messages.length > 1 && <button onClick={() => { void copy(true); setOpenMenu(null); }}>Copy transcript</button>}
+                  <button onClick={() => { void exportPdf(); setOpenMenu(null); }} disabled={exporting} aria-busy={exporting}>{exporting ? "Preparing PDF…" : "Export as PDF"}</button>
+                  <button onClick={() => { void shareLink(); setOpenMenu(null); }}>Share · Copy link</button>
+                </div>}
+              </div>
             </div>
           </div>
           <div className="copy-status" role="status">
             {copyStatus || theme.description}
-            {pdfDownload && (
-              <a
-                className="pdf-download"
-                href={pdfDownload.url}
-                download={pdfDownload.filename}
-              >
-                Download PDF again ↓
-              </a>
-            )}
+            {pdfDownload && <a className="pdf-download" href={pdfDownload.url} download={pdfDownload.filename}>Download PDF</a>}
+            {imageDownload && <a className="pdf-download" href={imageDownload} download={`${entry.id} — ${theme.name}.png`}>Download image</a>}
           </div>
           {fallback !== null && (
             <div className="copy-fallback">
@@ -489,14 +569,15 @@ export function Reader({
             )}
             <article
               className={`story-document theme-${style} ${plain ? "plain-mode" : ""}`}
-              style={{ "--reading-size": `${size}px` } as React.CSSProperties}
+              data-font={selectedFont.id}
+              style={{ "--reading-size": `${size}px`, "--reader-font": selectedFont.family || undefined } as React.CSSProperties}
             >
               {["manuscript", "decree"].includes(style) && (
                 <HistoricalDecorations kind={style} number={entry.number} />
               )}
               <div className="document-header">
                 <span className="document-ornament" aria-hidden="true">
-                  {style === "decree" ? (
+                  {style === "captain" ? <PirateCrest /> : style === "decree" ? (
                     <RoyalCrest />
                   ) : ["glorious", "prophecy", "poetry"].includes(style) ? (
                     <EpicSigil
@@ -525,7 +606,7 @@ export function Reader({
                     <span>[OK] Archive retrieved. Integrity intact.</span>
                   </div>
                 )}
-                <h2>{entry.title}</h2>
+                <h2>{showEmojis ? entry.title : withoutEmojis(entry.title)}</h2>
                 <div className="document-meta">
                   {style === "decree"
                     ? "ISSUED IN THE NAME OF"
@@ -578,6 +659,7 @@ export function Reader({
                 date={entry.date}
                 score={entry.score}
               />
+              {style === "captain" && <><div className="captain-register"><span>SHIP’S JOURNAL · No. {reference}</span><span>{entry.date}</span><span>VESSEL: THE LOREKEEPER</span></div><div className="captain-chart" aria-hidden="true"><CompassRose /></div></>}
               <div className="document-body">
                 {entry.messages.map((message, index) => (
                   <section
@@ -585,6 +667,7 @@ export function Reader({
                     className={`story-message ${authorName(message.author) === "Liri" ? "by-liri" : "by-luc"}`}
                   >
                     <EditionMessageLabel style={style} index={index} />
+                    {style === "captain" && <div className="captain-entry-label"><Icon name="anchor" /> LOG ENTRY {String(index + 1).padStart(2, "0")}</div>}
                     <div className="message-attribution">
                       {style === "card" && (
                         <span
@@ -622,7 +705,7 @@ export function Reader({
                         </span>
                       )}
                     </div>
-                    <MessageBody message={message} plain={plain} />
+                    <MessageBody message={message} plain={plain} showEmojis={showEmojis} />
                     {style === "social" && (
                       <div className="social-post-footer">
                         <span>♡ Preserved</span>
@@ -645,14 +728,16 @@ export function Reader({
               <div className="document-footer">
                 <EditionEnd style={style} />
                 <span aria-hidden="true">
-                  {style === "decree"
+                  {style === "captain" ? <Icon name="anchor" /> : style === "decree"
                     ? "♛"
                     : style === "terminal"
                       ? "EOF"
                       : "✦"}
                 </span>
                 <small>
-                  {style === "screenplay"
+                  {style === "captain"
+                    ? "LOG CLOSED. MAY THE TALE OUTLIVE THE TIDE."
+                    : style === "screenplay"
                     ? "FADE OUT. THE NONSENSE ENDURES."
                     : style === "incident"
                       ? "END OF REPORT · NO FURTHER ACTION TAKEN"

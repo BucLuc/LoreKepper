@@ -11,6 +11,9 @@ export type IconName =
   | "book"
   | "scroll"
   | "sun"
+  | "format"
+  | "export"
+  | "anchor"
   | "chevron";
 export function Icon({
   name,
@@ -76,6 +79,9 @@ export function Icon({
       </>
     ),
     chevron: <path d="m8 4 8 8-8 8" />,
+    format: <><path d="M4 5h16M8 5v14M5 19h6M15 11h6M18 8v6M15 19h6" /></>,
+    export: <><path d="M12 3v12m-4-4 4 4 4-4M4 15v5h16v-5" /></>,
+    anchor: <><circle cx="12" cy="4" r="2" /><path d="M12 6v15M8 10h8M3 14v3c0 3 4 5 9 5s9-2 9-5v-3M3 14l-2 3m2-3 3 2m15-2 2 3m-2-3-3 2" /></>,
   };
   return (
     <svg

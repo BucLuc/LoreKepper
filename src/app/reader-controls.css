@@ -1,0 +1,103 @@
+/* Reading controls remain neutral across all editions. */
+@font-face {
+  font-family: "LK Medieval Sharp";
+  src: url("/fonts/MedievalSharp.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.reader-toolbar { position: relative; z-index: 5; }
+.toolbar-menu { position: relative; }
+.toolbar-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  padding: 18px;
+  background: #20221d;
+  color: #eee9df;
+  border: 1px solid #c6a96b45;
+  border-radius: 8px;
+  box-shadow: 0 14px 40px #0007;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.format-check, .format-size { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.format-check input { accent-color: #c6a96b; width: 17px; height: 17px; }
+.format-size { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.reader-toolbar .format-size .size-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; width: 100%; margin: 0; }
+.reader-toolbar .format-size .size-controls button { display: grid; place-items: center; min-height: 42px; padding: 10px 16px; font-size: 15px; }
+.reader-toolbar .format-size .size-controls > span { display: grid; place-items: center; font-size: 14px; padding: 0 12px; min-width: 62px; }
+.reader-toolbar .toolbar-menu > button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; }
+.reader-toolbar .toolbar-menu > button svg { display: block; flex-shrink: 0; width: 17px; height: 17px; margin: 0; }
+.format-font { display: grid; gap: 8px; }
+.format-font select { width: 100%; background: #141610; color: #eee9df; border: 1px solid #c6a96b45; border-radius: 4px; padding: 9px; }
+.reader-toolbar .export-panel { display: grid; gap: 5px; width: 230px; padding: 10px; }
+.reader-toolbar .export-panel button { text-align: left; width: 100%; padding: 12px; font-size: 13px; }
+.reader-toolbar button[aria-expanded="true"] { background: #c6a96b20; color: #ebd49d; }
+.pdf-save-dialog { max-width: min(500px, calc(100vw - 32px)); margin: auto; background: #20221d; color: #eee9df; border: 1px solid #c6a96b70; border-radius: 12px; padding: 28px; }
+.pdf-save-dialog::backdrop { background: #0009; }
+.pdf-save-dialog h2 { font-size: 25px; margin: 0 0 12px; }
+.pdf-save-dialog p { color: #bcbcaf; margin-bottom: 20px; }
+.pdf-save-dialog label { display: block; margin-bottom: 7px; }
+.pdf-save-dialog input { width: 100%; background: #111210; color: #eee9df; padding: 10px; border: 1px solid #c6a96b60; border-radius: 5px; }
+.pdf-save-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 22px; }
+.pdf-save-actions > * { padding: 9px 14px; border-radius: 5px; border: 1px solid #c6a96b60; }
+.pdf-save-actions a { background: #c6a96b; color: #171810; }
+
+/* Markdown headings use the edition's actual body ink, including parchment. */
+.story-document .message-prose :is(h1,h2,h3,h4,h5,h6) { color: inherit; }
+.story-document .message-prose :is(strong,b) { color: inherit; }
+.story-document.theme-manuscript { --ink: #30291f; }
+.theme-manuscript :is(.message-prose,.message-text) { font-family: "Fell English", Georgia, serif; }
+.theme-manuscript .message-prose > p:first-child::first-letter,
+.theme-decree .message-prose > p:first-child::first-letter {
+  border: 0;
+  outline: 0;
+  background: none;
+  box-shadow: none;
+  padding: 0 3px 0 0;
+}
+.story-document:not([data-font="default"]) :is(.message-prose,.message-text,.document-header h2,.message-prose table) { font-family: var(--reader-font); }
+.story-document .message-prose :is(h1,h2,h3,h4,h5,h6,em,i,strong,b,blockquote,del,a) { font-family: inherit; }
+.story-document .message-prose { font-synthesis: weight style; }
+.story-document .message-prose :is(strong,b) { font-weight: 700; }
+.story-document .message-prose :is(em,i) { font-style: italic; font-weight: inherit; }
+.story-document .message-prose del { text-decoration: line-through; }
+.story-document .message-prose ul { list-style-type: disc; }
+.story-document .message-prose ul ul { list-style-type: circle; }
+.story-document .message-prose ul ul ul { list-style-type: square; }
+.story-document .message-prose ol { list-style-type: decimal; }
+.story-document .message-prose ol ol { list-style-type: lower-alpha; }
+.story-document .message-prose li { display: list-item; }
+.story-document .message-prose li::marker { color: inherit; }
+.story-document .message-prose .contains-task-list { list-style: none; padding-left: 0; }
+.story-document .message-prose .task-list-item input { margin-right: 8px; accent-color: var(--accent); }
+.story-document .message-prose :is(code,pre) { font-family: Consolas, "Courier New", monospace; }
+.story-document .message-prose :not(pre) > code {
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  line-height: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  overflow-wrap: anywhere;
+}
+.story-document .message-prose pre code {
+  color: inherit;
+  font-size: 0.9em;
+  font-style: normal;
+}
+.story-document .message-prose th { font-weight: 700; text-align: left; }
+.story-document .message-text.ascii-art { font-family: Consolas, monospace; }
+@media (max-width: 540px) {
+  .reader-toolbar .copy-actions { gap: 6px; }
+  .toolbar-menu { position: static; }
+  .toolbar-panel { right: 0; top: calc(100% + 6px); width: min(280px, 100%); }
+}

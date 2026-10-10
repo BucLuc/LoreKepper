@@ -4,6 +4,8 @@ import "./globals.css";
 import "./historical.css";
 import "./editions.css";
 import "./refined-editions.css";
+import "./reader-controls.css";
+import "./captains-log.css";
 export const metadata: Metadata = {
   title: {
     default: "LoreKeeper — The Hall of Fame",

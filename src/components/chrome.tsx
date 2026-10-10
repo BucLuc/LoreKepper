@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "./icon";
+import { AccountMenu } from "./account-menu";
 export function Header() {
   return (
     <header className="site-header">
@@ -9,16 +10,13 @@ export function Header() {
         </span>
         <span>
           Lore<span className="brand-gold">Keeper</span>
-          <small>THE PRIVATE COLLECTION</small>
+          <small>THE PRIVATE ARCHIVES</small>
         </span>
       </Link>
       <nav aria-label="Main navigation">
-        <Link href="/#collection">Collection</Link>
+        <span className="nav-motto">MANY MINDS. ENDLESS LEGENDS.</span>
         <span className="nav-divider" />
-        <span className="nav-motto">TWO MINDS. ONE LEGEND.</span>
-        <span className="nav-star" aria-hidden="true">
-          ✦
-        </span>
+        <AccountMenu />
       </nav>
     </header>
   );

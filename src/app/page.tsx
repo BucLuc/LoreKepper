@@ -1,20 +1,4 @@
-import { Hall } from "@/components/hall";
-import { exhibits, archiveStats } from "@/lib/archive";
+import { ArchiveApp } from "@/components/archive-app";
 export default function Home() {
-  return (
-    <Hall
-      exhibits={exhibits.map((e) => ({
-        ...e,
-        messages: e.messages.map((m) => ({
-          id: m.id,
-          source: m.source,
-          author: m.author,
-          timestamp: m.timestamp,
-          content: m.content,
-          sourceFormat: m.sourceFormat,
-        })),
-      }))}
-      stats={archiveStats}
-    />
-  );
+  return <ArchiveApp />;
 }

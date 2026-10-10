@@ -70,10 +70,7 @@ button:disabled {
 }
 button:focus-visible,
 a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-summary:focus-visible,
-textarea:focus-visible {
+summary:focus-visible {
   outline: 2px solid var(--gold-bright);
   outline-offset: 5px;
 }

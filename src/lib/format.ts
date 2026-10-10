@@ -71,7 +71,7 @@ export function storyText(entry: Entry, withAttribution = false) {
   return entry.messages
     .map((m) =>
       withAttribution
-        ? `${authorName(m.author)} · ${dateLabel(m.timestamp)} · ${displayTime(m.timestamp)}\n\n${m.content}`
+        ? `${m.userId ? m.author : authorName(m.author)} · ${dateLabel(m.timestamp)} · ${displayTime(m.timestamp)}\n\n${m.content}`
         : m.content,
     )
     .join("\n\n────────────────────────────\n\n");

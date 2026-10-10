@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import source from "../data/data.json";
-import { exhibits, archiveStats } from "../src/lib/archive";
+import { prepareEntries, statsFor } from "../src/lib/archive";
+const exhibits = prepareEntries(source.entries);
+const archiveStats = statsFor(exhibits);
 import {
   authorName,
   dateLabel,

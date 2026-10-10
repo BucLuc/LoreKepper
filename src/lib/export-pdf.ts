@@ -1,3 +1,4 @@
+import { exportFilename } from "./export-name";
 // Render one page at a time to avoid browser canvas limits on long stories.
 async function withStoryClone<T>(
   element: HTMLElement,
@@ -113,8 +114,7 @@ export async function exportStoryImage(element: HTMLElement) {
 }
 
 export function storyPdfFilename(title: string, edition: string) {
-  const filename = title.replace(/[<>:"/\\|?*\x00-\x1f]/g, "").trim().slice(0, 100) || "LoreKeeper";
-  return `${filename} — ${edition}.pdf`;
+  return exportFilename(title,"pdf",edition);
 }
 
 export async function createStoryPdf(pages: StoryPage[], title: string, edition: string) {

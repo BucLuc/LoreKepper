@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Header, Footer } from "@/components/chrome";
+import { ArchiveSkeleton } from "@/components/vault-ui";
 import "./globals.css";
+import "./vault.css";
 import "./historical.css";
 import "./editions.css";
 import "./refined-editions.css";
@@ -12,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s · LoreKeeper",
   },
   description:
-    "A monument to questionable wisdom. The legendary messages of Luc and Liri, preserved in unnecessary glory.",
+    "A monument to questionable wisdom. Your shared chronicles, preserved in unnecessary glory.",
   robots: { index: false, follow: false },
 };
 export default function RootLayout({
@@ -27,7 +30,7 @@ export default function RootLayout({
           Skip to content
         </a>
         <Header />
-        {children}
+        <Suspense fallback={<ArchiveSkeleton />}>{children}</Suspense>
         <Footer />
       </body>
     </html>

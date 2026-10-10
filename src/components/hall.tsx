@@ -2,13 +2,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Exhibit, archiveStats } from "@/lib/archive";
+import type { Exhibit, statsFor } from "@/lib/archive";
 import { Icon } from "./icon";
 import { matchesStory } from "@/lib/search";
 const symbols = ["✦", "❧", "⚜", "✧", "☷", "※"];
 function EntryCard({ entry, index }: { entry: Exhibit; index: number }) {
   return (
-    <Link
+    <article className="v-exhibit-wrapper"><Link
       href={`/stories/${entry.id}`}
       prefetch={false}
       className="exhibit-card"
@@ -53,15 +53,19 @@ function EntryCard({ entry, index }: { entry: Exhibit; index: number }) {
         </span>
         <Icon name="arrow" />
       </div>
-    </Link>
+    </Link></article>
   );
 }
 export function Hall({
   exhibits,
   stats,
+  collectionName,
+  collectionActions,
 }: {
+  collectionName?: string;
+  collectionActions?: React.ReactNode;
   exhibits: Exhibit[];
-  stats: typeof archiveStats;
+  stats: ReturnType<typeof statsFor>;
 }) {
   const [query, setQuery] = useState("");
   const [author, setAuthor] = useState("");
@@ -109,10 +113,7 @@ export function Hall({
                 : b.time - a.time,
       );
   }, [exhibits, query, author, source, kind, sort]);
-  const featured =
-    exhibits.find((e) => e.title === "The Legend of Liridon, Beast of BKW") ??
-    exhibits.find((e) => e.score === 10) ??
-    exhibits[0];
+  const featured = exhibits.find((e) => e.score === 10) ?? exhibits[0];
   const pages = Math.ceil(matching.length / pageSize);
   const current = Math.min(page, Math.max(1, pages));
   const visible = matching.slice((current - 1) * pageSize, current * pageSize);
@@ -148,16 +149,24 @@ export function Hall({
           <div className="hero-rays" />
         </div>
         <div className="eyebrow hero-eyebrow">
-          <span /> THE CHRONICLES OF LUC & LIRI <span />
+          <span /> THE IMMORTAL CHRONICLES <span />
         </div>
         <div className="hero-crest" aria-hidden="true">
           <span>❧</span>
           <Icon name="crown" width="46" height="46" />
           <span>❧</span>
         </div>
-        <p className="hero-kicker">WELCOME TO THE</p>
-        <h1>
-          Hall of <em>Fame.</em>
+        <p className="hero-kicker">
+          {collectionName ? "YOUR PRIVATE HALL OF FAME" : "WELCOME TO THE"}
+        </p>
+        <h1 className={collectionName ? "collection-hero-title" : undefined}>
+          {collectionName ? (
+            <em>{collectionName}</em>
+          ) : (
+            <>
+              Hall of <em>Fame.</em>
+            </>
+          )}
         </h1>
         <div className="hero-ornament" aria-hidden="true">
           <span />✦<span />
@@ -196,7 +205,12 @@ export function Hall({
           </div>
         </div>
         <span className="hero-side-note">
-          A PRIVATE ARCHIVE · {stats.years[0]}—{stats.years.at(-1)}
+          A PRIVATE ARCHIVE{" "}
+          {stats.years.length > 0 && (
+            <>
+              · {stats.years[0]}—{stats.years.at(-1)}
+            </>
+          )}
         </span>
       </section>
       <div className="content-wrap">
@@ -238,11 +252,7 @@ export function Hall({
                 Immortalised. <em>For better or worse.</em>
               </h2>
             </div>
-            <p>
-              An archive of accidental brilliance,
-              <br />
-              elaborate nonsense, and impeccable timing.
-            </p>
+            {collectionActions}
           </div>
           <div className="collection-toolbar">
             <label className="search">
@@ -393,7 +403,7 @@ export function Hall({
         <section className="closing">
           <span aria-hidden="true">❧ ✦ ❧</span>
           <p>
-            Two friends. Countless questionable words.
+            Many minds. Countless questionable words.
             <br />
             <em>One unnecessarily glorious archive.</em>
           </p>

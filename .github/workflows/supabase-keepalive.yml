@@ -1,0 +1,28 @@
+
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Every 6 hours (UTC)
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Query Supabase database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --get \
+            "$SUPABASE_URL/rest/v1/keepalive" \
+            --data-urlencode "select=id,message" \
+            --data-urlencode "limit=1" \
+            -H "apikey: $SUPABASE_KEY"
+
+
+          echo "Supabase query successful!"

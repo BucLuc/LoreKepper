@@ -14,6 +14,11 @@ import { readerFonts } from "@/lib/reader-fonts";
 import { storyPdfFilename } from "@/lib/export-pdf";
 import type { Exhibit, Message } from "@/lib/archive";
 import { authorName, dateLabel, displayTime, storyText } from "@/lib/format";
+import { Feedback } from "./feedback";
+import { Modal } from "./vault-ui";
+import { ExportOptions } from "./export-options";
+import { exportFilename } from "@/lib/export-name";
+import { api } from "@/lib/supabase";
 import { Icon } from "./icon";
 import { HistoricalDecorations, RoyalCrest } from "./historical-art";
 import { EpicSigil } from "./epic-sigil";
@@ -131,7 +136,15 @@ const editionGroups = [
   { name: "Basic", ids: ["light", "dark"] },
   {
     name: "Legend & History",
-    ids: ["glorious", "manuscript", "scroll", "decree", "poetry", "prophecy", "captain"],
+    ids: [
+      "glorious",
+      "manuscript",
+      "scroll",
+      "decree",
+      "poetry",
+      "prophecy",
+      "captain",
+    ],
   },
   { name: "Artifacts & Places", ids: ["museum", "tavern", "wanted", "card"] },
   {
@@ -162,8 +175,17 @@ function subscribeToPreferences(callback: () => void) {
     window.removeEventListener("lorekeeper-preferences", callback);
   };
 }
-function MessageBody({ message, plain, showEmojis }: { message: Message; plain: boolean; showEmojis: boolean }) {
-  const displayText = (text: string) => showEmojis ? text : withoutEmojis(text);
+function MessageBody({
+  message,
+  plain,
+  showEmojis,
+}: {
+  message: Message;
+  plain: boolean;
+  showEmojis: boolean;
+}) {
+  const displayText = (text: string) =>
+    showEmojis ? text : withoutEmojis(text);
   const looksLikeArt =
     /[╔╗╚╝║═┌┐└┘│─]/.test(message.content) ||
     message.content.split("\n").filter((l) => /^\s{4,}[^\w\s]{2,}/.test(l))
@@ -195,9 +217,17 @@ function MessageBody({ message, plain, showEmojis }: { message: Message; plain: 
 export function Reader({
   entry,
   previous,
+  collectionId,
+  collectionName,
   next,
+  favoriteControl,
+  titleActions,
 }: {
   entry: Exhibit;
+  collectionId?: string;
+  collectionName?: string;
+  favoriteControl?: React.ReactNode;
+  titleActions?: React.ReactNode;
   previous: { id: string; title: string } | null;
   next: { id: string; title: string } | null;
 }) {
@@ -221,25 +251,41 @@ export function Reader({
           : 18,
         plain: value.plain === true,
         showEmojis: value.showEmojis !== false,
-        fonts: value.fonts && typeof value.fonts === "object" ? value.fonts as Record<string, string> : {},
+        fonts:
+          value.fonts && typeof value.fonts === "object"
+            ? (value.fonts as Record<string, string>)
+            : {},
       };
     } catch {
-      return { style: "glorious", size: 18, plain: false, showEmojis: true, fonts: {} as Record<string, string> };
+      return {
+        style: "glorious",
+        size: 18,
+        plain: false,
+        showEmojis: true,
+        fonts: {} as Record<string, string>,
+      };
     }
   }, [saved]);
   const [override, setOverride] = useState<typeof stored | null>(null);
   const { style, size, plain, showEmojis, fonts } = override ?? stored;
   const fontOptions = readerFonts(style);
-  const selectedFont = fontOptions.find(font => font.id === fonts[style]) ?? fontOptions[0];
+  const selectedFont =
+    fontOptions.find((font) => font.id === fonts[style]) ?? fontOptions[0];
   const [openMenu, setOpenMenu] = useState<"format" | "export" | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [copyingImage, setCopyingImage] = useState(false);
   const [imageDownload, setImageDownload] = useState<string | null>(null);
-  useEffect(() => () => { if (imageDownload) URL.revokeObjectURL(imageDownload); }, [imageDownload]);
+  useEffect(
+    () => () => {
+      if (imageDownload) URL.revokeObjectURL(imageDownload);
+    },
+    [imageDownload],
+  );
   useEffect(() => {
     if (!openMenu) return;
     const closeOutside = (event: PointerEvent) => {
-      if (!toolbarRef.current?.contains(event.target as Node)) setOpenMenu(null);
+      if (!toolbarRef.current?.contains(event.target as Node))
+        setOpenMenu(null);
     };
     const closeEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpenMenu(null);
@@ -259,6 +305,9 @@ export function Reader({
   )!.name;
   const openGroup = expandedGroup === undefined ? activeGroup : expandedGroup;
   const [copyStatus, setCopyStatus] = useState("");
+  const [exportOpen,setExportOpen]=useState(false);
+  const [exportFormat,setExportFormat]=useState("pdf");
+  const [textDownload,setTextDownload]=useState<{url:string;name:string}|null>(null);
   const [fallback, setFallback] = useState<string | null>(null);
   const [maximized, setMaximized] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -289,18 +338,37 @@ export function Reader({
     if (!documentRef.current || exporting) return;
     setExporting(true);
     setPdfDownload(null);
-    setCopyStatus("Choose where to save your PDF…");
+    setCopyStatus("Preparing your export…");
     try {
       const pickerWindow = window as typeof window & {
-        showSaveFilePicker?: (options: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<{ createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }> }>;
+        showSaveFilePicker?: (options: {
+          suggestedName: string;
+          types: { description: string; accept: Record<string, string[]> }[];
+        }) => Promise<{
+          createWritable: () => Promise<{
+            write: (data: Blob) => Promise<void>;
+            close: () => Promise<void>;
+          }>;
+        }>;
       };
-      const handle = pickerWindow.showSaveFilePicker ? await pickerWindow.showSaveFilePicker({
-        suggestedName: storyPdfFilename(entry.title, theme.name),
-        types: [{ description: "PDF document", accept: { "application/pdf": [".pdf"] } }],
-      }) : null;
+      const handle = pickerWindow.showSaveFilePicker
+        ? await pickerWindow.showSaveFilePicker({
+            suggestedName: storyPdfFilename(entry.title, theme.name),
+            types: [
+              {
+                description: "PDF document",
+                accept: { "application/pdf": [".pdf"] },
+              },
+            ],
+          })
+        : null;
       setCopyStatus("Preparing your PDF…");
       const { exportStoryPdf } = await import("@/lib/export-pdf");
-      const download = await exportStoryPdf(documentRef.current, entry.title, theme.name);
+      const download = await exportStoryPdf(
+        documentRef.current,
+        entry.title,
+        theme.name,
+      );
       if (handle) {
         const writable = await handle.createWritable();
         await writable.write(download.blob);
@@ -308,30 +376,58 @@ export function Reader({
         setCopyStatus("PDF saved.");
       } else {
         setPdfDownload(download);
-        setCopyStatus("Your browser does not support Save As. Your PDF is ready below.");
+        setCopyStatus(
+          "Your browser does not support Save As. Your PDF is ready below.",
+        );
       }
     } catch (error) {
-      setCopyStatus(error instanceof DOMException && error.name === "AbortError" ? "PDF export cancelled." : "PDF export failed. Please try again.");
+      setCopyStatus(
+        error instanceof DOMException && error.name === "AbortError"
+          ? "PDF export cancelled."
+          : "PDF export failed. Please try again.",
+      );
     } finally {
       setExporting(false);
     }
   }
+  async function exportText() {
+    if(!collectionId || exporting)return;
+    setExporting(true);setTextDownload(null);
+    try {
+      const filename=exportFilename(entry.title,exportFormat);
+      const picker=(window as typeof window & {showSaveFilePicker?: (opts:unknown)=>Promise<{createWritable:()=>Promise<{write:(blob:Blob)=>Promise<void>;close:()=>Promise<void>}>}>}).showSaveFilePicker;
+      const handle=picker ? await picker.call(window,{suggestedName:filename,types:[{description:exportFormat==="json"?"JSON archive":"Markdown document",accept:{[exportFormat==="json"?"application/json":"text/markdown"]:["."+exportFormat]}}]}) : null;
+      const r=await api("export",{collection:collectionId,entry:entry.id,format:exportFormat});
+      const blob=new Blob([r.content],{type:exportFormat==="json"?"application/json":"text/markdown"});
+      if(handle){const w=await handle.createWritable();await w.write(blob);await w.close();setExportOpen(false);setCopyStatus("Story saved.");}
+      else setTextDownload({url:URL.createObjectURL(blob),name:filename});
+    }catch(error){setCopyStatus(error instanceof DOMException && error.name==="AbortError" ? "Export cancelled." : "Export failed. Please try again.");}
+    finally{setExporting(false);}
+  }
+  useEffect(()=>()=>{if(textDownload)URL.revokeObjectURL(textDownload.url);},[textDownload]);
   async function copyImage() {
     if (!documentRef.current || copyingImage) return;
     const element = documentRef.current;
     setCopyingImage(true);
     setImageDownload(null);
     setCopyStatus("Preparing image…");
-    const rendering = import("@/lib/export-pdf").then(module => module.exportStoryImage(element)).then(result => result.blob);
+    const rendering = import("@/lib/export-pdf")
+      .then((module) => module.exportStoryImage(element))
+      .then((result) => result.blob);
     try {
-      if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") throw new Error("Image clipboard unavailable");
+      if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined")
+        throw new Error("Image clipboard unavailable");
       // Register the promise while the click still provides user activation.
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": rendering })]);
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": rendering }),
+      ]);
       setCopyStatus("Entry copied as an image.");
     } catch {
       try {
         setImageDownload(URL.createObjectURL(await rendering));
-        setCopyStatus("Your browser could not copy the image. Download it below instead.");
+        setCopyStatus(
+          "Your browser could not copy the image. Download it below instead.",
+        );
       } catch {
         setCopyStatus("Image rendering failed. Please try again.");
       }
@@ -339,10 +435,22 @@ export function Reader({
       setCopyingImage(false);
     }
   }
-  function preferences(newStyle: string, newSize = size, newPlain = plain, newShowEmojis = showEmojis, newFonts = fonts) {
+  function preferences(
+    newStyle: string,
+    newSize = size,
+    newPlain = plain,
+    newShowEmojis = showEmojis,
+    newFonts = fonts,
+  ) {
     setPdfDownload(null);
     setImageDownload(null);
-    const value = { style: newStyle, size: newSize, plain: newPlain, showEmojis: newShowEmojis, fonts: newFonts };
+    const value = {
+      style: newStyle,
+      size: newSize,
+      plain: newPlain,
+      showEmojis: newShowEmojis,
+      fonts: newFonts,
+    };
     setOverride(value);
     try {
       localStorage.setItem("lorekeeper-reader", JSON.stringify(value));
@@ -398,11 +506,17 @@ export function Reader({
     >
       <header className="reader-heading">
         <nav className="eyebrow entry-breadcrumb" aria-label="Breadcrumb">
-          <Link href="/#collection">THE COLLECTION</Link>
+          <Link
+            href={
+              collectionId ? `/collections/${collectionId}#collection` : "/"
+            }
+          >
+            {collectionName || "THE COLLECTION"}
+          </Link>
           <span aria-hidden="true">/</span>
           <span aria-current="page">EXHIBIT {reference}</span>
         </nav>
-        <h1>{entry.title}</h1>
+        <div className="v-reader-title"><h1>{entry.title}</h1>{titleActions}</div>
         <div className="reader-meta">
           <span className="avatar-pair">
             {entry.authors.map((a) => (
@@ -418,9 +532,13 @@ export function Reader({
           <span>{entry.minutes} min read</span>
           <span>·</span>
           <span>
-            {entry.source === "whatsapp" ? "WhatsApp" : "Microsoft Teams"}
+            {entry.source === "whatsapp"
+              ? "WhatsApp"
+              : entry.source === "teams"
+                ? "Microsoft Teams"
+                : entry.source}
           </span>
-          <span className="reader-rating">✦ {entry.score.toFixed(1)} / 10</span>
+          {favoriteControl}
         </div>
       </header>
       <div className="reader-layout">
@@ -488,17 +606,32 @@ export function Reader({
           <div className="recommended">
             <span className="eyebrow">CURATOR’S SUGGESTION</span>
             <button onClick={() => preferences(recommended.id)}>
-              <EditionMark id={recommended.id} mark={recommended.mark} /> {recommended.name} <span>↗</span>
+              <EditionMark id={recommended.id} mark={recommended.mark} />{" "}
+              {recommended.name} <span>↗</span>
             </button>
           </div>
         </aside>
         <div className="reader-main">
           <div className="reader-toolbar" ref={toolbarRef}>
             <div>
-              <span aria-hidden="true"><EditionMark id={theme.id} mark={theme.mark} /></span> {theme.name}
+              <span aria-hidden="true">
+                <EditionMark id={theme.id} mark={theme.mark} />
+              </span>{" "}
+              {theme.name}
             </div>
             <div className="copy-actions">
-              {maximized && <Link href="/#collection" className="maximized-hall-link">← Back to the Hall</Link>}
+              {maximized && (
+                <Link
+                  href={
+                    collectionId
+                      ? `/collections/${collectionId}#collection`
+                      : "/"
+                  }
+                  className="maximized-hall-link"
+                >
+                  ← Back to the Hall
+                </Link>
+              )}
               <button
                 ref={maximizeRef}
                 onClick={() => setMaximized((value) => !value)}
@@ -507,41 +640,95 @@ export function Reader({
                 {maximized ? "↙ Restore" : "↗ Maximize"}
               </button>
               <div className="toolbar-menu">
-                <button aria-expanded={openMenu === "format"} aria-controls="format-panel"
-                  onClick={() => setOpenMenu(openMenu === "format" ? null : "format")}><Icon name="format" />Format</button>
-                {openMenu === "format" && <div id="format-panel" className="toolbar-panel" role="group" aria-label="Formatting options">
-                  <label className="format-check"><span>Show emojis</span><input type="checkbox" checked={showEmojis} onChange={e => preferences(style, size, plain, e.target.checked)} /></label>
-                  <label className="format-check"><span>Show formatted text</span><input type="checkbox" checked={!plain} onChange={e => preferences(style, size, !e.target.checked)} /></label>
-                  <div className="format-size"><span>Font size</span><div className="size-controls">
-                    <button aria-label="Decrease text size" disabled={size === 16} onClick={() => preferences(style, size - 2)}>A−</button>
-                    <span>{size}px</span>
-                    <button aria-label="Increase text size" disabled={size === 22} onClick={() => preferences(style, size + 2)}>A+</button>
-                  </div></div>
-                  <label className="format-font" htmlFor="reader-font">Font
-                    <select id="reader-font" value={selectedFont.id} onChange={e => preferences(style, size, plain, showEmojis, { ...fonts, [style]: e.target.value })}>
-                      {fontOptions.map(font => <option key={font.id} value={font.id}>{font.name}</option>)}
-                    </select>
-                  </label>
-                </div>}
+                <button
+                  aria-expanded={openMenu === "format"}
+                  aria-controls="format-panel"
+                  onClick={() =>
+                    setOpenMenu(openMenu === "format" ? null : "format")
+                  }
+                >
+                  <Icon name="format" />
+                  Format
+                </button>
+                {openMenu === "format" && (
+                  <div
+                    id="format-panel"
+                    className="toolbar-panel"
+                    role="group"
+                    aria-label="Formatting options"
+                  >
+                    <label className="format-check">
+                      <span>Show emojis</span>
+                      <input
+                        type="checkbox"
+                        checked={showEmojis}
+                        onChange={(e) =>
+                          preferences(style, size, plain, e.target.checked)
+                        }
+                      />
+                    </label>
+                    <label className="format-check">
+                      <span>Show formatted text</span>
+                      <input
+                        type="checkbox"
+                        checked={!plain}
+                        onChange={(e) =>
+                          preferences(style, size, !e.target.checked)
+                        }
+                      />
+                    </label>
+                    <div className="format-size">
+                      <span>Font size</span>
+                      <div className="size-controls">
+                        <button
+                          aria-label="Decrease text size"
+                          disabled={size === 16}
+                          onClick={() => preferences(style, size - 2)}
+                        >
+                          A−
+                        </button>
+                        <span>{size}px</span>
+                        <button
+                          aria-label="Increase text size"
+                          disabled={size === 22}
+                          onClick={() => preferences(style, size + 2)}
+                        >
+                          A+
+                        </button>
+                      </div>
+                    </div>
+                    <label className="format-font" htmlFor="reader-font">
+                      Font
+                      <select
+                        id="reader-font"
+                        value={selectedFont.id}
+                        onChange={(e) =>
+                          preferences(style, size, plain, showEmojis, {
+                            ...fonts,
+                            [style]: e.target.value,
+                          })
+                        }
+                      >
+                        {fontOptions.map((font) => (
+                          <option key={font.id} value={font.id}>
+                            {font.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                )}
               </div>
-              <div className="toolbar-menu">
-                <button aria-expanded={openMenu === "export"} aria-controls="export-panel"
-                  onClick={() => setOpenMenu(openMenu === "export" ? null : "export")}><Icon name="export" />Export</button>
-                {openMenu === "export" && <div id="export-panel" className="toolbar-panel export-panel" role="group" aria-label="Export options">
-                  <button onClick={() => { void copy(); setOpenMenu(null); }}><Icon name="copy" /> Copy Text</button>
-                  <button onClick={() => { void copyImage(); setOpenMenu(null); }} disabled={copyingImage} aria-busy={copyingImage}>{copyingImage ? "Preparing image…" : "Copy Image"}</button>
-                  {entry.messages.length > 1 && <button onClick={() => { void copy(true); setOpenMenu(null); }}>Copy transcript</button>}
-                  <button onClick={() => { void exportPdf(); setOpenMenu(null); }} disabled={exporting} aria-busy={exporting}>{exporting ? "Preparing PDF…" : "Export as PDF"}</button>
-                  <button onClick={() => { void shareLink(); setOpenMenu(null); }}>Share · Copy link</button>
-                </div>}
-              </div>
+              <div className="toolbar-menu"><button onClick={()=>{setOpenMenu(null);setExportOpen(true);setPdfDownload(null);setTextDownload(null);}}><Icon name="export"/>Export</button></div>
             </div>
           </div>
-          <div className="copy-status" role="status">
-            {copyStatus || theme.description}
-            {pdfDownload && <a className="pdf-download" href={pdfDownload.url} download={pdfDownload.filename}>Download PDF</a>}
-            {imageDownload && <a className="pdf-download" href={imageDownload} download={`${entry.id} — ${theme.name}.png`}>Download image</a>}
-          </div>
+          {copyStatus ? <Feedback onDismiss={()=>{setCopyStatus("");setImageDownload(null);}}>{copyStatus}{imageDownload && <a className="pdf-download" href={imageDownload} download={exportFilename(entry.title,"png",theme.name)}>Save image</a>}</Feedback> : <p className="copy-status">{theme.description}</p>}
+          <Modal open={exportOpen} title="Take the legend with you" onClose={()=>{if(!exporting)setExportOpen(false);}}>
+            <p className="v-muted">Choose your edition. This story is included.</p>
+            {copyStatus && <Feedback onDismiss={()=>setCopyStatus("")}>{copyStatus}</Feedback>}
+            <ExportOptions formats={collectionId?["pdf","json","md"]:["pdf"]} format={exportFormat} onFormat={f=>{setExportFormat(f);setPdfDownload(null);setTextDownload(null);}} busy={exporting} onExport={()=>void (exportFormat==="pdf"?exportPdf():exportText())} onCancel={()=>setExportOpen(false)} download={exportFormat==="pdf"&&pdfDownload?{url:pdfDownload.url,name:pdfDownload.filename}:textDownload}/>
+            <div className="v-export-extras"><button className="v-button" onClick={()=>void copy()}><Icon name="copy"/>Copy text</button><button className="v-button" onClick={()=>void copyImage()} disabled={copyingImage}>{copyingImage?"Preparing image…":"Copy image"}</button>{entry.messages.length>1 && <button className="v-button" onClick={()=>void copy(true)}>Copy transcript</button>}<button className="v-button" onClick={()=>void shareLink()}><Icon name="link"/>Copy link</button></div>
+          </Modal>
           {fallback !== null && (
             <div className="copy-fallback">
               <label htmlFor="manual-copy">Copy manually (Ctrl+C)</label>
@@ -570,14 +757,21 @@ export function Reader({
             <article
               className={`story-document theme-${style} ${plain ? "plain-mode" : ""}`}
               data-font={selectedFont.id}
-              style={{ "--reading-size": `${size}px`, "--reader-font": selectedFont.family || undefined } as React.CSSProperties}
+              style={
+                {
+                  "--reading-size": `${size}px`,
+                  "--reader-font": selectedFont.family || undefined,
+                } as React.CSSProperties
+              }
             >
               {["manuscript", "decree"].includes(style) && (
                 <HistoricalDecorations kind={style} number={entry.number} />
               )}
               <div className="document-header">
                 <span className="document-ornament" aria-hidden="true">
-                  {style === "captain" ? <PirateCrest /> : style === "decree" ? (
+                  {style === "captain" ? (
+                    <PirateCrest />
+                  ) : style === "decree" ? (
                     <RoyalCrest />
                   ) : ["glorious", "prophecy", "poetry"].includes(style) ? (
                     <EpicSigil
@@ -659,27 +853,43 @@ export function Reader({
                 date={entry.date}
                 score={entry.score}
               />
-              {style === "captain" && <><div className="captain-register"><span>SHIP’S JOURNAL · No. {reference}</span><span>{entry.date}</span><span>VESSEL: THE LOREKEEPER</span></div><div className="captain-chart" aria-hidden="true"><CompassRose /></div></>}
+              {style === "captain" && (
+                <>
+                  <div className="captain-register">
+                    <span>SHIP’S JOURNAL · No. {reference}</span>
+                    <span>{entry.date}</span>
+                    <span>VESSEL: THE LOREKEEPER</span>
+                  </div>
+                  <div className="captain-chart" aria-hidden="true">
+                    <CompassRose />
+                  </div>
+                </>
+              )}
               <div className="document-body">
                 {entry.messages.map((message, index) => (
                   <section
                     key={message.id}
-                    className={`story-message ${authorName(message.author) === "Liri" ? "by-liri" : "by-luc"}`}
+                    className={`story-message ${(message.userId ? message.author : authorName(message.author)) === "Liri" ? "by-liri" : "by-luc"}`}
                   >
                     <EditionMessageLabel style={style} index={index} />
-                    {style === "captain" && <div className="captain-entry-label"><Icon name="anchor" /> LOG ENTRY {String(index + 1).padStart(2, "0")}</div>}
-                    <div className="message-attribution">
+                    {style === "captain" && (
+                      <div className="captain-entry-label">
+                        <Icon name="anchor" /> LOG ENTRY{" "}
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
+                    )}
+                    {entry.messages.length > 1 && <div className="message-attribution">
                       {style === "card" && (
                         <span
                           className="collectible-portrait"
                           aria-hidden="true"
                         >
-                          {authorName(message.author)[0]}
+                          {(message.userId ? message.author : authorName(message.author))[0]}
                         </span>
                       )}
                       {style === "social" && (
                         <span className="social-avatar" aria-hidden="true">
-                          {authorName(message.author)[0]}
+                          {(message.userId ? message.author : authorName(message.author))[0]}
                         </span>
                       )}
                       {style === "screenplay" && (
@@ -693,7 +903,7 @@ export function Reader({
                           : style === "terminal"
                             ? "> "
                             : ""}
-                        {authorName(message.author)}
+                        {(message.userId ? message.author : authorName(message.author))}
                       </span>
                       <span className="message-timestamp">
                         {dateLabel(message.timestamp)} ·{" "}
@@ -704,8 +914,12 @@ export function Reader({
                           EXHIBIT {reference}.{index + 1}
                         </span>
                       )}
-                    </div>
-                    <MessageBody message={message} plain={plain} showEmojis={showEmojis} />
+                    </div>}
+                    <MessageBody
+                      message={message}
+                      plain={plain}
+                      showEmojis={showEmojis}
+                    />
                     {style === "social" && (
                       <div className="social-post-footer">
                         <span>♡ Preserved</span>
@@ -728,24 +942,28 @@ export function Reader({
               <div className="document-footer">
                 <EditionEnd style={style} />
                 <span aria-hidden="true">
-                  {style === "captain" ? <Icon name="anchor" /> : style === "decree"
-                    ? "♛"
-                    : style === "terminal"
-                      ? "EOF"
-                      : "✦"}
+                  {style === "captain" ? (
+                    <Icon name="anchor" />
+                  ) : style === "decree" ? (
+                    "♛"
+                  ) : style === "terminal" ? (
+                    "EOF"
+                  ) : (
+                    "✦"
+                  )}
                 </span>
                 <small>
                   {style === "captain"
                     ? "LOG CLOSED. MAY THE TALE OUTLIVE THE TIDE."
                     : style === "screenplay"
-                    ? "FADE OUT. THE NONSENSE ENDURES."
-                    : style === "incident"
-                      ? "END OF REPORT · NO FURTHER ACTION TAKEN"
-                      : style === "dossier"
-                        ? "DOCUMENT ENDS · RETURN TO ARCHIVE"
-                        : style === "decree"
-                          ? "SO RECORDED. SO IMMORTALISED."
-                          : "HERE ENDS THE RECORD. THE LEGEND CONTINUES."}
+                      ? "FADE OUT. THE NONSENSE ENDURES."
+                      : style === "incident"
+                        ? "END OF REPORT · NO FURTHER ACTION TAKEN"
+                        : style === "dossier"
+                          ? "DOCUMENT ENDS · RETURN TO ARCHIVE"
+                          : style === "decree"
+                            ? "SO RECORDED. SO IMMORTALISED."
+                            : "HERE ENDS THE RECORD. THE LEGEND CONTINUES."}
                 </small>
               </div>
             </article>

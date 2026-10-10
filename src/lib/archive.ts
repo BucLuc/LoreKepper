@@ -1,11 +1,13 @@
 import { authorName, parseTimestamp, dateLabel } from "./format";
-import archive from "../../data/data.json";
-import TurndownService from "turndown";
+
+import { clipboardMarkdown } from "./markdown-editor";
 
 export type Message = {
   id: string;
   source: string;
   author: string;
+  userId?: string;
+  fallbackAuthor?: string;
   timestamp: string;
   content: string;
   original?: string;
@@ -20,6 +22,8 @@ export type Entry = {
   reason: string;
   source: string;
   messages: Message[];
+  author?: string;
+  authorUserId?: string;
 };
 export type Exhibit = Entry & {
   number: number;
@@ -58,25 +62,19 @@ export function classify(entry: Entry) {
     return { category: "Technical tragedies", recommended: "terminal" };
   return { category: "Uncategorised genius", recommended: "glorious" };
 }
-const htmlToMarkdown = new TurndownService({
-  headingStyle: "atx",
-  bulletListMarker: "-",
-  codeBlockStyle: "fenced",
-});
-htmlToMarkdown.remove(["script", "style", "iframe", "img"]);
-export const exhibits: Exhibit[] = (archive.entries as Entry[]).map(
-  (entry, index) => {
+export function prepareEntries(entries: Entry[]): Exhibit[] {
+  return entries.map((entry, index) => {
     const messages = entry.messages.map((message) => {
       const isHtmlContent =
-        /<(?:p|div|ul|ol|li|br|strong|span|table|blockquote|h[1-6])(?:\s|>)/i.test(
+        message.sourceFormat !== "markdown" && /<(?:p|div|ul|ol|li|br|strong|b|em|i|s|del|code|pre|kbd|samp|span|table|blockquote|h[1-6])(?:\s|>)/i.test(
           message.content,
         );
       const content = isHtmlContent
-        ? htmlToMarkdown.turndown(message.content)
+        ? clipboardMarkdown(message.content)
         : message.content;
       const presentation =
         message.sourceFormat === "html" && message.original
-          ? htmlToMarkdown.turndown(message.original)
+          ? clipboardMarkdown(message.original)
           : content;
       return { ...message, content, presentation };
     });
@@ -88,7 +86,7 @@ export const exhibits: Exhibit[] = (archive.entries as Entry[]).map(
       ...entry,
       messages,
       number: index + 1,
-      authors: [...new Set(entry.messages.map((m) => authorName(m.author)))],
+      authors: [...new Set(entry.messages.map((m) => m.userId ? m.author : authorName(m.author)))],
       time,
       date: entry.messages.length
         ? dateLabel(entry.messages[0].timestamp)
@@ -100,13 +98,15 @@ export const exhibits: Exhibit[] = (archive.entries as Entry[]).map(
         .slice(0, 190),
       ...classify(entry),
     };
-  },
-);
-export const archiveStats = {
-  stories: exhibits.length,
-  messages: exhibits.reduce((n, e) => n + e.messages.length, 0),
-  authors: [...new Set(exhibits.flatMap((e) => e.authors))].sort(),
-  years: [
-    ...new Set(exhibits.map((e) => new Date(e.time).getUTCFullYear())),
-  ].sort(),
-};
+  });
+}
+export function statsFor(exhibits: Exhibit[]) {
+  return {
+    stories: exhibits.length,
+    messages: exhibits.reduce((n, e) => n + e.messages.length, 0),
+    authors: [...new Set(exhibits.flatMap((e) => e.authors))].sort(),
+    years: [
+      ...new Set(exhibits.map((e) => new Date(e.time).getUTCFullYear())),
+    ].sort(),
+  };
+}

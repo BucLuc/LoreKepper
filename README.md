@@ -1,15 +1,13 @@
 # LoreKeeper
 
-A deliberately glorious Hall of Fame for Luc and Liri’s messages. Built with Next.js App Router, React, TypeScript, and Tailwind CSS.
+A glorious private archive for shared chronicles, built with Next.js, React, TypeScript and Supabase.
 
-## Run locally
+Read **SUPABASE.md** for the database migration, environment variables, Auth settings and setup steps before running the app.
 
 ```powershell
 npm install
 npm run dev
 ```
-
-Open http://localhost:3000. Use `npm run dev -- --port 3001` if that port is occupied.
 
 ```powershell
 npm run lint
@@ -18,24 +16,12 @@ npm run build
 npm start
 ```
 
-The dev and build scripts use Webpack because Turbopack’s native Windows path resolution fails inside the Codex sandbox. The JavaScript config also avoids a separate native TypeScript config-transpilation step. The historical editions use locally hosted IM Fell English and UnifrakturMaguntia fonts under the SIL Open Font License (license files are in `public/fonts`). Modern editions keep their system fonts. The aged parchment texture and heraldic ornaments are local SVG assets; reading requires no external font or image requests.
+## Shared collections
 
-## The collection
+Guest and email/password users can create collections, join invitation links, write entries, and favorite stories. Collection creators can rename/delete collections, import original JSON, invite members, revoke invitations and associate author names with members. Profiles include credentials, guest upgrades, account deletion, authored/submitted entries and personal favorites. Every member can export collections as JSON without internal IDs or as Markdown.
 
-`data/data.json` is the source of truth. The app reads its `entries` array at build time, preserving stable entry IDs and every message in each conversation. Add entries there using the existing structure, then restart development or rebuild production. Original source data is never edited by the reader. There is no editor or database in this first version.
+Supabase is the source of truth. `data/data.json` remains an import fixture and regression-test source; pages no longer publish it at build time. Entire entry payloads are encrypted on the Next.js server before database writes, with RLS enforcing access. See SUPABASE.md for the security model and key handling.
 
-The hall provides full-text search, author/source/type filters, rating/date/title/length sorting, grid and list views, pagination, and a random-story button. `/` focuses search. Short and full Teams author names resolve to Luc and Liri. WhatsApp timestamps are interpreted in Europe/Zurich; Teams UTC timestamps are displayed in that zone.
+The original Hall design, search/filter/sort controls, grid/list views and reader editions are retained. Reader preferences remain browser-local. Markdown rendering, PDF/image downloads, source copying, maximized reading and previous/next navigation remain available. Historical fonts, parchment textures and ornaments are local assets. Font licenses are in `public/fonts`.
 
-Each story has a direct `/stories/<id>` URL and twenty-three editions, including: Glorious, Newspaper, Medieval Manuscript, Ancient Scroll, Royal Decree, Movie Screenplay, Social Media Post, Corporate Incident Report, Classified Dossier, Formal Letter, and Terminal Archive. These change presentation, not the words. Style suggestions are based on the entry title and conversation type.
-
-The reader supports adjustable text size, unformatted source text, copying the entire story, copying conversations with attribution, maximized reading (Escape to restore), downloading the selected edition as an A4 PDF, and previous/next navigation. Reader preferences persist locally in the browser. If clipboard access is unavailable, a selectable manual-copy box appears.
-
-Markdown is rendered safely. Teams HTML originals are converted to Markdown on the server; embedded scripts, styles, frames, and images are removed. One source entry contains HTML in its nominally plain-text content; that entry is also converted to readable text for search and copying. ASCII art retains monospace spacing and scrolls independently.
-
-## Access
-
-This version is a local archive without authentication. Search-engine indexing is disabled, but this is not access control. Add authentication before deploying the collection somewhere accessible to others.
-
-The twelve additional editions are Museum Exhibit, Court Transcript, Poetry, Tavern Noticeboard, Wanted Poster, Trading Card, Space Transmission, Prophecy, Academic Paper, Breaking News, Bug Report, and Album Lyrics. The selector groups all editions into five collapsible categories. Decorative labels describe the presentation; original message wording is preserved.
-
-
+The scripts use Webpack and keep production output separate from development. Authenticated data is fetched per session through an uncached API; prerendered shells contain no story data. Search-engine indexing remains disabled.

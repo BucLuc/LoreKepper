@@ -36,11 +36,11 @@ async function withStoryClone<T>(
     // Materialize the illuminated initial in this temporary export only.
     if (
       clone.querySelector(
-        ".theme-manuscript, .theme-scroll, .theme-decree, .theme-glorious",
+        ".theme-ancientcodex, .theme-manuscript, .theme-scroll, .theme-decree, .theme-glorious",
       )
     ) {
       clone
-        .querySelectorAll<HTMLElement>(".message-prose > p:first-child")
+        .querySelectorAll<HTMLElement>(".message-prose > p:first-child, :is(.theme-manuscript,.theme-ancientcodex) .edition-section > :is(h1,h2) + p, .theme-ancientcodex .edition-section > p:first-child")
         .forEach((paragraph) => {
           const walker = document.createTreeWalker(
             paragraph,
@@ -95,7 +95,7 @@ function backdrop(element: HTMLElement) {
   const article = element.querySelector(".story-document") ?? element;
   const color = getComputedStyle(article).backgroundColor;
   if (color !== "rgba(0, 0, 0, 0)") return color;
-  return article.matches(".theme-manuscript,.theme-scroll,.theme-decree,.theme-poetry,.theme-captain,.theme-tavern,.theme-wanted") ? "#d4c49d" : "#171c15";
+  return article.matches(".theme-manuscript,.theme-scroll,.theme-decree,.theme-poetry,.theme-captain,.theme-tavern,.theme-wanted,.theme-ancientcodex") ? "#d4c49d" : "#171c15";
 }
 
 async function captureStory(element: HTMLElement, y = 0, height = Math.ceil(element.getBoundingClientRect().height)) {

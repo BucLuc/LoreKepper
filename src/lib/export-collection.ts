@@ -1,11 +1,12 @@
 import type { Entry } from "./archive";
 export function collectionJson(entries: Entry[]) {
   return {
-    entries: entries.map((e) => ({
+    items: entries.map((e) => ({
       type: e.type,
       title: e.title,
       score: e.score,
-      reason: e.reason,
+      description: e.reason,
+      timestamp: e.messages[0]?.timestamp ?? "",
       source: e.source,
       messages: e.messages.map((m) => ({
         source: m.source,

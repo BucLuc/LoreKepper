@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { api, supabase } from "@/lib/supabase";
@@ -10,6 +10,7 @@ import { MarkdownEditor } from "./markdown-editor";
 import { Feedback } from "./feedback";
 import { EntryMenu } from "./entry-menu";
 import { ExportOptions } from "./export-options";
+import { CollectionPdfSettings } from "./collection-pdf-settings";
 import { exportFilename } from "@/lib/export-name";
 import { Hall } from "./hall";
 import { Reader } from "./reader";
@@ -75,7 +76,7 @@ export function ArchiveApp({
     [adminTab, setAdminTab] = useState("general"),
     [filter, setFilter] = useState(""),
     [query, setQuery] = useState(""),
-    [format, setFormat] = useState<"json" | "md">("json"),
+    [format, setFormat] = useState<"json" | "md" | "pdf">("json"),
     [download, setDownload] = useState<{ url: string; name: string } | null>(
       null,
     ),
@@ -84,6 +85,10 @@ export function ArchiveApp({
       archive: unknown;
       count: number;
     } | null>(null);
+  const [pdfEdition,setPdfEdition]=useState("ancientcodex"), [pdfFont,setPdfFont]=useState("default");
+  const [pdfProgress,setPdfProgress]=useState<{story:number;total:number;pages:number;label:string}|null>(null);
+  const pdfAbort=useRef<AbortController|null>(null);
+  useEffect(()=>()=>pdfAbort.current?.abort(),[]);
   async function load(u: User) {
     const home = await api("home");
     setCollections(home.collections);
@@ -332,6 +337,17 @@ export function ArchiveApp({
   async function exportCollection() {
     await run(async () => {
       if (!a) return;
+      if (format === "pdf") {
+        const controller=new AbortController();pdfAbort.current=controller;setPdfProgress({story:0,total:a.entries.length,pages:0,label:"Loading complete collection"});
+        try {
+          const latest=await api("collection",{collection:a.collection.id},controller.signal);
+          const {exportCollectionPdf}=await import("@/lib/export-collection-pdf");
+          const result=await exportCollectionPdf({name:latest.collection.name,entries:latest.entries,edition:pdfEdition,font:pdfFont,signal:controller.signal,onProgress:setPdfProgress});
+          setDownload({url:URL.createObjectURL(result.blob),name:result.filename});
+          setNotice(`Your collection PDF is ready: ${result.pages} A4 pages.`);
+        } finally {pdfAbort.current=null;setPdfProgress(null);}
+        return;
+      }
       const filename = exportFilename(a.collection.name, format);
       // Open the picker before the network request, preserving browser user activation.
       const picker = (window as SaveWindow).showSaveFilePicker;
@@ -541,7 +557,7 @@ export function ArchiveApp({
           </div>
         </form>
       )}
-      {modal === "export" && <><p className="v-muted">Choose your edition. The entire collection is included.</p><ExportOptions format={format} onFormat={f=>{setFormat(f as "json"|"md");setDownload(null);}} busy={busy} onExport={()=>void exportCollection()} onCancel={()=>setModal("")} download={download}/></>}
+      {modal === "export" && <><p className="v-muted">Export the entire collection.</p>{format === "pdf" && <CollectionPdfSettings edition={pdfEdition} font={pdfFont} onEdition={value=>{setPdfEdition(value);setPdfFont("default");setDownload(null);}} onFont={value=>{setPdfFont(value);setDownload(null);}} busy={busy}/>}<ExportOptions formats={["json","md","pdf"]} format={format} onFormat={f=>{setFormat(f as "json"|"md"|"pdf");setDownload(null);}} busy={busy} onExport={()=>void exportCollection()} onCancel={()=>setModal("")} download={download}/>{pdfProgress && <div className="pdf-export-progress" role="status" aria-live="polite"><progress max={Math.max(1,pdfProgress.total)} value={pdfProgress.story}/><p>{pdfProgress.story} / {pdfProgress.total} stories · {pdfProgress.pages} pages</p><p>{pdfProgress.label}</p><button className="v-button" type="button" onClick={()=>pdfAbort.current?.abort()}>Cancel PDF export</button></div>}</>}
       {modal === "credentials" && (
         <form
           onSubmit={submit(async () => {

@@ -1,0 +1,2906 @@
+/* One authoritative typography rule after all legacy edition skins. */
+.story-document[data-font] {
+  --artifact-rule: color-mix(in srgb, currentColor 25%, transparent);
+  font-optical-sizing: auto;
+}
+.story-document[data-font]
+  .document-body
+  :is(.message-prose, .message-text):not(.ascii-art),
+.story-document[data-font] .document-body .message-prose table {
+  font-family: var(--reader-font);
+  font-weight: 400;
+  font-style: normal;
+  font-size: var(--reading-size);
+}
+.story-document[data-font] .document-header h2 {
+  font-family: var(--edition-title-font, var(--reader-font));
+  overflow-wrap: break-word;
+}
+.story-document[data-font] .message-prose :is(h1, h2, h3, h4, h5, h6) {
+  font-family: inherit;
+}
+.story-document[data-font] .message-text.ascii-art {
+  font-family: "LK IBM Plex Mono", monospace;
+}
+.story-document[data-font] .document-body {
+  min-width: 0;
+}
+.story-document[data-font] :is(.document-meta, .document-label) {
+  font-size: 10px;
+}
+.artifact-running-head {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 12px 0;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--artifact-rule);
+  font:
+    10px/1.5 "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.12em;
+}
+.artifact-seal {
+  width: 90px;
+  height: 90px;
+  position: relative;
+  flex-shrink: 0;
+  color: inherit;
+}
+.artifact-seal svg {
+  width: 100%;
+  height: 100%;
+}
+.artifact-seal > span {
+  position: absolute;
+  inset: auto 0 20px;
+  text-align: center;
+  font:
+    8px "LK Cinzel",
+    serif;
+  letter-spacing: 0.15em;
+}
+.artifact-instrument {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* A bound vellum leaf with polychrome acanthus, gold tooling and scribal margins. */
+.edition-stage.stage-manuscript {
+  padding: 20px 18px 20px 36px;
+  background: linear-gradient(
+    90deg,
+    #231c16 0 16px,
+    #69422a 17px,
+    #322216 24px,
+    #493122 36px,
+    #241c16
+  );
+  border: 1px solid #77583a;
+  border-radius: 5px 9px 9px 5px;
+  box-shadow:
+    0 25px 70px #0008,
+    inset 0 0 0 4px #211910;
+}
+.story-document.theme-manuscript {
+  --ink: #342a1c;
+  --accent: #873b32;
+  clip-path: none;
+  padding: 48px 92px 40px;
+  border: 1px solid #ac9364;
+  border-radius: 0 3px 3px 0;
+  background-color: #eadbb4;
+  background-image:
+    linear-gradient(
+      90deg,
+      #75512f25,
+      transparent 8%,
+      #fff6d81a 50%,
+      transparent 90%,
+      #71522a20
+    ),
+    url("/textures/aged-vellum.svg");
+  box-shadow:
+    inset 10px 0 18px #71533230,
+    5px 5px 0 #c0ac7d,
+    8px 8px 0 #7d693f,
+    12px 12px 20px #0004;
+}
+.theme-manuscript .artifact-decoration {
+  display: none;
+}
+.codex-illumination {
+  position: absolute;
+  inset: 18px 16px 18px 19px;
+  border: 5px double #927834;
+  pointer-events: none;
+}
+.codex-illumination::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid #7d37334a;
+}
+.codex-vine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  height: 100%;
+  width: 64px;
+  opacity: 0.95;
+}
+.vine-left {
+  left: 0;
+}
+.vine-right {
+  right: 0;
+  transform: scaleX(-1);
+}
+.codex-bestiary {
+  position: absolute;
+  bottom: 2px;
+  width: 220px;
+  height: 66px;
+  left: calc(50% - 110px);
+}
+.theme-manuscript .artifact-running-head {
+  position: relative;
+  color: #734432;
+  border-color: #8c6b3544;
+  font-family: "LK Medieval Sharp", serif;
+  letter-spacing: 0.05em;
+}
+.codex-rubric {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #7c302e;
+  margin: 30px -10px;
+  font-family: "LK Medieval Sharp", serif;
+  text-align: center;
+}
+.codex-rubric > span {
+  color: #9d792e;
+  font-size: 35px;
+}
+.codex-rubric strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  font-variant: small-caps;
+}
+.theme-manuscript .document-header {
+  border-bottom: 3px double #885b3a80;
+  margin-bottom: 35px;
+  padding: 0 0 26px;
+}
+.theme-manuscript .document-ornament,
+.theme-manuscript .document-label {
+  display: none;
+}
+.story-document.theme-manuscript .document-header h2 {
+  color: #6c302b;
+  font-size: clamp(36px, 4.5vw, 62px);
+  line-height: 1.17;
+  font-weight: 400;
+}
+.theme-manuscript .document-meta {
+  color: #654a32;
+  font-family: "LK Medieval Sharp", serif;
+  letter-spacing: 0.04em;
+}
+.theme-manuscript .document-body {
+  border: 0;
+  padding: 0;
+}
+.theme-manuscript .edition-section {
+  border: 0;
+  padding: 0;
+}
+.story-document.theme-manuscript .message-prose :is(h1, h2) {
+  color: #813732;
+  border: 0;
+  padding: 0;
+  font-size: 1.45em;
+  font-weight: 400;
+  font-variant: small-caps;
+}
+.theme-manuscript .message-prose > p:first-child::first-letter,
+.theme-manuscript .edition-section > :is(h1, h2) + p::first-letter {
+  float: left;
+  font-family: "Unifraktur", serif;
+  font-size: 4.2em;
+  line-height: 0.86;
+  color: #f4deb0;
+  padding: 11px 13px 9px;
+  margin: 6px 13px 4px 0;
+  border: 4px double #cbaa56;
+  background:
+    repeating-linear-gradient(45deg, #ceaf6033 0 1px, transparent 1px 7px),
+    #3b5264;
+  box-shadow:
+    0 0 0 2px #85392f,
+    inset 0 0 0 1px #1f3949;
+  text-shadow: 1px 1px #221e16;
+}
+.theme-manuscript .message-prose blockquote {
+  color: #6d3729;
+  border: 0;
+  border-block: 3px double #a7874544;
+  background: transparent;
+  font-size: 1.1em;
+  text-align: center;
+  font-style: italic;
+}
+.codex-colophon {
+  position: relative;
+  text-align: center;
+  margin: 45px 0 56px;
+  color: #70482f;
+}
+.codex-colophon > span {
+  display: block;
+  font-size: 32px;
+  color: #8b6e2d;
+}
+.codex-colophon i {
+  display: block;
+  font:
+    20px "LK Medieval Sharp",
+    serif;
+}
+.codex-colophon small {
+  display: block;
+  font:
+    9px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.2em;
+  margin-top: 12px;
+}
+.theme-manuscript .document-footer {
+  display: none;
+}
+/* An archaeological roll mounted on charcoal linen. */
+.edition-stage.stage-scroll {
+  padding: 36px 20px;
+  background: repeating-linear-gradient(45deg, #252521 0 1px, #292a25 1px 4px);
+  border-radius: 4px;
+}
+.story-document.theme-scroll {
+  --ink: #403023;
+  padding: 50px 66px;
+  background-color: #d8be88;
+  background-image:
+    linear-gradient(
+      90deg,
+      #8d642e44,
+      transparent 10%,
+      #f4e6b635 50%,
+      transparent 90%,
+      #8d642e55
+    ),
+    url("/textures/aged-vellum.svg");
+  clip-path: none;
+  border-radius: 2px 7px 7px 2px;
+  border-inline: 1px solid #896538;
+  box-shadow:
+    inset 0 24px 30px -20px #442908,
+    inset 0 -24px 30px -20px #442908,
+    0 12px 35px #0007;
+}
+.scroll-cartouche {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 22px 0 32px;
+  color: #745229;
+  font:
+    17px "LK Uncial Antiqua",
+    serif;
+}
+.scroll-cartouche small {
+  font:
+    12px "LK Crimson Pro",
+    serif;
+}
+.scroll-cartouche .artifact-seal {
+  width: 65px;
+  height: 65px;
+}
+.theme-scroll .document-label,
+.theme-scroll .document-ornament {
+  display: none;
+}
+.theme-scroll .document-header h2 {
+  font-size: clamp(28px, 4vw, 46px);
+  color: #664629;
+}
+.theme-scroll .document-body {
+  max-width: 650px;
+  margin: auto;
+}
+/* Royal charter, gilded rules, hanging seal and chancery signatures. */
+.edition-stage.stage-decree {
+  padding: 22px;
+  background: #331f26;
+  border: 1px solid #927345;
+  box-shadow: inset 0 0 80px #130b12;
+}
+.story-document.theme-decree {
+  --ink: #38261f;
+  padding: 40px 65px;
+  border: 8px double #8f703d;
+  outline: 1px solid #c1a36f;
+  outline-offset: -18px;
+  clip-path: none;
+  background: #f0e1b9 url("/textures/aged-vellum.svg") center/100% 100%;
+}
+.theme-decree .artifact-decoration {
+  display: none;
+}
+.royal-protocol {
+  color: #7b382b;
+  text-align: center;
+  font:
+    11px "LK Cinzel",
+    serif;
+  letter-spacing: 0.18em;
+  margin: 20px 0;
+}
+.theme-decree .document-ornament {
+  margin: 18px auto 5px;
+}
+.theme-decree .royal-crest {
+  max-width: 190px;
+  max-height: 155px;
+  margin: auto;
+}
+.theme-decree .document-label {
+  display: none;
+}
+.theme-decree .document-header h2 {
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 500;
+  color: #58362b;
+}
+.theme-decree .edition-section {
+  padding-top: 15px;
+  border-color: #906637;
+}
+.royal-signature {
+  display: grid;
+  grid-template-columns: 1fr 100px 1fr;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  margin: 45px 0 24px;
+  font:
+    12px "LK Crimson Pro",
+    serif;
+}
+.royal-signature i {
+  display: block;
+  border-top: 1px solid #8a6b3744;
+  margin-top: 12px;
+  padding-top: 12px;
+  font:
+    22px "LK Caveat",
+    cursive;
+}
+.wax-seal {
+  width: 95px;
+  height: 95px;
+  border-radius: 48% 53% 49% 46%;
+  background: radial-gradient(circle at 35% 25%, #b25548, #803327 60%, #542014);
+  color: #e6b29a;
+  border: 5px ridge #9d4336;
+  box-shadow:
+    2px 5px 7px #391d1d55,
+    inset 0 0 0 2px #b96852;
+  transform: rotate(-12deg);
+}
+.wax-seal .artifact-seal {
+  width: 85px;
+  height: 85px;
+}
+.theme-decree .document-footer {
+  border-top: 1px solid #8f703d55;
+}
+/* Monumental gold-tooled chronicle. */
+.edition-stage.stage-glorious {
+  padding: 18px;
+  background: linear-gradient(115deg, #32271b, #171a17, #392e20);
+  border: 1px solid #ab8a46;
+  box-shadow:
+    inset 0 0 0 6px #171811,
+    0 25px 70px #0007;
+}
+.story-document.theme-glorious {
+  --ink: #e8dfc5;
+  --accent: #d7b46b;
+  border: 6px double #b8954e;
+  padding: 38px 62px 50px;
+  outline: 1px solid #a7854144;
+  outline-offset: -20px;
+  background:
+    radial-gradient(ellipse at 50% 0, #5f4a2966, transparent 45%),
+    repeating-linear-gradient(90deg, #22271e 0 2px, #21261d 2px 4px);
+}
+.epic-pediment {
+  text-align: center;
+  padding: 18px;
+  color: #d4b263;
+  font:
+    11px "LK Cinzel",
+    serif;
+  letter-spacing: 0.18em;
+}
+.theme-glorious .document-header {
+  border-radius: 180px 180px 0 0;
+  padding: 36px 25px;
+  margin-top: 20px;
+  background: radial-gradient(ellipse at 50% 45%, #d0ab4b18, transparent 75%);
+}
+.theme-glorious .epic-sigil {
+  width: 240px;
+}
+.theme-glorious .document-label {
+  display: none;
+}
+.story-document.theme-glorious .document-header h2 {
+  font-size: clamp(34px, 4vw, 55px);
+  font-variant: normal;
+  color: #f1dca9;
+  letter-spacing: 0.025em;
+}
+/* Ivory poetry folio on emerald cloth. */
+.edition-stage.stage-poetry {
+  padding: 24px;
+  background: linear-gradient(110deg, #172d2c, #244641);
+  border: 1px solid #69877b;
+}
+.story-document.theme-poetry {
+  --ink: #303e38;
+  --accent: #80613e;
+  background: #f1ead9 url("/textures/aged-vellum.svg") center/100% 100%;
+  color: var(--ink);
+  border: 1px solid #cabd9b;
+  outline: 1px solid #cabd9b66;
+  outline-offset: -15px;
+  padding: 38px 65px 60px;
+  box-shadow:
+    4px 5px 0 #c4bb9f,
+    7px 8px 0 #617168;
+}
+.poetry-frontispiece {
+  text-align: center;
+  color: #47665a;
+  margin: 28px 0;
+}
+.poetry-frontispiece span {
+  display: block;
+  font-size: 65px;
+}
+.poetry-frontispiece i {
+  font:
+    19px "LK Cormorant Garamond",
+    serif;
+}
+.theme-poetry .document-ornament,
+.theme-poetry .poetry-invocation,
+.theme-poetry .document-label {
+  display: none;
+}
+.story-document.theme-poetry .document-header h2 {
+  color: #365547;
+  font-weight: 400;
+  font-size: clamp(38px, 5vw, 60px);
+}
+.story-document.theme-poetry .document-body .message-prose {
+  color: #303e38;
+  line-height: 2;
+}
+.theme-poetry .edition-section {
+  border-left: 0;
+  padding: 0;
+}
+.story-document.theme-poetry .message-prose :is(h1, h2) {
+  color: #365547;
+  font-weight: 400;
+}
+.theme-poetry .message-prose blockquote {
+  background: transparent;
+  border: 0;
+  padding-left: 2em;
+  font-style: italic;
+}
+.theme-poetry .document-meta,
+.theme-poetry .message-attribution,
+.theme-poetry .document-footer {
+  color: #69746a;
+}
+/* Celestial plate, etched in silver against midnight blue. */
+.edition-stage.stage-prophecy {
+  padding: 20px;
+  background: radial-gradient(ellipse at 50% 0, #434364, #151827);
+  border: 1px solid #777496;
+}
+.story-document.theme-prophecy {
+  --ink: #e1dfec;
+  background: radial-gradient(ellipse at 50% 0, #343356, #141626 70%);
+  border: 5px double #9d91b1;
+  outline: 1px solid #79778c66;
+  outline-offset: -17px;
+  padding: 35px 65px;
+}
+.theme-prophecy .instrument-star {
+  color: #b9a57a;
+  max-height: 210px;
+  margin: 8px auto 24px;
+}
+.theme-prophecy .prophecy-orbit,
+.theme-prophecy .document-label {
+  display: none;
+}
+.story-document.theme-prophecy .document-header h2 {
+  font-size: clamp(28px, 4vw, 43px);
+  color: #dfcfab;
+}
+.theme-prophecy .edition-section > :is(h1, h2) {
+  letter-spacing: 0.015em;
+  font-size: 1.25em;
+}
+.theme-prophecy .message-prose blockquote {
+  background: #ada0c408;
+  border: 1px solid #b6a58266;
+  border-radius: 0;
+}
+/* Ship's ledger: leather spine, brass corners and ink rules. */
+.edition-stage.stage-captain {
+  padding: 18px 18px 18px 40px;
+  background: linear-gradient(
+    90deg,
+    #1c1913 0 22px,
+    #62452d 23px,
+    #392e21 29px,
+    #292b25 40px
+  );
+  border: 3px solid #413524;
+  border-radius: 5px 9px 9px 5px;
+}
+.story-document.theme-captain {
+  padding: 38px 58px 50px;
+  clip-path: none;
+  background-color: #ddd0a6;
+  background-image:
+    linear-gradient(90deg, #79603c33, transparent 9%),
+    url("/textures/pirate-chart.svg"), url("/textures/aged-vellum.svg");
+  background-size:
+    auto,
+    100% auto,
+    100% 100%;
+  box-shadow:
+    inset 7px 0 12px #84633f55,
+    4px 5px 0 #bba577;
+}
+.logbook-binding {
+  position: absolute;
+  left: 8px;
+  top: 25%;
+  bottom: 25%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.logbook-binding i {
+  width: 15px;
+  height: 7px;
+  border-radius: 4px;
+  background: linear-gradient(#c6a767, #65502f);
+  box-shadow: 0 2px 3px #0005;
+}
+.theme-captain .document-label {
+  display: none;
+}
+.theme-captain .pirate-crest {
+  width: 130px;
+  height: 130px;
+}
+.story-document.theme-captain .document-header h2 {
+  font-size: clamp(35px, 4vw, 53px);
+}
+.theme-captain .edition-section {
+  border-top: 1px dashed #8c694277;
+}
+/* Pinned inn notice: oak, iron nails, torn edges and handwritten messages. */
+.edition-stage.stage-tavern {
+  padding: 36px;
+  border: 9px ridge #5d3b25;
+  background: repeating-linear-gradient(
+    0deg,
+    #382719 0 69px,
+    #21160d 70px,
+    #483320 72px,
+    #362618 76px
+  );
+  box-shadow:
+    inset 0 0 100px #0006,
+    0 25px 70px #0005;
+}
+.story-document.theme-tavern {
+  --ink: #39291d;
+  padding: 42px 44px;
+  background-color: #e0c99c;
+  transform: rotate(-0.45deg);
+  clip-path: polygon(
+    0.2% 0.5%,
+    18% 0,
+    37% 0.6%,
+    60% 0,
+    81% 0.5%,
+    99.7% 0.2%,
+    100% 99.6%,
+    83% 100%,
+    62% 99.5%,
+    37% 100%,
+    18% 99.6%,
+    0.3% 100%
+  );
+  box-shadow: 5px 9px 15px #0007;
+}
+.notice-nails {
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  inset: 14px 25px auto;
+}
+.notice-nails i {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #bbb5a3, #645e51 45%, #292823);
+  box-shadow: 2px 4px 4px #0006;
+}
+.tavern-sign {
+  text-align: center;
+  font:
+    clamp(25px, 4vw, 38px) "LK Medieval Sharp",
+    serif;
+  color: #673c23;
+  margin: 20px 0 24px;
+}
+.tavern-sign small {
+  display: block;
+  font:
+    16px "LK Patrick Hand",
+    cursive;
+  margin-top: 12px;
+}
+.theme-tavern .tavern-pin,
+.theme-tavern .document-ornament,
+.theme-tavern .document-label {
+  display: none;
+}
+.story-document.theme-tavern .document-header h2 {
+  font-size: clamp(30px, 4vw, 44px);
+}
+.theme-tavern .edition-section {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+}
+.theme-tavern .message-prose blockquote {
+  padding: 1em;
+  border: 2px dashed #75472b88;
+  background: #a2823520;
+  font-size: 1.1em;
+  transform: rotate(0.4deg);
+}
+/* Wood-type letterpress poster with sheriff's seal. */
+.edition-stage.stage-wanted {
+  padding: 24px;
+  background: repeating-linear-gradient(91deg, #42352a 0 7px, #3d3026 8px 13px);
+}
+.story-document.theme-wanted {
+  --ink: #432b1c;
+  padding: 30px 42px;
+  background-color: #d8bf87;
+  border: 8px double #57391f;
+  outline: 2px solid #c5a463;
+  outline-offset: -19px;
+}
+.wanted-banner {
+  text-align: center;
+  font:
+    clamp(65px, 10vw, 128px)/0.85 "LK Bebas Neue",
+    sans-serif;
+  letter-spacing: 0.06em;
+  margin: 38px 0 16px;
+  color: #4d2c19;
+  text-shadow: 1px 2px #9c784d55;
+}
+.wanted-banner small {
+  display: block;
+  font:
+    10px "LK Bitter",
+    serif;
+  letter-spacing: 0.14em;
+  margin-top: 17px;
+}
+.wanted-stars {
+  text-align: center;
+  color: #614128;
+  border-block: 2px solid #654428;
+  padding: 12px;
+  font-size: 22px;
+}
+.theme-wanted .document-label {
+  display: none;
+}
+.story-document.theme-wanted .document-header h2 {
+  font-size: clamp(37px, 5vw, 57px);
+  letter-spacing: 0.025em;
+  margin: 24px 0;
+  font-weight: 400;
+}
+.theme-wanted .wanted-reward {
+  border-block: 4px double currentColor;
+}
+.theme-wanted .document-body {
+  border: 0;
+  padding: 0;
+}
+.sheriff-signature {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin-top: 35px;
+  color: #785333;
+  font:
+    12px "LK Bitter",
+    serif;
+}
+.sheriff-signature strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 10px;
+}
+/* Book typography for the two deliberately plain reading editions. */
+.story-document.theme-light,
+.story-document.theme-dark {
+  padding: 40px 60px 60px;
+  border-radius: 6px;
+  max-width: 820px;
+  margin: auto;
+}
+.story-document.theme-light {
+  background: #faf9f5;
+  box-shadow: 0 20px 70px #0004;
+  --ink: #292c32;
+}
+.story-document.theme-dark {
+  background: #1a1e23;
+  border: 1px solid #424750;
+  --ink: #dedfe3;
+  box-shadow: 0 20px 70px #0005;
+}
+.story-document:is(.theme-light, .theme-dark) .document-header h2 {
+  font-size: clamp(30px, 4vw, 47px);
+  line-height: 1.18;
+}
+.story-document:is(.theme-light, .theme-dark) .document-body {
+  max-width: 66ch;
+}
+.story-document:is(.theme-light, .theme-dark) .edition-section {
+  margin-block: 2.2em;
+}
+/* Broadsheet masthead, edition strip, columns and headline hierarchy. */
+.edition-stage.stage-newspaper {
+  padding: 18px;
+  background: #252825;
+}
+.story-document.theme-newspaper {
+  --ink: #24231f;
+  background: #f0eddf url("/textures/newsprint-grain.svg");
+  padding: 30px 42px 40px;
+  border: 1px solid #aba898;
+  box-shadow:
+    5px 5px 0 #c2bfaf,
+    8px 9px 0 #76756d,
+    0 20px 45px #0004;
+}
+.gazette-masthead {
+  font:
+    700 clamp(35px, 5.5vw, 67px)/1.06 "LK EB Garamond",
+    serif;
+  text-align: center;
+  letter-spacing: -0.045em;
+  padding: 18px 0 25px;
+  border-bottom: 4px double #322c23;
+}
+.gazette-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #322c23;
+  padding: 11px 0;
+  font:
+    10px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.075em;
+  margin-bottom: 26px;
+}
+.theme-newspaper .artifact-running-head {
+  border-bottom: 0;
+  margin-bottom: 0;
+  font-size: 8px;
+}
+.theme-newspaper .document-label,
+.theme-newspaper .document-ornament,
+.theme-newspaper .newspaper-edition {
+  display: none;
+}
+.story-document.theme-newspaper .document-header h2 {
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+.theme-newspaper .document-header {
+  border-bottom: 3px double #322c2355;
+  padding-bottom: 23px;
+}
+.story-document.theme-newspaper .document-body .message-prose {
+  column-count: 2;
+  column-gap: 30px;
+  column-rule: 1px solid #665b3938;
+  line-height: 1.6;
+  font-size: var(--reading-size);
+}
+.theme-newspaper .edition-section {
+  margin-top: 0;
+}
+.story-document.theme-newspaper .message-prose :is(h1, h2) {
+  border-top: 2px solid currentColor;
+  padding-top: 12px;
+  font-size: 1.5em;
+}
+.theme-newspaper .message-prose :is(pre, .edition-table, blockquote) {
+  break-inside: avoid;
+}
+/* A social card with navigation and author identity. */
+.story-document.theme-social {
+  --ink: #253346;
+  background: #f2f5f9;
+  border: 1px solid #d2dce8;
+  border-radius: 16px;
+  padding: 0;
+}
+.feed-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 30px;
+  background: #fff;
+  border-bottom: 1px solid #d8e0eb;
+  font:
+    10px "LK Work Sans",
+    sans-serif;
+  color: #758397;
+}
+.feed-navigation > strong {
+  font:
+    800 29px "LK Nunito",
+    sans-serif;
+  color: #3156a1;
+  letter-spacing: -0.04em;
+}
+.feed-navigation > strong span {
+  color: #7a91b3;
+}
+.feed-profile {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e6eefb;
+  color: #355c9b;
+}
+.theme-social .artifact-running-head {
+  margin: 0 28px 20px;
+  color: #667990;
+}
+.theme-social .document-header {
+  padding: 8px 30px 24px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  margin-bottom: 0;
+}
+.theme-social .document-ornament,
+.theme-social .document-label {
+  display: none;
+}
+.story-document.theme-social .document-header h2 {
+  font-size: clamp(28px, 4vw, 38px);
+  color: #253346;
+}
+.theme-social .document-body {
+  padding: 0 28px 22px;
+}
+.theme-social .story-message {
+  padding: 25px;
+  background: #fff;
+  border: 1px solid #d8e1ed;
+  border-radius: 12px;
+  box-shadow: 0 5px 12px #1c3d6610;
+}
+.feed-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-family: "LK Nunito", sans-serif;
+}
+.feed-author > span {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #386ba2, #7794c5);
+  color: #fff;
+  font-weight: 800;
+}
+.feed-author strong,
+.feed-author small {
+  display: block;
+}
+.feed-author small {
+  font-size: 11px;
+  color: #788ca7;
+}
+.feed-author > b {
+  margin-left: auto;
+  color: #8492a9;
+}
+.theme-social .message-attribution {
+  display: none;
+}
+.theme-social .edition-section {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+.theme-social .social-post-footer {
+  color: #6f829c;
+  border-top: 1px solid #dfe6ef;
+  padding-top: 16px;
+}
+/* Station ident, broadcast ticker and a lower-third article title. */
+.story-document.theme-news {
+  --ink: #202b38;
+  padding: 0;
+  border: 1px solid #8a9199;
+  background: #f5f6f8;
+  border-radius: 0;
+}
+.broadcast-navigation {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  padding: 18px 28px;
+  background: #101f36;
+  color: #eff5ff;
+  font:
+    10px "LK Barlow",
+    sans-serif;
+  letter-spacing: 0.08em;
+}
+.broadcast-navigation > strong {
+  font:
+    800 36px "LK Barlow",
+    sans-serif;
+  letter-spacing: -0.05em;
+}
+.broadcast-navigation > strong span {
+  color: #ec4650;
+}
+.broadcast-navigation > b {
+  margin-left: auto;
+  font-size: 9px;
+  color: #ffb5b8;
+}
+.broadcast-ticker {
+  display: flex;
+  align-items: stretch;
+  background: #a71e2e;
+  color: #fff;
+  font:
+    12px "LK Barlow",
+    sans-serif;
+}
+.broadcast-ticker > b {
+  padding: 12px 20px;
+  background: #7b1221;
+  letter-spacing: 0.13em;
+}
+.broadcast-ticker > span {
+  padding: 12px 18px;
+}
+.theme-news .document-header {
+  padding: 32px 38px 24px;
+  background: transparent;
+}
+.theme-news .document-label,
+.theme-news .document-ornament {
+  display: none;
+}
+.story-document.theme-news .document-header h2 {
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 1.08;
+  font-weight: 700;
+}
+.theme-news .news-live {
+  border-top: 1px solid #d3d8df;
+}
+.theme-news .document-body {
+  padding: 32px 38px;
+}
+.theme-news .edition-section > :is(h1, h2) {
+  border-left: 5px solid #a92233;
+  padding-left: 14px;
+  background: transparent;
+  color: #293447;
+  text-transform: none;
+}
+/* Complaint form: ruled cells, section codes, routing fields and an archive stamp. */
+.edition-stage.stage-incident {
+  padding: 25px;
+  background: #57616b;
+  box-shadow: inset 0 0 100px #26323b66;
+}
+.story-document.theme-incident {
+  --ink: #242d34;
+  --accent: #263c4a;
+  background: #fcfcfa;
+  padding: 34px 42px 28px;
+  border: 1px solid #c3c7c7;
+  box-shadow:
+    4px 5px 0 #e3e4e0,
+    7px 9px 0 #c3c6c4,
+    0 18px 35px #16232b66;
+}
+.form-letterhead {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 3px solid #293e4b;
+  padding-bottom: 22px;
+}
+.form-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font:
+    10px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.15em;
+}
+.form-brand > span {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: #293e4b;
+  color: #fff;
+  font-size: 19px;
+  letter-spacing: 0;
+}
+.form-brand strong {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 0;
+  margin-top: 5px;
+}
+.form-control {
+  text-align: right;
+  font:
+    9px/1.7 "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.08em;
+  color: #536570;
+}
+.form-title {
+  margin: 28px 0 12px;
+  font:
+    700 clamp(24px, 4vw, 34px)/1.15 "LK Work Sans",
+    sans-serif;
+  letter-spacing: -0.025em;
+}
+.form-title > span {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  font-weight: 400;
+  margin-top: 8px;
+}
+.form-instructions {
+  font:
+    10px/1.6 "LK Work Sans",
+    sans-serif;
+  padding: 12px 0;
+  border-bottom: 1px solid #bac4c9;
+  color: #566771;
+}
+.theme-incident .artifact-running-head {
+  margin: 0;
+  border: 0;
+  padding-block: 16px;
+  font-size: 9px;
+  color: #344955;
+}
+.theme-incident .document-label,
+.theme-incident .document-meta,
+.theme-incident .document-ornament {
+  display: none;
+}
+.theme-incident .document-header {
+  padding: 0;
+  margin: 0 0 28px;
+}
+.theme-incident .document-header::before {
+  content: "SUBJECT / SUMMARY";
+  font:
+    9px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 9px;
+}
+.story-document.theme-incident .document-header h2 {
+  margin: 0;
+  padding: 14px 15px;
+  border: 1px solid #aebbc2;
+  border-bottom: 0;
+  font-size: 21px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+.theme-incident .document-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  background: #f7f8f7;
+  border: 1px solid #aebbc2;
+  margin: 0;
+}
+.theme-incident .document-fields > div {
+  padding: 12px 15px;
+  border-bottom: 1px solid #aebbc2;
+}
+.theme-incident .document-fields > div:nth-child(odd) {
+  border-right: 1px solid #aebbc2;
+}
+.theme-incident .document-fields > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+.theme-incident .document-fields dt {
+  font:
+    9px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.12em;
+  color: #5c6b73;
+}
+.theme-incident .document-fields dd {
+  margin: 7px 0 0;
+  font:
+    12px "LK Work Sans",
+    sans-serif;
+}
+.form-section-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: #e8edef;
+  border: 1px solid #aebbc2;
+  color: #344854;
+  padding: 11px 13px;
+  font:
+    10px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.06em;
+}
+.form-section-bar > b {
+  border-right: 1px solid #a9b7bf;
+  padding-right: 12px;
+}
+.form-section-bar > small {
+  margin-left: auto;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+.theme-incident .story-message {
+  border: 0;
+  padding: 0;
+  margin-top: 26px;
+}
+.theme-incident .message-attribution {
+  display: none;
+}
+.story-document.theme-incident .document-body .message-prose,
+.story-document.theme-incident .document-body .message-text {
+  padding: 18px 20px;
+  border: 1px solid #aebbc2;
+  border-top: 0;
+  font-size: var(--reading-size);
+  line-height: 1.75;
+  background: repeating-linear-gradient(
+    transparent 0 31px,
+    #657d8c05 31px 32px
+  );
+}
+.theme-incident .edition-section {
+  padding: 0;
+}
+.theme-incident .edition-section > :is(h1, h2) {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #aebbc2;
+  padding: 0 0 9px;
+  font-size: 1.05em;
+}
+.form-disposition {
+  margin-top: 28px;
+}
+.form-routing {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  border: 1px solid #aebbc2;
+  border-top: 0;
+  padding: 20px;
+  font:
+    10px "LK Work Sans",
+    sans-serif;
+  color: #526571;
+}
+.form-routing > span:last-child {
+  grid-column: 1/-1;
+}
+.form-routing i {
+  display: block;
+  height: 22px;
+  border-bottom: 1px solid #aebbc2;
+}
+.form-signoff {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 23px 0;
+  font:
+    10px/1.7 "LK Work Sans",
+    sans-serif;
+}
+.form-signoff > strong {
+  color: #8b4542;
+  border: 3px double #8b4542;
+  padding: 8px 12px;
+  transform: rotate(-7deg);
+  font-size: 14px;
+  text-align: center;
+  letter-spacing: 0.07em;
+  opacity: 0.8;
+}
+.theme-incident .document-footer {
+  padding-top: 15px;
+  margin-top: 0;
+  font:
+    9px "LK Work Sans",
+    sans-serif;
+}
+.theme-incident .document-footer > small {
+  font-size: 9px;
+  letter-spacing: 0.03em;
+}
+/* Intelligence folder, document clip and typewritten evidence strips. */
+.edition-stage.stage-dossier {
+  padding: 32px 20px 20px;
+  background: linear-gradient(100deg, #968260, #ccb88a);
+  border-radius: 0 8px 8px 8px;
+  border: 1px solid #89724f;
+}
+.story-document.theme-dossier {
+  --ink: #333127;
+  --accent: #8a3532;
+  background: #eae5d5 url("/textures/newsprint-grain.svg");
+  padding: 0 38px 30px;
+  border: 1px solid #9d927a;
+  box-shadow:
+    5px 7px 0 #d2c6a8,
+    0 15px 30px #44392355;
+  overflow: visible;
+}
+.file-tab {
+  position: absolute;
+  top: -29px;
+  left: -1px;
+  max-width: 85%;
+  padding: 8px 22px 9px;
+  background: #bfa877;
+  border: 1px solid #947b53;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  font:
+    9px "LK IBM Plex Mono",
+    monospace;
+}
+.classification-band {
+  margin: 0 -38px 25px;
+  background: #853934;
+  color: #efdfbf;
+  text-align: center;
+  font:
+    700 11px "LK IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.13em;
+  padding: 12px;
+}
+.classification-band span {
+  opacity: 0.55;
+  margin-inline: 8px;
+}
+.dossier-control {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font:
+    11px/1.5 "LK Special Elite",
+    monospace;
+  border-bottom: 1px solid #756a4f55;
+  padding-bottom: 22px;
+}
+.dossier-control .artifact-seal {
+  width: 70px;
+  height: 70px;
+  color: #696348;
+}
+.dossier-control strong {
+  font-size: 15px;
+}
+.dossier-control small {
+  display: block;
+  font:
+    8px "LK IBM Plex Mono",
+    monospace;
+  margin-top: 8px;
+}
+.paperclip {
+  width: 23px;
+  height: 75px;
+  border: 3px solid #8c938e;
+  border-radius: 14px;
+  position: absolute;
+  right: 27px;
+  top: -13px;
+  transform: rotate(8deg);
+  box-shadow: 2px 2px 1px #0003;
+}
+.paperclip::after {
+  content: "";
+  position: absolute;
+  inset: 10px 5px 4px;
+  border: 2px solid #8c938e;
+  border-top: 0;
+  border-radius: 0 0 9px 9px;
+}
+.theme-dossier .document-label,
+.theme-dossier .classified-stamp,
+.theme-dossier .document-meta {
+  display: none;
+}
+.theme-dossier .document-header {
+  margin-top: 22px;
+}
+.story-document.theme-dossier .document-header h2 {
+  font-size: clamp(26px, 3.5vw, 39px);
+  line-height: 1.3;
+}
+.theme-dossier .document-fields {
+  background: transparent;
+  border: 0;
+  border-block: 1px solid #756a4f66;
+}
+.file-evidence-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  border-block: 2px solid #72654e88;
+  padding: 10px 0;
+  font:
+    9px "LK IBM Plex Mono",
+    monospace;
+}
+.file-evidence-bar strong {
+  font-weight: 400;
+}
+.theme-dossier .story-message {
+  margin-top: 28px;
+}
+.theme-dossier .message-attribution {
+  display: none;
+}
+.theme-dossier .message-prose {
+  padding-block: 12px;
+}
+.theme-dossier .edition-section > :is(h1, h2) {
+  font-size: 1.15em;
+}
+.dossier-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 30px;
+  border-block: 1px solid #756a4f88;
+  padding: 12px 0;
+  font:
+    8px "LK IBM Plex Mono",
+    monospace;
+  color: #8a3532;
+}
+.theme-dossier .document-footer {
+  display: none;
+}
+/* Engraved stationery and penned closing. */
+.edition-stage.stage-letter {
+  padding: 25px;
+  background: #56616a;
+}
+.story-document.theme-letter {
+  --ink: #323b43;
+  background: linear-gradient(115deg, #fffef9, #f3f0e7);
+  padding: 35px 70px 45px;
+  border: 1px solid #ddd9ce;
+  box-shadow: 0 20px 50px #0004;
+}
+.correspondence-letterhead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #526a75;
+  border-bottom: 3px double #6f849066;
+  padding-bottom: 24px;
+}
+.correspondence-letterhead .artifact-seal {
+  width: 70px;
+  height: 70px;
+}
+.correspondence-letterhead > strong {
+  font:
+    22px "LK Marcellus",
+    serif;
+  letter-spacing: 0.18em;
+  margin-top: 8px;
+}
+.correspondence-letterhead > span {
+  font:
+    8px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.16em;
+  margin-top: 9px;
+}
+.theme-letter .document-label,
+.theme-letter .document-ornament {
+  display: none;
+}
+.theme-letter .artifact-running-head {
+  border: 0;
+  color: #70818a;
+  margin-bottom: 20px;
+}
+.story-document.theme-letter .document-header h2 {
+  font-size: clamp(26px, 3.5vw, 37px);
+  font-weight: 400;
+  text-align: left;
+}
+.theme-letter .document-fields {
+  border: 0;
+  border-bottom: 1px solid #8a9aa744;
+  background: transparent;
+}
+.letter-signature {
+  position: relative;
+  margin: 45px 0 10px;
+  font:
+    13px "LK Crimson Pro",
+    serif;
+  color: #526775;
+}
+.letter-signature strong {
+  display: block;
+  font:
+    32px "LK Caveat",
+    cursive;
+  margin-top: 8px;
+}
+.postal-cancel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  border: 3px double #768996;
+  border-radius: 50%;
+  padding: 18px 12px;
+  font:
+    9px/1.6 "LK Work Sans",
+    sans-serif;
+  transform: rotate(-13deg);
+  opacity: 0.5;
+}
+/* Terminal window in a brushed-metal chassis. */
+.edition-stage.stage-terminal {
+  padding: 13px;
+  background: linear-gradient(120deg, #4b5255, #20272a);
+  border: 1px solid #596165;
+  border-radius: 11px;
+  box-shadow: 0 25px 60px #0007;
+}
+.story-document.theme-terminal {
+  --ink: #bcd9b2;
+  --accent: #97ce83;
+  background: #111a15;
+  padding: 0 32px 30px;
+  border: 1px solid #131a14;
+  border-radius: 7px;
+  box-shadow: inset 0 0 80px #050b0744;
+}
+.console-titlebar {
+  margin: 0 -32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  background: #2a3430;
+  color: #a1b1a6;
+  font:
+    10px "LK IBM Plex Mono",
+    monospace;
+  border-bottom: 1px solid #465149;
+}
+.window-lights {
+  display: flex;
+  gap: 7px;
+}
+.window-lights i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ba7268;
+}
+.window-lights i:nth-child(2) {
+  background: #c8ae65;
+}
+.window-lights i:nth-child(3) {
+  background: #7ca16c;
+}
+.console-boot {
+  margin: 25px 0;
+  border-bottom: 1px dashed #63866155;
+  padding-bottom: 22px;
+  font:
+    11px "LK IBM Plex Mono",
+    monospace;
+}
+.console-boot > span {
+  display: block;
+  font-weight: 700;
+  color: #a7d495;
+  letter-spacing: 0.08em;
+}
+.console-boot small {
+  display: block;
+  margin: 10px 0;
+  color: #678971;
+  font-size: 9px;
+}
+.console-boot > div {
+  color: #8aa88a;
+}
+.theme-terminal .document-label,
+.theme-terminal .document-ornament {
+  display: none;
+}
+.theme-terminal .document-header {
+  border: 0;
+  text-align: left;
+}
+.story-document.theme-terminal .document-header h2 {
+  font-size: clamp(24px, 3.5vw, 35px);
+  color: #d1e9c9;
+}
+.theme-terminal .terminal-command {
+  font:
+    11px "LK IBM Plex Mono",
+    monospace;
+  color: #a9ce9e;
+}
+.theme-terminal .message-prose :is(h1, h2) {
+  border: 0;
+  background: #91bb7f0a;
+  border-left: 2px solid #91bb7f;
+  padding: 10px 14px;
+}
+.console-prompt {
+  margin-top: 26px;
+  font:
+    12px "LK IBM Plex Mono",
+    monospace;
+  color: #71957b;
+}
+.console-prompt b {
+  color: #8cc078;
+  font-weight: 400;
+}
+.console-cursor {
+  color: #b8d9a7;
+}
+.theme-terminal .document-footer {
+  display: none;
+}
+/* Spacecraft receiver with radar, oscilloscope and telemetry readouts. */
+.edition-stage.stage-space {
+  padding: 20px;
+  background: linear-gradient(135deg, #62696d, #2c3439 45%, #5b666a);
+  border: 2px solid #7a868a;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 0 6px #343c41,
+    0 25px 70px #0006;
+}
+.story-document.theme-space {
+  --ink: #bfe0e5;
+  --accent: #76bac8;
+  background: linear-gradient(#0a1c24, #0b1820);
+  padding: 0 32px 30px;
+  border: 3px solid #172b34;
+  border-radius: 4px;
+  box-shadow: inset 0 0 35px #030b11;
+}
+.relay-topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  background: #17303c;
+  margin: 0 -32px;
+  padding: 13px 20px;
+  font:
+    10px "LK Rajdhani",
+    sans-serif;
+  letter-spacing: 0.13em;
+  color: #95c6d0;
+}
+.relay-topbar > span {
+  color: #e2b86c;
+}
+.theme-space .instrument-radar {
+  color: #6babb7;
+  margin: 22px auto 12px;
+  border-bottom: 1px solid #57869944;
+  padding-bottom: 20px;
+}
+.relay-readouts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  border-bottom: 1px solid #57869944;
+  padding-bottom: 20px;
+  font:
+    8px "LK Space Mono",
+    monospace;
+  color: #6e909c;
+}
+.relay-readouts b {
+  display: block;
+  color: #b9d9df;
+  font-weight: 400;
+  font-size: 11px;
+  margin-top: 8px;
+}
+.theme-space .document-label,
+.theme-space .document-ornament {
+  display: none;
+}
+.theme-space .document-header {
+  margin-top: 24px;
+}
+.story-document.theme-space .document-header h2 {
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.theme-space .space-telemetry {
+  padding: 15px;
+  font-size: 9px;
+  background: #0d212a;
+}
+.theme-space .story-message {
+  border-left: 0;
+  padding-left: 0;
+}
+.theme-space .edition-section {
+  border-left: 1px solid #5799a466;
+}
+.relay-checksum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #4d7c8c66;
+  margin-top: 30px;
+  padding-top: 20px;
+  font:
+    9px "LK Space Mono",
+    monospace;
+  color: #7aa8b5;
+}
+.relay-checksum > span {
+  letter-spacing: 2px;
+  color: #558d9a;
+}
+.relay-checksum small {
+  font-size: 8px;
+}
+/* Modern issue tracker with navigation, ticket state and reproduction panels. */
+.story-document.theme-bug {
+  --ink: #d2d9e5;
+  --accent: #a397d9;
+  background: #171c28;
+  border: 1px solid #4b4e65;
+  border-radius: 10px;
+  padding: 0 32px 30px;
+  box-shadow: 0 18px 55px #0006;
+}
+.issue-navigation {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: #222735;
+  margin: 0 -32px;
+  padding: 18px 23px;
+  border-bottom: 1px solid #3b4355;
+  font:
+    12px "LK Inter",
+    sans-serif;
+  color: #b0bbcf;
+}
+.issue-logo {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: #786aad;
+  color: #fff;
+  font-size: 18px;
+}
+.issue-navigation > span:last-child {
+  color: #7e8ba2;
+  font-size: 11px;
+}
+.issue-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin: 24px 0;
+  font:
+    10px "LK Inter",
+    sans-serif;
+  color: #8f9bb0;
+}
+.issue-toolbar b {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: #b9b0dc;
+  padding: 6px 9px;
+  border: 1px solid #7f70b359;
+  border-radius: 5px;
+  background: #7f70b31a;
+}
+.theme-bug .document-label,
+.theme-bug .document-ornament {
+  display: none;
+}
+.theme-bug .document-header {
+  text-align: left;
+}
+.story-document.theme-bug .document-header h2 {
+  font-size: clamp(28px, 4vw, 41px);
+  font-weight: 600;
+  color: #e2e7f0;
+}
+.theme-bug .bug-fields {
+  background: #202635;
+  border: 1px solid #3f4961;
+  border-radius: 8px;
+  color: #b2bfd4;
+}
+.theme-bug .edition-section {
+  border: 1px solid #3f4961;
+  padding: 18px;
+  background: #1c2230;
+}
+.theme-bug .message-prose pre {
+  background: #111620;
+  border-color: #485063;
+}
+.theme-bug .document-footer {
+  color: #8c9ab1;
+}
+/* Studio script: cover notation, real courier type and dialogue indents. */
+.edition-stage.stage-screenplay {
+  padding: 24px;
+  background: #3e464e;
+}
+.story-document.theme-screenplay {
+  --ink: #252525;
+  background: #fffefa;
+  padding: 42px 70px;
+  border: 1px solid #dddcd3;
+  box-shadow:
+    6px 7px 0 #d4d4c9,
+    0 20px 50px #0004;
+}
+.script-cover {
+  text-align: center;
+  font:
+    11px "LK Courier Prime",
+    monospace;
+  margin: 48px 0 22px;
+}
+.script-cover strong {
+  display: block;
+  font-weight: 400;
+  margin-top: 10px;
+}
+.script-cover small {
+  display: block;
+  margin-top: 26px;
+}
+.theme-screenplay .document-ornament,
+.theme-screenplay .document-label,
+.theme-screenplay .document-meta {
+  display: none;
+}
+.story-document.theme-screenplay .document-header h2 {
+  font-size: clamp(24px, 3.5vw, 34px);
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.script-scene {
+  font:
+    12px "LK Courier Prime",
+    monospace;
+  margin: 36px 0 22px;
+  border-bottom: 1px solid #36363633;
+  padding-bottom: 12px;
+}
+.theme-screenplay .scene-number {
+  display: none;
+}
+.theme-screenplay .message-attribution {
+  display: block;
+  text-align: center;
+  margin: 22px 0;
+}
+.theme-screenplay .message-speaker {
+  font-family: "LK Courier Prime", monospace;
+  text-transform: uppercase;
+}
+.theme-screenplay .message-timestamp {
+  display: block;
+  margin-top: 5px;
+}
+.theme-screenplay .edition-section {
+  padding: 0;
+}
+.script-end {
+  margin: 50px 0 30px;
+  font:
+    13px "LK Courier Prime",
+    monospace;
+}
+.script-end strong {
+  display: block;
+  text-align: center;
+  font-weight: 400;
+  margin-top: 40px;
+}
+.theme-screenplay .document-footer {
+  display: none;
+}
+/* Gallery vitrine: stone frame, accession plaque and a sheet behind glass. */
+.edition-stage.stage-museum {
+  padding: 22px;
+  background: linear-gradient(120deg, #817d72, #393d38);
+  border: 1px solid #928d7b;
+}
+.story-document.theme-museum {
+  --ink: #3e4139;
+  background: #dad8ce;
+  padding: 35px 32px;
+  border: 10px solid #30372f;
+  box-shadow:
+    inset 0 0 0 2px #90917d,
+    0 20px 50px #0005;
+}
+.gallery-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: #525d4c;
+  font:
+    10px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.13em;
+}
+.gallery-wordmark > span {
+  font:
+    38px "LK Marcellus",
+    serif;
+  border-right: 1px solid #737b6555;
+  padding-right: 20px;
+}
+.gallery-wordmark strong {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  margin-top: 6px;
+}
+.theme-museum .document-label,
+.theme-museum .document-ornament {
+  display: none;
+}
+.story-document.theme-museum .document-header h2 {
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.2;
+}
+.theme-museum .museum-label {
+  max-width: none;
+  box-shadow: 3px 4px 0 #a09f8f;
+  border: 1px solid #b5b5a5;
+  border-left: 4px solid #5a6951;
+  font-size: 11px;
+}
+.theme-museum .document-body {
+  background: linear-gradient(130deg, #fff8 0%, #fff0 40%), #f1eddf;
+  padding: 35px;
+  border: 1px solid #b7b29e;
+  box-shadow:
+    inset 0 0 30px #82795715,
+    0 6px 14px #39392733;
+}
+.theme-museum .edition-section {
+  padding: 0;
+}
+.theme-museum .message-prose blockquote {
+  background: #e1dece;
+}
+/* Certified transcript on ruled legal paper with jurisdiction heading. */
+.edition-stage.stage-court {
+  padding: 24px;
+  background: #414b56;
+}
+.story-document.theme-court {
+  --ink: #28333e;
+  padding: 35px 48px 35px 60px;
+  border: 1px solid #b8c0c5;
+  background: #f7f7f1;
+  box-shadow:
+    5px 6px 0 #d1d4ce,
+    0 20px 50px #0005;
+}
+.court-letterhead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 15px 0 24px;
+  border-bottom: 4px double #3f4d5b;
+  color: #3b4b5c;
+  font:
+    14px "LK Source Serif 4",
+    serif;
+  letter-spacing: 0.07em;
+}
+.court-letterhead strong {
+  display: block;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+.court-letterhead > div > span {
+  display: block;
+  font:
+    8px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.15em;
+  margin-top: 10px;
+}
+.court-letterhead .artifact-seal {
+  width: 82px;
+  height: 82px;
+}
+.theme-court .document-label,
+.theme-court .document-ornament {
+  display: none;
+}
+.theme-court .document-header {
+  border: 0;
+  margin-top: 20px;
+}
+.story-document.theme-court .document-header h2 {
+  font-size: clamp(24px, 3vw, 35px);
+}
+.theme-court .court-case {
+  font:
+    10px "LK Source Code Pro",
+    monospace;
+  border-block: 1px solid #3f4d5b88;
+  padding: 15px 0;
+}
+.testimony-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 25px 0 14px;
+  font:
+    9px "LK Source Code Pro",
+    monospace;
+  border-bottom: 1px solid #6c819655;
+  padding-bottom: 12px;
+  color: #445b70;
+}
+.testimony-heading strong {
+  font-size: 12px;
+}
+.theme-court .edition-message-label,
+.theme-court .message-attribution {
+  display: none;
+}
+.story-document.theme-court .document-body .message-prose {
+  padding: 10px 0 10px 36px;
+  border-left: 1px solid #b1646388;
+  line-height: 2;
+  background: repeating-linear-gradient(
+    transparent 0 calc(2em - 1px),
+    #73879a0d calc(2em - 1px) 2em
+  );
+}
+.theme-court .edition-section {
+  padding: 0;
+}
+.theme-court .message-prose :is(h1, h2) {
+  font-size: 1em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.theme-court .edition-section > p::before {
+  font-family: "LK Source Code Pro", monospace;
+  font-size: 10px;
+}
+.theme-court .end-court {
+  border: 3px double #83463e;
+  padding: 12px 22px;
+}
+/* Typeset journal article, publisher metadata and scholarly rules. */
+.edition-stage.stage-academic {
+  padding: 24px;
+  background: #4b4d49;
+}
+.story-document.theme-academic {
+  --ink: #24282b;
+  background: #fffffb;
+  padding: 40px 65px;
+  border: 1px solid #d5d5cb;
+  box-shadow: 0 20px 50px #0004;
+}
+.journal-masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: 4px double #293c47;
+  padding-bottom: 25px;
+  color: #2a4652;
+}
+.journal-masthead > span {
+  font:
+    10px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.2em;
+}
+.journal-masthead > strong {
+  font:
+    34px "LK Literata",
+    serif;
+  margin-top: 5px;
+}
+.journal-masthead > small {
+  font:
+    8px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.14em;
+  margin-top: 12px;
+}
+.theme-academic .document-label,
+.theme-academic .document-ornament {
+  display: none;
+}
+.story-document.theme-academic .document-header h2 {
+  font-size: clamp(26px, 3.5vw, 40px);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.theme-academic .academic-abstract {
+  background: #eef1ef;
+  border: 0;
+  border-block: 1px solid #c6ceca;
+  font-size: 12px;
+  padding: 22px;
+}
+.theme-academic .document-body {
+  max-width: 69ch;
+  margin: auto;
+}
+.theme-academic .edition-section {
+  padding: 0;
+}
+.theme-academic .edition-section > :is(h1, h2) {
+  font-size: 1.1em;
+}
+.theme-academic .message-prose p {
+  text-align: justify;
+  hyphens: auto;
+}
+/* Foil collectible: illustrated art window, metallic bevels and a rules box. */
+.edition-stage.stage-card {
+  padding: 22px;
+  background: radial-gradient(ellipse at 50% 30%, #413954, #191b23);
+  border-radius: 15px;
+}
+.story-document.theme-card {
+  --ink: #eadfc8;
+  background: linear-gradient(
+    125deg,
+    #8668a8,
+    #bda16c 22%,
+    #536f87 44%,
+    #bf8dac 65%,
+    #816a47
+  );
+  border: 7px ridge #be9d67;
+  padding: 18px;
+  border-radius: 22px;
+  box-shadow:
+    inset 0 0 0 3px #192736,
+    0 25px 60px #0007;
+}
+.collectible-topline {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #1b273cdd;
+  padding: 12px 15px;
+  font:
+    10px "LK Rajdhani",
+    sans-serif;
+  letter-spacing: 0.1em;
+  border: 1px solid #c2a465;
+  border-radius: 7px;
+  color: #e6d0a2;
+}
+.collectible-topline strong {
+  font-size: 13px;
+}
+.collectible-art {
+  position: relative;
+  margin: 14px 0 0;
+  border: 3px ridge #b89c67;
+  background:
+    radial-gradient(circle at 70% 15%, #a1819666, transparent 45%),
+    linear-gradient(#21364e, #1a2839);
+  color: #dcbf8d;
+  overflow: hidden;
+}
+.collectible-art .artifact-instrument {
+  min-height: 180px;
+}
+.collectible-art > span {
+  position: absolute;
+  bottom: 15px;
+  left: 20px;
+  font:
+    9px "LK Cinzel",
+    serif;
+  letter-spacing: 0.16em;
+}
+.theme-card .document-header {
+  border: 2px ridge #c3a577;
+  background: linear-gradient(100deg, #d3bb8d, #f2e4bc, #bea177);
+  border-radius: 0 0 8px 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+.theme-card .document-label,
+.theme-card .document-ornament {
+  display: none;
+}
+.story-document.theme-card .document-header h2 {
+  font-size: clamp(28px, 4vw, 43px);
+  font-weight: 600;
+  color: #333226;
+  margin-top: 0;
+}
+.theme-card .card-rarity {
+  background: #1b283bda;
+  border: 1px solid #c2a465;
+  padding: 12px 16px;
+  border-radius: 7px;
+  margin-bottom: 16px;
+}
+.theme-card .story-message {
+  background: #f1e8d0;
+  color: #343025;
+  border: 3px ridge #c3a577;
+  border-radius: 8px;
+  padding: 23px;
+}
+.story-document.theme-card .document-body .message-prose {
+  color: #343025;
+}
+.theme-card .edition-message-label {
+  color: #795d31;
+  border-color: #957a4d66;
+}
+.theme-card .edition-section {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.theme-card .edition-section > :is(h1, h2) {
+  color: #624328;
+  font-size: 1.15em;
+}
+.theme-card .message-prose blockquote {
+  background: #aa7d2620;
+  border-left-color: #92703c;
+}
+.card-bottomline {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background: #1b273cdd;
+  border: 1px solid #c2a465;
+  border-radius: 6px;
+  font:
+    9px "LK Rajdhani",
+    sans-serif;
+  letter-spacing: 0.08em;
+}
+.theme-card .document-footer {
+  display: none;
+}
+/* Record sleeve and lyric insert: vinyl, cover type and handwritten verse. */
+.edition-stage.stage-lyrics {
+  padding: 22px;
+  background: #302b28;
+}
+.story-document.theme-lyrics {
+  --ink: #3c3933;
+  --accent: #a04b37;
+  background: #eee6d2 url("/textures/newsprint-grain.svg");
+  padding: 32px 45px;
+  border: 1px solid #c6bba4;
+  box-shadow:
+    7px 7px 0 #15191b,
+    0 25px 60px #0005;
+}
+.record-sleeve {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 28px;
+  background: #263c41;
+  color: #eedec0;
+  margin-bottom: 30px;
+}
+.record-disc {
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: repeating-radial-gradient(
+    circle,
+    #171d1e 0 2px,
+    #263035 3px,
+    #141a1b 4px 5px
+  );
+  box-shadow: 5px 6px 10px #0005;
+}
+.record-disc i {
+  font:
+    16px "LK Oswald",
+    sans-serif;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  background: #b66b4a;
+  color: #f4dcc2;
+  border-radius: 50%;
+  border: 2px solid #7c452e;
+}
+.record-sleeve > div:last-child > span {
+  font:
+    8px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.12em;
+}
+.record-sleeve strong {
+  display: block;
+  font:
+    500 clamp(30px, 4vw, 47px)/1.1 "LK Oswald",
+    sans-serif;
+  letter-spacing: -0.025em;
+  margin: 12px 0;
+}
+.record-sleeve small {
+  font:
+    8px "LK Work Sans",
+    sans-serif;
+  letter-spacing: 0.08em;
+}
+.theme-lyrics .album-art,
+.theme-lyrics .document-label,
+.theme-lyrics .document-ornament {
+  display: none;
+}
+.story-document.theme-lyrics .document-header h2 {
+  color: #703c2d;
+  font-size: clamp(28px, 4vw, 41px);
+  font-weight: 500;
+}
+.theme-lyrics .document-header {
+  text-align: left;
+}
+.story-document.theme-lyrics .document-body .message-prose {
+  color: #3c3933;
+  line-height: 1.65;
+}
+.theme-lyrics .edition-section {
+  border: 0;
+  padding: 0;
+}
+.theme-lyrics .edition-section > :is(h1, h2) {
+  color: #894f39;
+  letter-spacing: 0.05em;
+  opacity: 1;
+  font-size: 1.15em;
+}
+.theme-lyrics .message-prose blockquote {
+  font-style: normal;
+  padding: 15px 25px;
+  border-block: 1px solid #a3755044;
+  background: #a375500c;
+}
+.theme-lyrics .document-footer {
+  color: #725f4a;
+}
+/* Art stays in margins and folds away before it can crowd the text. */
+@media (max-width: 760px) {
+  .story-document.theme-newspaper .document-body .message-prose {
+    column-count: 1;
+  }
+  .story-document:is(
+    .theme-glorious,
+    .theme-scroll,
+    .theme-decree,
+    .theme-poetry,
+    .theme-prophecy,
+    .theme-captain,
+    .theme-letter,
+    .theme-screenplay,
+    .theme-academic
+  ) {
+    padding: 30px 28px;
+  }
+  .edition-stage:is(.stage-manuscript, .stage-captain) {
+    padding: 12px 12px 12px 22px;
+  }
+  .story-document.theme-manuscript {
+    padding: 30px 58px;
+  }
+  .codex-vine {
+    width: 38px;
+  }
+  .codex-illumination {
+    inset: 10px;
+  }
+  .codex-bestiary {
+    width: 150px;
+    left: calc(50% - 75px);
+    height: 45px;
+  }
+  .codex-colophon {
+    margin-bottom: 42px;
+  }
+  .edition-stage:is(
+    .stage-tavern,
+    .stage-wanted,
+    .stage-newspaper,
+    .stage-incident,
+    .stage-letter,
+    .stage-screenplay,
+    .stage-museum,
+    .stage-court,
+    .stage-academic,
+    .stage-lyrics
+  ) {
+    padding: 15px;
+  }
+  .story-document:is(
+    .theme-wanted,
+    .theme-tavern,
+    .theme-newspaper,
+    .theme-incident,
+    .theme-lyrics,
+    .theme-court
+  ) {
+    padding: 28px;
+  }
+  .royal-signature {
+    grid-template-columns: 1fr 75px 1fr;
+    gap: 12px;
+  }
+  .wax-seal {
+    width: 75px;
+    height: 75px;
+  }
+  .wax-seal .artifact-seal {
+    width: 65px;
+    height: 65px;
+  }
+  .story-document.theme-museum {
+    padding: 24px;
+    border-width: 7px;
+  }
+  .theme-museum .document-body {
+    padding: 24px;
+  }
+  .record-disc {
+    width: 105px;
+    height: 105px;
+  }
+  .record-sleeve {
+    gap: 20px;
+    padding: 22px;
+  }
+  .broadcast-navigation {
+    gap: 15px;
+  }
+  .broadcast-navigation > span {
+    font-size: 8px;
+  }
+}
+@media (max-width: 480px) {
+  .artifact-running-head {
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+  .story-document.theme-manuscript {
+    padding: 25px 42px;
+  }
+  .codex-vine {
+    width: 26px;
+  }
+  .codex-illumination {
+    inset: 7px;
+    border-width: 3px;
+  }
+  .codex-rubric {
+    gap: 8px;
+  }
+  .codex-rubric > span {
+    font-size: 25px;
+  }
+  .codex-rubric strong {
+    font-size: 11px;
+  }
+  .codex-colophon i {
+    font-size: 17px;
+  }
+  .story-document:is(
+    .theme-light,
+    .theme-dark,
+    .theme-wanted,
+    .theme-tavern,
+    .theme-newspaper,
+    .theme-incident,
+    .theme-lyrics,
+    .theme-court,
+    .theme-museum
+  ) {
+    padding: 22px;
+  }
+  .story-document:is(
+    .theme-scroll,
+    .theme-decree,
+    .theme-glorious,
+    .theme-poetry,
+    .theme-prophecy,
+    .theme-letter,
+    .theme-screenplay,
+    .theme-academic,
+    .theme-captain
+  ) {
+    padding: 25px 20px;
+  }
+  .edition-stage:is(
+    .stage-space,
+    .stage-scroll,
+    .stage-glorious,
+    .stage-poetry,
+    .stage-prophecy,
+    .stage-lyrics,
+    .stage-card
+  ) {
+    padding: 10px;
+  }
+  .story-document.theme-decree {
+    border-width: 5px;
+    outline-offset: -11px;
+  }
+  .theme-glorious .document-header {
+    padding: 25px 13px;
+  }
+  .theme-glorious .epic-sigil {
+    max-width: 180px;
+  }
+  .royal-signature {
+    grid-template-columns: 1fr;
+  }
+  .wax-seal {
+    margin: auto;
+  }
+  .royal-signature i {
+    margin-top: 5px;
+    padding-top: 5px;
+  }
+  .story-document.theme-dossier {
+    padding: 0 22px 25px;
+  }
+  .classification-band {
+    margin-inline: -22px;
+    font-size: 8px;
+    letter-spacing: 0.05em;
+  }
+  .classification-band span {
+    margin-inline: 3px;
+  }
+  .dossier-control {
+    gap: 12px;
+  }
+  .dossier-control strong {
+    font-size: 12px;
+  }
+  .dossier-control small {
+    font-size: 7px;
+  }
+  .dossier-control .artifact-seal {
+    width: 50px;
+    height: 50px;
+  }
+  .paperclip {
+    right: 15px;
+    width: 18px;
+    height: 52px;
+  }
+  .form-letterhead {
+    gap: 15px;
+  }
+  .form-brand {
+    gap: 10px;
+  }
+  .form-brand > span {
+    width: 37px;
+    height: 37px;
+  }
+  .form-control {
+    font-size: 8px;
+  }
+  .form-brand strong {
+    font-size: 12px;
+  }
+  .theme-incident .document-fields {
+    grid-template-columns: 1fr;
+  }
+  .theme-incident .document-fields > div:nth-child(odd) {
+    border-right: 0;
+  }
+  .theme-incident .document-fields > div:nth-last-child(-n + 2) {
+    border-bottom: 1px solid #aebbc2;
+  }
+  .theme-incident .document-fields > div:last-child {
+    border-bottom: 0;
+  }
+  .story-document.theme-incident .document-body .message-prose {
+    padding: 15px;
+  }
+  .broadcast-navigation {
+    padding: 15px 20px;
+  }
+  .broadcast-navigation > span {
+    display: none;
+  }
+  .broadcast-navigation > b {
+    font-size: 8px;
+  }
+  .broadcast-ticker {
+    font-size: 10px;
+  }
+  .theme-news .document-header,
+  .theme-news .document-body {
+    padding: 25px;
+  }
+  .news-live span {
+    font-size: 8px;
+  }
+  .theme-social .document-body {
+    padding: 0 15px 20px;
+  }
+  .theme-social .story-message {
+    padding: 18px;
+  }
+  .feed-navigation {
+    padding: 18px 20px;
+  }
+  .feed-navigation > span:not(.feed-profile) {
+    font-size: 8px;
+  }
+  .theme-social .document-header {
+    padding-inline: 20px;
+  }
+  .story-document.theme-terminal,
+  .story-document.theme-space,
+  .story-document.theme-bug {
+    padding: 0 20px 25px;
+  }
+  .console-titlebar,
+  .relay-topbar,
+  .issue-navigation {
+    margin-inline: -20px;
+  }
+  .console-titlebar {
+    font-size: 8px;
+    gap: 8px;
+  }
+  .relay-topbar {
+    font-size: 8px;
+  }
+  .relay-readouts {
+    grid-template-columns: 1fr;
+  }
+  .relay-readouts > span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .relay-readouts b {
+    margin: 0;
+  }
+  .space-telemetry {
+    grid-template-columns: 1fr;
+  }
+  .theme-space .instrument-radar {
+    max-height: 120px;
+  }
+  .court-letterhead {
+    gap: 12px;
+  }
+  .court-letterhead .artifact-seal {
+    width: 55px;
+    height: 55px;
+  }
+  .court-letterhead {
+    font-size: 11px;
+  }
+  .court-letterhead strong {
+    font-size: 18px;
+  }
+  .court-letterhead > div > span {
+    font-size: 7px;
+  }
+  .testimony-heading {
+    font-size: 8px;
+  }
+  .testimony-heading strong {
+    font-size: 10px;
+  }
+  .record-sleeve {
+    padding: 18px;
+    gap: 15px;
+  }
+  .record-disc {
+    width: 75px;
+    height: 75px;
+  }
+  .record-disc i {
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+  }
+  .record-sleeve strong {
+    font-size: 29px;
+  }
+  .record-sleeve > div:last-child > span,
+  .record-sleeve small {
+    font-size: 7px;
+  }
+  .story-document.theme-card {
+    padding: 12px;
+    border-width: 5px;
+  }
+  .theme-card .story-message {
+    padding: 18px;
+  }
+  .theme-museum .document-body {
+    padding: 18px;
+  }
+  .gallery-wordmark {
+    gap: 12px;
+  }
+  .gallery-wordmark strong {
+    font-size: 10px;
+  }
+  .gallery-wordmark > span {
+    padding-right: 12px;
+  }
+  .postal-cancel {
+    font-size: 7px;
+    padding: 12px;
+  }
+  .letter-signature strong {
+    font-size: 27px;
+  }
+}
+@media print {
+  .edition-stage,
+  .story-document {
+    box-shadow: none;
+  }
+  .theme-tavern {
+    transform: none;
+  }
+  .story-document .edition-section {
+    break-inside: auto;
+  }
+  .story-document
+    :is(.form-section-bar, .testimony-heading, .file-evidence-bar) {
+    break-after: avoid;
+  }
+}
+.story-document.theme-screenplay .message-prose .script-slug {
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 2em;
+}
+.story-document.theme-screenplay .message-prose .script-character {
+  text-align: center;
+  margin: 1.6em 0 0.25em;
+}
+.story-document.theme-screenplay .message-prose .script-direction {
+  max-width: 65%;
+  margin-inline: auto;
+  font-style: italic;
+}
+.story-document.theme-court .message-prose .court-question {
+  padding-left: 1.8em;
+  text-indent: -1.8em;
+}
+.story-document:is(.theme-letter, .theme-incident)
+  .message-prose
+  .correspondence-field {
+  padding: 0.5em 0.8em;
+  border-bottom: 1px solid var(--artifact-rule);
+  font-weight: 600;
+}
+.story-document.theme-bug .message-prose .issue-detail {
+  padding: 0.8em 1em;
+  background: #8d7eb015;
+  border-left: 3px solid #8d7eb0;
+}
+.codex-vine {
+  background: url("/textures/illuminated-vine.svg") center top/100% auto
+    repeat-y;
+}
+.story-document.theme-decree .document-header {
+  background: linear-gradient(120deg, #4d202b, #391720);
+  border: 3px double #a77d42;
+  padding: 28px 20px;
+}
+.story-document.theme-decree .document-header h2 {
+  color: #f0ddb5;
+}
+.theme-decree .document-meta {
+  color: #d2b58a;
+}
+@media (max-width: 480px) {
+  .theme-manuscript .message-prose > p:first-child::first-letter,
+  .theme-manuscript .edition-section > :is(h1, h2) + p::first-letter {
+    font-size: 3.15em;
+    padding: 7px 8px;
+    margin-right: 9px;
+    border-width: 3px;
+  }
+}
+.pdf-export .theme-manuscript .edition-section > :is(h1, h2) + p::first-letter {
+  float: none;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+/* Legacy light-paper themes must not leave dark ink on a newly dark surface. */
+.story-document[data-font] {
+  color: var(--ink);
+}
+.story-document[data-font] .document-body :is(.message-prose, .message-text) {
+  color: var(--ink);
+}
+.story-document.theme-card .story-message {
+  --ink: #343025;
+}
+.theme-bug .edition-message-label {
+  background: #342d4a;
+  color: #c6b9e7;
+  border: 1px solid #8f7fb344;
+}
+.theme-bug .end-bug {
+  color: #a5b9a4;
+}
+.theme-poetry {
+  clip-path: none;
+}
+.story-document.theme-decree .document-footer > span {
+  display: none;
+}
+.theme-decree .document-footer > small {
+  margin-top: 0;
+}

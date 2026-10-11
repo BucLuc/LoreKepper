@@ -7,158 +7,21 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { withoutEmojis } from "@/lib/emojis";
 import { readerFonts } from "@/lib/reader-fonts";
 import { storyPdfFilename } from "@/lib/export-pdf";
-import type { Exhibit, Message } from "@/lib/archive";
-import { authorName, dateLabel, displayTime, storyText } from "@/lib/format";
+import type { Exhibit } from "@/lib/archive";
+import { storyText } from "@/lib/format";
 import { Feedback } from "./feedback";
 import { Modal } from "./vault-ui";
 import { ExportOptions } from "./export-options";
 import { exportFilename } from "@/lib/export-name";
 import { api } from "@/lib/supabase";
 import { Icon } from "./icon";
-import { HistoricalDecorations, RoyalCrest } from "./historical-art";
-import { EpicSigil } from "./epic-sigil";
-import { CompassRose } from "./compass-rose";
-import { PirateCrest } from "./pirate-crest";
 
-import {
-  extraEditions,
-  EditionHeader,
-  EditionMessageLabel,
-  EditionEnd,
-} from "./extra-editions";
-const styles = [
-  {
-    id: "captain",
-    name: "Captain’s Log",
-    mark: "⚓",
-    description: "Salt-stained pages. Questionable orders. Preserved at sea.",
-    label: "RECOVERED FROM THE CAPTAIN’S QUARTERS",
-  },
-  {
-    id: "light",
-    name: "Light",
-    mark: "○",
-    description: "A simple white page. Just the words.",
-    label: "",
-  },
-  {
-    id: "dark",
-    name: "Dark",
-    mark: "●",
-    description: "A quiet dark page. Just the words.",
-    label: "",
-  },
-  ...extraEditions,
-  {
-    id: "glorious",
-    name: "Glorious",
-    mark: "✦",
-    description: "Gold, grandeur, and absolutely no restraint.",
-    label: "THE IMMORTAL CHRONICLES",
-  },
-  {
-    id: "newspaper",
-    name: "Newspaper",
-    mark: "▤",
-    description: "Yesterday’s nonsense. Today’s front page.",
-    label: "THE LOREKEEPER GAZETTE",
-  },
-  {
-    id: "manuscript",
-    name: "Medieval Manuscript",
-    mark: "❧",
-    description: "Illuminated pages from a deeply unserious age.",
-    label: "FROM THE BOOK OF QUESTIONABLE DEEDS",
-  },
-  {
-    id: "scroll",
-    name: "Ancient Scroll",
-    mark: "☷",
-    description: "Unearthed wisdom. Suspiciously well preserved.",
-    label: "FRAGMENT FROM THE SACRED ARCHIVES",
-  },
-  {
-    id: "decree",
-    name: "Royal Decree",
-    mark: "♛",
-    description: "By order of their extremely questionable majesties.",
-    label: "BY ROYAL APPOINTMENT",
-  },
-  {
-    id: "screenplay",
-    name: "Movie Screenplay",
-    mark: "▶",
-    description: "A cinematic record. Oscar nomination pending.",
-    label: "LOREKEEPER PICTURES PRESENTS",
-  },
-  {
-    id: "social",
-    name: "Social Media Post",
-    mark: "@",
-    description: "Posted for posterity. Immortalised by the archive.",
-    label: "LOREKEEPER SOCIAL · THE ARCHIVED FEED",
-  },
-  {
-    id: "incident",
-    name: "Corporate Incident Report",
-    mark: "▧",
-    description: "Filed with HR. Immediately escalated.",
-    label: "INTERNAL INCIDENT REGISTER",
-  },
-  {
-    id: "dossier",
-    name: "Classified Dossier",
-    mark: "⊕",
-    description: "Eyes only. Clearance: questionable.",
-    label: "DIRECTORATE OF QUESTIONABLE INTELLIGENCE",
-  },
-  {
-    id: "letter",
-    name: "Formal Letter",
-    mark: "✉",
-    description: "Sincerely yours, with absolutely no remorse.",
-    label: "PRIVATE CORRESPONDENCE",
-  },
-  {
-    id: "terminal",
-    name: "Terminal Archive",
-    mark: ">_",
-    description: "The logs don’t lie. They do occasionally roast.",
-    label: "LOREKEEPER ARCHIVE TERMINAL",
-  },
-];
-const editionGroups = [
-  { name: "Basic", ids: ["light", "dark"] },
-  {
-    name: "Legend & History",
-    ids: [
-      "glorious",
-      "manuscript",
-      "scroll",
-      "decree",
-      "poetry",
-      "prophecy",
-      "captain",
-    ],
-  },
-  { name: "Artifacts & Places", ids: ["museum", "tavern", "wanted", "card"] },
-  {
-    name: "Media & Entertainment",
-    ids: ["newspaper", "screenplay", "social", "news", "lyrics"],
-  },
-  {
-    name: "Official Records",
-    ids: ["incident", "dossier", "letter", "court", "academic"],
-  },
-  { name: "Technology & Sci-Fi", ids: ["terminal", "space", "bug"] },
-];
+import { readerEditions as styles, editionGroups } from "@/lib/reader-editions";
+import { StoryDocument } from "./story-document";
 function EditionMark({ id, mark }: { id: string; mark: string }) {
-  return id === "captain" ? <Icon name="anchor" /> : <>{mark}</>;
+  return id === "ancientcodex" ? <Icon name="book" /> : id === "captain" ? <Icon name="anchor" /> : <>{mark}</>;
 }
 function readPreferences() {
   try {
@@ -174,45 +37,6 @@ function subscribeToPreferences(callback: () => void) {
     window.removeEventListener("storage", callback);
     window.removeEventListener("lorekeeper-preferences", callback);
   };
-}
-function MessageBody({
-  message,
-  plain,
-  showEmojis,
-}: {
-  message: Message;
-  plain: boolean;
-  showEmojis: boolean;
-}) {
-  const displayText = (text: string) =>
-    showEmojis ? text : withoutEmojis(text);
-  const looksLikeArt =
-    /[╔╗╚╝║═┌┐└┘│─]/.test(message.content) ||
-    message.content.split("\n").filter((l) => /^\s{4,}[^\w\s]{2,}/.test(l))
-      .length > 2;
-  if (plain || looksLikeArt)
-    return (
-      <pre className={`message-text ${looksLikeArt ? "ascii-art" : ""}`}>
-        {displayText(message.content)}
-      </pre>
-    );
-  return (
-    <div className="message-prose">
-      <Markdown
-        remarkPlugins={[remarkGfm]}
-        skipHtml
-        components={{
-          a: ({ children, href }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
-        }}
-      >
-        {displayText(message.presentation ?? message.content)}
-      </Markdown>
-    </div>
-  );
 }
 export function Reader({
   entry,
@@ -240,9 +64,12 @@ export function Reader({
     try {
       const value = JSON.parse(saved || "{}");
       return {
-        style:
-          value.style === "transcript"
-            ? "manuscript"
+        style: ["transcript", "monastic", "gothic", "charter"].includes(
+          value.style,
+        )
+          ? "manuscript"
+          : value.style === "pirate"
+            ? "captain"
             : styles.some((s) => s.id === value.style)
               ? (value.style as string)
               : "glorious",
@@ -305,9 +132,12 @@ export function Reader({
   )!.name;
   const openGroup = expandedGroup === undefined ? activeGroup : expandedGroup;
   const [copyStatus, setCopyStatus] = useState("");
-  const [exportOpen,setExportOpen]=useState(false);
-  const [exportFormat,setExportFormat]=useState("pdf");
-  const [textDownload,setTextDownload]=useState<{url:string;name:string}|null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState("pdf");
+  const [textDownload, setTextDownload] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
   const [fallback, setFallback] = useState<string | null>(null);
   const [maximized, setMaximized] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -391,20 +221,71 @@ export function Reader({
     }
   }
   async function exportText() {
-    if(!collectionId || exporting)return;
-    setExporting(true);setTextDownload(null);
+    if (!collectionId || exporting) return;
+    setExporting(true);
+    setTextDownload(null);
     try {
-      const filename=exportFilename(entry.title,exportFormat);
-      const picker=(window as typeof window & {showSaveFilePicker?: (opts:unknown)=>Promise<{createWritable:()=>Promise<{write:(blob:Blob)=>Promise<void>;close:()=>Promise<void>}>}>}).showSaveFilePicker;
-      const handle=picker ? await picker.call(window,{suggestedName:filename,types:[{description:exportFormat==="json"?"JSON archive":"Markdown document",accept:{[exportFormat==="json"?"application/json":"text/markdown"]:["."+exportFormat]}}]}) : null;
-      const r=await api("export",{collection:collectionId,entry:entry.id,format:exportFormat});
-      const blob=new Blob([r.content],{type:exportFormat==="json"?"application/json":"text/markdown"});
-      if(handle){const w=await handle.createWritable();await w.write(blob);await w.close();setExportOpen(false);setCopyStatus("Story saved.");}
-      else setTextDownload({url:URL.createObjectURL(blob),name:filename});
-    }catch(error){setCopyStatus(error instanceof DOMException && error.name==="AbortError" ? "Export cancelled." : "Export failed. Please try again.");}
-    finally{setExporting(false);}
+      const filename = exportFilename(entry.title, exportFormat);
+      const picker = (
+        window as typeof window & {
+          showSaveFilePicker?: (opts: unknown) => Promise<{
+            createWritable: () => Promise<{
+              write: (blob: Blob) => Promise<void>;
+              close: () => Promise<void>;
+            }>;
+          }>;
+        }
+      ).showSaveFilePicker;
+      const handle = picker
+        ? await picker.call(window, {
+            suggestedName: filename,
+            types: [
+              {
+                description:
+                  exportFormat === "json"
+                    ? "JSON archive"
+                    : "Markdown document",
+                accept: {
+                  [exportFormat === "json"
+                    ? "application/json"
+                    : "text/markdown"]: ["." + exportFormat],
+                },
+              },
+            ],
+          })
+        : null;
+      const r = await api("export", {
+        collection: collectionId,
+        entry: entry.id,
+        format: exportFormat,
+      });
+      const blob = new Blob([r.content], {
+        type: exportFormat === "json" ? "application/json" : "text/markdown",
+      });
+      if (handle) {
+        const w = await handle.createWritable();
+        await w.write(blob);
+        await w.close();
+        setExportOpen(false);
+        setCopyStatus("Story saved.");
+      } else
+        setTextDownload({ url: URL.createObjectURL(blob), name: filename });
+    } catch (error) {
+      setCopyStatus(
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Export cancelled."
+          : "Export failed. Please try again.",
+      );
+    } finally {
+      setExporting(false);
+    }
   }
-  useEffect(()=>()=>{if(textDownload)URL.revokeObjectURL(textDownload.url);},[textDownload]);
+  useEffect(
+    () => () => {
+      if (textDownload) URL.revokeObjectURL(textDownload.url);
+    },
+    [textDownload],
+  );
   async function copyImage() {
     if (!documentRef.current || copyingImage) return;
     const element = documentRef.current;
@@ -488,17 +369,11 @@ export function Reader({
       setCopyStatus("Copy the story link below.");
     }
   }
+  const reference = String(entry.number).padStart(3, "0");
   const theme = styles.find((s) => s.id === style)!;
   const recommended =
     styles.find((s) => s.id === entry.recommended) ??
     styles.find((s) => s.id === "glorious")!;
-  const reference = String(entry.number).padStart(3, "0");
-  const isTranscript = [
-    "screenplay",
-    "incident",
-    "dossier",
-    "terminal",
-  ].includes(style);
   return (
     <main
       id="main"
@@ -516,7 +391,10 @@ export function Reader({
           <span aria-hidden="true">/</span>
           <span aria-current="page">EXHIBIT {reference}</span>
         </nav>
-        <div className="v-reader-title"><h1>{entry.title}</h1>{titleActions}</div>
+        <div className="v-reader-title">
+          <h1>{entry.title}</h1>
+          {titleActions}
+        </div>
         <div className="reader-meta">
           <span className="avatar-pair">
             {entry.authors.map((a) => (
@@ -719,15 +597,98 @@ export function Reader({
                   </div>
                 )}
               </div>
-              <div className="toolbar-menu"><button onClick={()=>{setOpenMenu(null);setExportOpen(true);setPdfDownload(null);setTextDownload(null);}}><Icon name="export"/>Export</button></div>
+              <div className="toolbar-menu">
+                <button
+                  onClick={() => {
+                    setOpenMenu(null);
+                    setExportOpen(true);
+                    setPdfDownload(null);
+                    setTextDownload(null);
+                  }}
+                >
+                  <Icon name="export" />
+                  Export
+                </button>
+              </div>
             </div>
           </div>
-          {copyStatus ? <Feedback onDismiss={()=>{setCopyStatus("");setImageDownload(null);}}>{copyStatus}{imageDownload && <a className="pdf-download" href={imageDownload} download={exportFilename(entry.title,"png",theme.name)}>Save image</a>}</Feedback> : <p className="copy-status">{theme.description}</p>}
-          <Modal open={exportOpen} title="Take the legend with you" onClose={()=>{if(!exporting)setExportOpen(false);}}>
-            <p className="v-muted">Choose your edition. This story is included.</p>
-            {copyStatus && <Feedback onDismiss={()=>setCopyStatus("")}>{copyStatus}</Feedback>}
-            <ExportOptions formats={collectionId?["pdf","json","md"]:["pdf"]} format={exportFormat} onFormat={f=>{setExportFormat(f);setPdfDownload(null);setTextDownload(null);}} busy={exporting} onExport={()=>void (exportFormat==="pdf"?exportPdf():exportText())} onCancel={()=>setExportOpen(false)} download={exportFormat==="pdf"&&pdfDownload?{url:pdfDownload.url,name:pdfDownload.filename}:textDownload}/>
-            <div className="v-export-extras"><button className="v-button" onClick={()=>void copy()}><Icon name="copy"/>Copy text</button><button className="v-button" onClick={()=>void copyImage()} disabled={copyingImage}>{copyingImage?"Preparing image…":"Copy image"}</button>{entry.messages.length>1 && <button className="v-button" onClick={()=>void copy(true)}>Copy transcript</button>}<button className="v-button" onClick={()=>void shareLink()}><Icon name="link"/>Copy link</button></div>
+          {copyStatus ? (
+            <Feedback
+              onDismiss={() => {
+                setCopyStatus("");
+                setImageDownload(null);
+              }}
+            >
+              {copyStatus}
+              {imageDownload && (
+                <a
+                  className="pdf-download"
+                  href={imageDownload}
+                  download={exportFilename(entry.title, "png", theme.name)}
+                >
+                  Save image
+                </a>
+              )}
+            </Feedback>
+          ) : (
+            <p className="copy-status">{theme.description}</p>
+          )}
+          <Modal
+            open={exportOpen}
+            title="Take the legend with you"
+            onClose={() => {
+              if (!exporting) setExportOpen(false);
+            }}
+          >
+            <p className="v-muted">
+              Choose your edition. This story is included.
+            </p>
+            {copyStatus && (
+              <Feedback onDismiss={() => setCopyStatus("")}>
+                {copyStatus}
+              </Feedback>
+            )}
+            <ExportOptions
+              formats={collectionId ? ["pdf", "json", "md"] : ["pdf"]}
+              format={exportFormat}
+              onFormat={(f) => {
+                setExportFormat(f);
+                setPdfDownload(null);
+                setTextDownload(null);
+              }}
+              busy={exporting}
+              onExport={() =>
+                void (exportFormat === "pdf" ? exportPdf() : exportText())
+              }
+              onCancel={() => setExportOpen(false)}
+              download={
+                exportFormat === "pdf" && pdfDownload
+                  ? { url: pdfDownload.url, name: pdfDownload.filename }
+                  : textDownload
+              }
+            />
+            <div className="v-export-extras">
+              <button className="v-button" onClick={() => void copy()}>
+                <Icon name="copy" />
+                Copy text
+              </button>
+              <button
+                className="v-button"
+                onClick={() => void copyImage()}
+                disabled={copyingImage}
+              >
+                {copyingImage ? "Preparing image…" : "Copy image"}
+              </button>
+              {entry.messages.length > 1 && (
+                <button className="v-button" onClick={() => void copy(true)}>
+                  Copy transcript
+                </button>
+              )}
+              <button className="v-button" onClick={() => void shareLink()}>
+                <Icon name="link" />
+                Copy link
+              </button>
+            </div>
           </Modal>
           {fallback !== null && (
             <div className="copy-fallback">
@@ -754,219 +715,15 @@ export function Reader({
                 />
               </>
             )}
-            <article
-              className={`story-document theme-${style} ${plain ? "plain-mode" : ""}`}
-              data-font={selectedFont.id}
-              style={
-                {
-                  "--reading-size": `${size}px`,
-                  "--reader-font": selectedFont.family || undefined,
-                } as React.CSSProperties
-              }
-            >
-              {["manuscript", "decree"].includes(style) && (
-                <HistoricalDecorations kind={style} number={entry.number} />
-              )}
-              <div className="document-header">
-                <span className="document-ornament" aria-hidden="true">
-                  {style === "captain" ? (
-                    <PirateCrest />
-                  ) : style === "decree" ? (
-                    <RoyalCrest />
-                  ) : ["glorious", "prophecy", "poetry"].includes(style) ? (
-                    <EpicSigil
-                      kind={style as "glorious" | "prophecy" | "poetry"}
-                    />
-                  ) : (
-                    theme.mark
-                  )}
-                </span>
-                <div className="document-label">{theme.label}</div>
-                {style === "newspaper" && (
-                  <div className="newspaper-edition">
-                    VOL. I · NO. {reference}{" "}
-                    <span>{entry.date.toUpperCase()}</span> PRICE: YOUR DIGNITY
-                  </div>
-                )}
-                {style === "dossier" && (
-                  <div className="classified-stamp">
-                    TOP SECRET // LORE EYES ONLY
-                  </div>
-                )}
-                {style === "terminal" && (
-                  <div className="terminal-command">
-                    $ lorekeeper read --exhibit {reference}
-                    <br />
-                    <span>[OK] Archive retrieved. Integrity intact.</span>
-                  </div>
-                )}
-                <h2>{showEmojis ? entry.title : withoutEmojis(entry.title)}</h2>
-                <div className="document-meta">
-                  {style === "decree"
-                    ? "ISSUED IN THE NAME OF"
-                    : style === "screenplay"
-                      ? "WRITTEN BY"
-                      : style === "incident"
-                        ? "PARTIES ON RECORD"
-                        : "PRESERVED WORDS OF"}{" "}
-                  {entry.authors.join(" & ").toUpperCase()}
-                </div>
-                {["incident", "dossier", "letter"].includes(style) && (
-                  <dl className="document-fields">
-                    <div>
-                      <dt>{style === "letter" ? "Date" : "Reference"}</dt>
-                      <dd>
-                        {style === "letter" ? entry.date : `LK-${reference}`}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>{style === "letter" ? "From" : "Recorded"}</dt>
-                      <dd>
-                        {style === "letter"
-                          ? entry.authors.join(" & ")
-                          : entry.date}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Source</dt>
-                      <dd>
-                        {entry.source === "whatsapp"
-                          ? "WhatsApp"
-                          : "Microsoft Teams"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>{style === "incident" ? "Status" : "Record"}</dt>
-                      <dd>
-                        {style === "incident"
-                          ? "Preserved for review"
-                          : `${entry.messages.length} message${entry.messages.length === 1 ? "" : "s"}`}
-                      </dd>
-                    </div>
-                  </dl>
-                )}
-              </div>
-              <EditionHeader
-                style={style}
-                reference={reference}
-                authors={entry.authors.join(" & ")}
-                date={entry.date}
-                score={entry.score}
-              />
-              {style === "captain" && (
-                <>
-                  <div className="captain-register">
-                    <span>SHIP’S JOURNAL · No. {reference}</span>
-                    <span>{entry.date}</span>
-                    <span>VESSEL: THE LOREKEEPER</span>
-                  </div>
-                  <div className="captain-chart" aria-hidden="true">
-                    <CompassRose />
-                  </div>
-                </>
-              )}
-              <div className="document-body">
-                {entry.messages.map((message, index) => (
-                  <section
-                    key={message.id}
-                    className={`story-message ${(message.userId ? message.author : authorName(message.author)) === "Liri" ? "by-liri" : "by-luc"}`}
-                  >
-                    <EditionMessageLabel style={style} index={index} />
-                    {style === "captain" && (
-                      <div className="captain-entry-label">
-                        <Icon name="anchor" /> LOG ENTRY{" "}
-                        {String(index + 1).padStart(2, "0")}
-                      </div>
-                    )}
-                    {entry.messages.length > 1 && <div className="message-attribution">
-                      {style === "card" && (
-                        <span
-                          className="collectible-portrait"
-                          aria-hidden="true"
-                        >
-                          {(message.userId ? message.author : authorName(message.author))[0]}
-                        </span>
-                      )}
-                      {style === "social" && (
-                        <span className="social-avatar" aria-hidden="true">
-                          {(message.userId ? message.author : authorName(message.author))[0]}
-                        </span>
-                      )}
-                      {style === "screenplay" && (
-                        <span className="scene-number">
-                          SCENE {index + 1} · ARCHIVED EXCHANGE
-                        </span>
-                      )}
-                      <span className="message-speaker">
-                        {style === "incident"
-                          ? "Statement / "
-                          : style === "terminal"
-                            ? "> "
-                            : ""}
-                        {(message.userId ? message.author : authorName(message.author))}
-                      </span>
-                      <span className="message-timestamp">
-                        {dateLabel(message.timestamp)} ·{" "}
-                        {displayTime(message.timestamp)}
-                      </span>
-                      {style === "dossier" && (
-                        <span className="evidence-label">
-                          EXHIBIT {reference}.{index + 1}
-                        </span>
-                      )}
-                    </div>}
-                    <MessageBody
-                      message={message}
-                      plain={plain}
-                      showEmojis={showEmojis}
-                    />
-                    {style === "social" && (
-                      <div className="social-post-footer">
-                        <span>♡ Preserved</span>
-                        <span>↗ From the archives</span>
-                        <span>◇ Exhibit {reference}</span>
-                      </div>
-                    )}
-                    {isTranscript && (
-                      <div className="message-end" aria-hidden="true">
-                        {style === "terminal"
-                          ? "[END OF RECORD]"
-                          : style === "dossier"
-                            ? "— END OF EVIDENCE —"
-                            : ""}
-                      </div>
-                    )}
-                  </section>
-                ))}
-              </div>
-              <div className="document-footer">
-                <EditionEnd style={style} />
-                <span aria-hidden="true">
-                  {style === "captain" ? (
-                    <Icon name="anchor" />
-                  ) : style === "decree" ? (
-                    "♛"
-                  ) : style === "terminal" ? (
-                    "EOF"
-                  ) : (
-                    "✦"
-                  )}
-                </span>
-                <small>
-                  {style === "captain"
-                    ? "LOG CLOSED. MAY THE TALE OUTLIVE THE TIDE."
-                    : style === "screenplay"
-                      ? "FADE OUT. THE NONSENSE ENDURES."
-                      : style === "incident"
-                        ? "END OF REPORT · NO FURTHER ACTION TAKEN"
-                        : style === "dossier"
-                          ? "DOCUMENT ENDS · RETURN TO ARCHIVE"
-                          : style === "decree"
-                            ? "SO RECORDED. SO IMMORTALISED."
-                            : "HERE ENDS THE RECORD. THE LEGEND CONTINUES."}
-                </small>
-              </div>
-            </article>
+            <StoryDocument
+              entry={entry}
+              style={style}
+              theme={theme}
+              size={size}
+              plain={plain}
+              showEmojis={showEmojis}
+              font={selectedFont.id}
+            />
           </div>
           <details className="curator-note">
             <summary>

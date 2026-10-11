@@ -36,11 +36,11 @@ test("collection JSON keeps import format and excludes all IDs, user references 
   assert.ok(!json.includes("secret-"));
   assert.ok(!json.includes("presentation"));
   assert.equal(
-    value.entries[0].messages[0].original,
+    value.items[0].messages[0].original,
     entries[0].messages[0].original,
   );
   assert.equal(
-    value.entries[0].messages[0].content,
+    value.items[0].messages[0].content,
     entries[0].messages[0].content,
   );
 });

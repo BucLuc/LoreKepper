@@ -1,0 +1,332 @@
+/* Locally hosted fonts; original OFL / Apache licenses sit alongside each family. Weight ranges match the actual font binaries. */
+@font-face {
+  font-family: "LK Crimson Pro";
+  src: url("/fonts/crimsonpro.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Source Serif 4";
+  src: url("/fonts/sourceserif4.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK EB Garamond";
+  src: url("/fonts/ebgaramond.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Literata";
+  src: url("/fonts/literata.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Lora";
+  src: url("/fonts/lora.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Cormorant Garamond";
+  src: url("/fonts/cormorantgaramond.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Bitter";
+  src: url("/fonts/bitter.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Alegreya";
+  src: url("/fonts/alegreya.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Inter";
+  src: url("/fonts/inter.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Work Sans";
+  src: url("/fonts/worksans.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Nunito";
+  src: url("/fonts/nunito.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Oswald";
+  src: url("/fonts/oswald.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK JetBrains Mono";
+  src: url("/fonts/jetbrainsmono.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Space Mono";
+  src: url("/fonts/spacemono.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Inconsolata";
+  src: url("/fonts/inconsolata.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Source Code Pro";
+  src: url("/fonts/sourcecodepro.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Caveat";
+  src: url("/fonts/caveat.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Barlow";
+  src: url("/fonts/barlow.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Barlow";
+  src: url("/fonts/barlow-italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Barlow";
+  src: url("/fonts/barlow-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Barlow";
+  src: url("/fonts/barlow-italic-bold.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK IBM Plex Mono";
+  src: url("/fonts/ibmplexmono.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK IBM Plex Mono";
+  src: url("/fonts/ibmplexmono-italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK IBM Plex Mono";
+  src: url("/fonts/ibmplexmono-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK IBM Plex Mono";
+  src: url("/fonts/ibmplexmono-italic-bold.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Courier Prime";
+  src: url("/fonts/courierprime.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Courier Prime";
+  src: url("/fonts/courierprime-italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Courier Prime";
+  src: url("/fonts/courierprime-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Courier Prime";
+  src: url("/fonts/courierprime-italic-bold.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Special Elite";
+  src: url("/fonts/specialelite.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Patrick Hand";
+  src: url("/fonts/patrickhand.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Marcellus";
+  src: url("/fonts/marcellus.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Uncial Antiqua";
+  src: url("/fonts/uncialantiqua.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Atkinson Hyperlegible";
+  src: url("/fonts/atkinsonhyperlegible.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Atkinson Hyperlegible";
+  src: url("/fonts/atkinsonhyperlegible-italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Atkinson Hyperlegible";
+  src: url("/fonts/atkinsonhyperlegible-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Atkinson Hyperlegible";
+  src: url("/fonts/atkinsonhyperlegible-italic-bold.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Rajdhani";
+  src: url("/fonts/rajdhani.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Rajdhani";
+  src: url("/fonts/rajdhani-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Cinzel";
+  src: url("/fonts/cinzel.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Bebas Neue";
+  src: url("/fonts/bebasneue.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "LK Gentium Book Plus";
+  src: url("/fonts/gentiumbookplus.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Gentium Book Plus";
+  src: url("/fonts/gentiumbookplus-italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Gentium Book Plus";
+  src: url("/fonts/gentiumbookplus-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Gentium Book Plus";
+  src: url("/fonts/gentiumbookplus-italic-bold.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "LK Fondamento";
+  src: url("/fonts/fondamento.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LK Fondamento";
+  src: url("/fonts/fondamento-italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}

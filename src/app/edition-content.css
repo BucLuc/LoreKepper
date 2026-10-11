@@ -1,0 +1,98 @@
+/* Semantic content inside the existing artifact shells. Last in the cascade. */
+.story-document :is(.message-prose,.message-text,.document-header h2) { font-family: var(--reader-font); }
+.story-document .edition-prose { line-height: 1.8; overflow-wrap: anywhere; }
+.story-document .edition-section { margin-block: 2em; position: relative; break-inside: auto; }
+.story-document .edition-section:first-child { margin-top: 0; }
+.story-document .edition-prose :is(h1,h2,h3,h4,h5,h6) { line-height: 1.25; text-wrap: balance; margin: 1.6em 0 .7em; break-after: avoid; }
+.story-document .edition-prose h1 { font-size: 1.9em; }
+.story-document .edition-prose h2 { font-size: 1.5em; }
+.story-document .edition-prose h3 { font-size: 1.2em; }
+.story-document .edition-prose :is(h4,h5,h6) { font-size: 1em; }
+.story-document .edition-prose p { margin-block: .85em; }
+.story-document .edition-prose :is(ul,ol) { padding-left: 1.6em; margin-block: 1em; }
+.story-document .edition-prose li { padding-left: .3em; margin-block: .4em; }
+.story-document .edition-prose blockquote { margin: 1.6em 0; padding: .8em 1.2em; border-left: 3px solid currentColor; background: color-mix(in srgb, currentColor 5%, transparent); color: inherit; }
+.story-document .edition-prose hr { border: 0; border-top: 1px solid currentColor; opacity: .35; margin: 2em 0; }
+.story-document .edition-prose pre { max-width: 100%; overflow-x: auto; padding: 1.2em; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); background: color-mix(in srgb, currentColor 6%, transparent); white-space: pre; }
+.story-document .edition-prose :not(pre)>code { font-family: "LK IBM Plex Mono", monospace; font-size: .85em; padding: .12em .35em; background: color-mix(in srgb, currentColor 8%, transparent); border-radius: 3px; }
+.story-document .edition-table { max-width: 100%; overflow-x: auto; margin-block: 1.5em; }
+.story-document .edition-table table { width: 100%; border-collapse: collapse; font-family: inherit; }
+.story-document .edition-table :is(th,td) { padding: .7em .9em; border: 1px solid color-mix(in srgb, currentColor 22%, transparent); min-width: 7em; }
+.story-document .edition-table th { background: color-mix(in srgb, currentColor 9%, transparent); }
+.story-document .edition-prose a { text-decoration: underline; text-underline-offset: .2em; }
+/* Illumination, carved fragments, and numbered royal clauses. */
+.theme-manuscript .edition-section { border-left: 3px double #8e3936; padding-left: 1.4em; }
+.theme-manuscript .edition-section> :is(h1,h2) { color: #803b31; font-variant: small-caps; border-bottom: 1px solid #ad8b51; padding-bottom: .4em; }
+.theme-scroll .edition-section> :is(h1,h2) { text-align: center; font-variant: small-caps; letter-spacing: .06em; padding-block: .7em; border-block: 1px solid #8a603866; }
+.theme-scroll .edition-prose blockquote { border-inline: 1px solid #8a603866; text-align: center; font-style: italic; }
+.theme-decree .edition-section { border-top: 3px double #947043; padding-top: 1.2em; }
+.theme-decree .edition-section::before { content: "§ " attr(data-section); color: #86532b; font-size: .8em; letter-spacing: .15em; }
+.theme-decree .edition-prose ol { list-style-type: upper-roman; }
+.theme-glorious .edition-section> :is(h1,h2) { color: #edcf88; font-variant: small-caps; text-align: center; padding: .8em; border-block: 1px solid #b99b5555; background: radial-gradient(ellipse, #b99b551a, transparent); }
+.theme-glorious .edition-prose blockquote { border: 3px double #b99b55; text-align: center; font-size: 1.15em; }
+.theme-poetry .edition-prose p,.theme-lyrics .edition-prose p { white-space: pre-line; }
+.theme-poetry .edition-section { padding-inline: 1em; border-left: 1px solid #a3bba455; }
+.theme-poetry .edition-section> :is(h1,h2) { font-style: italic; font-weight: 400; color: #bfd3be; }
+.theme-prophecy .edition-section> :is(h1,h2) { text-align: center; letter-spacing: .08em; color: #d6bce9; border-bottom: 1px solid #b593cc66; padding-bottom: .8em; }
+.theme-prophecy .edition-prose blockquote { border: 1px solid #b593cc66; border-radius: 50% 50% 0 0 / 20px 20px 0 0; padding: 1.6em; text-align: center; }
+.theme-captain .edition-section { border-top: 1px dashed #78542c80; padding-top: 1em; }
+.theme-captain .edition-section> :is(h1,h2) { font-variant: small-caps; color: #664223; }
+.theme-captain .edition-prose blockquote { border: 2px solid #78542c55; background: #78542c0a; transform: rotate(-.3deg); }
+/* Paper ephemera and curated artifacts. */
+.theme-tavern .edition-section { padding: 1.2em; border: 1px solid #79522d55; background: #fff5d41c; box-shadow: 2px 4px 0 #573d2112; }
+.theme-tavern .edition-section> :is(h1,h2) { text-align: center; border-bottom: 2px solid #79522d66; padding-bottom: .5em; }
+.theme-wanted .edition-section> :is(h1,h2) { text-transform: uppercase; letter-spacing: .06em; text-align: center; border-block: 3px double currentColor; padding-block: .5em; }
+.theme-wanted .edition-prose blockquote { border: 2px dashed currentColor; font-weight: 600; text-align: center; }
+.theme-museum .edition-section { padding: 1.3em; border-top: 1px solid #626b5855; }
+.theme-museum .edition-section> :is(h1,h2) { font-weight: 400; }
+.theme-museum .edition-prose blockquote { background: #e5e1d5; border-left: 4px solid #626b58; }
+.theme-card .edition-section { border: 1px solid #c6a96b55; border-radius: 10px; padding: 1em; background: #ffffff08; }
+.theme-card .edition-section> :is(h1,h2) { font-size: 1.15em; text-transform: uppercase; letter-spacing: .06em; }
+/* News hierarchy, pull quotes, and feed cards. */
+.theme-newspaper .edition-section> :is(h1,h2) { font-weight: 800; border-top: 4px double currentColor; padding-top: .5em; }
+.theme-newspaper .edition-prose blockquote { font-size: 1.3em; font-style: italic; border-block: 2px solid currentColor; border-left: 0; text-align: center; background: transparent; }
+.theme-news .edition-section> :is(h1,h2) { background: #ac2430; color: #fff; padding: .55em .8em; text-transform: uppercase; font-size: 1.3em; }
+.theme-news .edition-prose blockquote { border-left-color: #bd3440; font-size: 1.15em; }
+.theme-social .edition-section { padding: 1.2em; border: 1px solid #8791ab40; border-radius: 14px; background: #8791ab08; }
+.theme-social .edition-section> :is(h1,h2) { font-size: 1.25em; }
+.theme-lyrics .edition-section> :is(h1,h2) { text-transform: uppercase; letter-spacing: .18em; font-size: 1em; color: inherit; opacity: .8; }
+.theme-lyrics .edition-prose blockquote { border-block: 1px solid currentColor; border-left: 0; padding-block: 1.2em; font-size: 1.15em; }
+/* Records preserve original wording while expressing their documentary structure. */
+.theme-court .edition-section> :is(h1,h2) { text-align: center; text-transform: uppercase; font-size: 1.1em; border-block: 1px solid currentColor; padding: .7em; }
+.theme-court .edition-section>p { counter-increment: testimony; position: relative; }
+.theme-court .edition-section>p::before { content: counter(testimony,decimal-leading-zero); position: absolute; right: calc(100% + 12px); font: 11px/2 monospace; opacity: .5; }
+.theme-court .edition-prose blockquote { border: 3px double #293a4d66; }
+.theme-incident .edition-section> :is(h1,h2) { font-size: 1.15em; text-transform: uppercase; letter-spacing: .06em; background: #263e5210; border-left: 4px solid #263e52; padding: .7em; }
+.theme-incident .edition-prose ol { border-left: 1px solid #263e5240; }
+.theme-dossier .edition-section> :is(h1,h2) { text-transform: uppercase; font-size: 1.1em; letter-spacing: .1em; border-bottom: 2px solid currentColor; padding-bottom: .5em; }
+.theme-dossier .edition-prose blockquote { border: 1px dashed currentColor; }
+.theme-academic .edition-section { counter-increment: paper-section; }
+.theme-academic .edition-section> :is(h1,h2) { font-size: 1.2em; border-bottom: 1px solid #3333; padding-bottom: .5em; }
+.theme-academic .edition-table { font-size: .9em; border-block: 2px solid currentColor; }
+.theme-academic .edition-prose blockquote { font-size: .95em; background: transparent; }
+.theme-letter .edition-section> :is(h1,h2) { font-size: 1.15em; font-style: italic; font-weight: 400; border-bottom: 1px solid #99785455; padding-bottom: .6em; }
+.theme-letter .edition-prose blockquote { font-style: italic; background: transparent; }
+.theme-screenplay .edition-section> :is(h1,h2) { font-size: 1em; text-transform: uppercase; margin-top: 2.5em; }
+.theme-screenplay .edition-prose blockquote { max-width: 70%; margin-inline: auto; border: 0; background: transparent; }
+.theme-screenplay .edition-prose h3 { text-align: center; text-transform: uppercase; font-size: 1em; }
+/* Five genuinely different monospaced faces for each technical edition. */
+:is(.theme-terminal,.theme-space,.theme-bug) .edition-section> :is(h1,h2) { font-size: 1.05em; padding: .7em 1em; border: 1px solid currentColor; background: color-mix(in srgb,currentColor 8%,transparent); }
+.theme-terminal .edition-section> :is(h1,h2)::before { content: "> "; opacity: .6; }
+.theme-terminal .edition-prose blockquote { border-left-style: dashed; }
+.theme-space .edition-section { border-left: 2px solid #6bcad966; padding-left: 1em; }
+.theme-space .edition-section> :is(h1,h2) { border-radius: 0 15px 0 0; letter-spacing: .08em; }
+.theme-bug .edition-section { border: 1px solid #8998b340; border-radius: 6px; padding: 1em; }
+.theme-bug .edition-section> :is(h1,h2) { border: 0; border-bottom: 1px solid #8998b340; background: transparent; padding-left: 0; }
+:is(.theme-light,.theme-dark) .edition-section> :is(h1,h2) { letter-spacing: -.025em; border-bottom: 1px solid color-mix(in srgb,currentColor 18%,transparent); padding-bottom: .5em; }
+@media(max-width:600px) {
+  .story-document .edition-section { padding-inline: .7em; }
+  .story-document .edition-prose h1 { font-size: 1.55em; }
+  .theme-screenplay .edition-prose blockquote { max-width: 90%; }
+  .theme-court .edition-section { padding-left: 0; }
+}
+@media print {
+  .story-document .edition-section { box-shadow: none; transform: none; }
+  .story-document .edition-table { overflow: visible; }
+}
+.story-document .edition-prose img { max-width: 100%; height: auto; border-radius: 3px; }
+

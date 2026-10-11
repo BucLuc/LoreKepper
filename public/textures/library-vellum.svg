@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+<defs><filter id="vellum"><feTurbulence type="fractalNoise" baseFrequency=".045 .1" numOctaves="3" seed="27"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".085"/></feComponentTransfer></filter><radialGradient id="wear"><stop stop-color="#8b704b" stop-opacity=".18"/><stop offset="1" stop-color="#8b704b" stop-opacity="0"/></radialGradient></defs>
+<rect width="900" height="1200" fill="#e9e1c9"/>
+<rect width="900" height="1200" filter="url(#vellum)" opacity=".65"/>
+<ellipse cx="30" cy="490" rx="155" ry="450" fill="url(#wear)"/><ellipse cx="890" cy="950" rx="140" ry="360" fill="url(#wear)"/><ellipse cx="570" cy="25" rx="370" ry="120" fill="url(#wear)"/>
+<g fill="none" stroke="#806a4f" opacity=".07"><path d="M40 13q70 16 125-4M10 34q90 16 160-5M891 73q-7 41 4 92M882 92q-8 34 8 73M16 785q6 63-4 112M23 823q5 46-3 66M714 1188q75-15 160-2"/><path d="M795 221q32-10 54 2t22 32q-8 20-35 10"/><path d="M800 225q25-9 47 2t20 22"/></g>
+<g fill="#6a5032" opacity=".12"><circle cx="27" cy="176" r="1.8"/><circle cx="55" cy="217" r="1"/><circle cx="884" cy="380" r="2"/><circle cx="870" cy="720" r="1.5"/><circle cx="44" cy="925" r="2"/><circle cx="825" cy="1128" r="2"/><circle cx="38" cy="1119" r="1"/></g>
+</svg>

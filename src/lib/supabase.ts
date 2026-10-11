@@ -7,7 +7,7 @@ export function supabase() {
     throw new Error("Configure Supabase using .env.local. See SUPABASE.md.");
   return (client ??= createClient(url, key));
 }
-export async function api(action: string, body: Record<string, unknown> = {}) {
+export async function api(action: string, body: Record<string, unknown> = {}, signal?: AbortSignal) {
   const { data } = await supabase().auth.getSession();
   if (!data.session) throw new Error("Please sign in to enter the archives.");
   const response = await fetch("/api/lore", {
@@ -17,6 +17,7 @@ export async function api(action: string, body: Record<string, unknown> = {}) {
       Authorization: `Bearer ${data.session.access_token}`,
     },
     body: JSON.stringify({ action, ...body }),
+    signal,
   });
   const result = await response.json();
   if (!response.ok)

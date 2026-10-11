@@ -3,7 +3,6 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # Every 6 hours (UTC)
     - cron: "17 */6 * * *"
   workflow_dispatch:
 
@@ -16,13 +15,39 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        shell: bash
         run: |
+          set -euo pipefail
+
+          # Check secrets
+          if [[ -z "$SUPABASE_URL" ]]; then
+            echo "::error::SUPABASE_URL is empty"
+            exit 1
+          fi
+
+          if [[ -z "$SUPABASE_KEY" ]]; then
+            echo "::error::SUPABASE_KEY is empty"
+            exit 1
+          fi
+
+          # Remove accidental whitespace and trailing slash
+          SUPABASE_URL="$(printf '%s' "$SUPABASE_URL" | tr -d '\r\n' | xargs)"
+          SUPABASE_URL="${SUPABASE_URL%/}"
+
+          # Validate URL
+          if [[ ! "$SUPABASE_URL" =~ ^https://[a-zA-Z0-9.-]+$ ]]; then
+            echo "::error::Invalid SUPABASE_URL format"
+            exit 1
+          fi
+
+          # Query database
           curl --fail-with-body --silent --show-error \
+            --retry 3 \
             --get \
             "$SUPABASE_URL/rest/v1/keepalive" \
             --data-urlencode "select=id,message" \
             --data-urlencode "limit=1" \
             -H "apikey: $SUPABASE_KEY"
 
-
+          echo ""
           echo "Supabase query successful!"

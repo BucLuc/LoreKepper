@@ -63,11 +63,20 @@ export function remarkEditionSemantics(style: string) {
           /^(Expected|Actual|Steps to reproduce|Environment):\s/i.test(text)
         )
           kind = "issue-detail";
+        if(style.startsWith("gallery-")){
+          if(/^(The Year of Our Lord|Im Jahre des Herrn) \d{3,4}\b/i.test(text)) kind="setting-note";
+          else if(/^(Subject|Betreff|From|To|Date|Datum|Von|An|Ort|Location|Author|Verfasser|Setting):\s/i.test(text))kind="manuscript-field";
+        }
         if (kind)
           node.data = {
             ...node.data,
             hProperties: { ...node.data?.hProperties, className: [kind] },
           };
+      }
+      if(style.startsWith("gallery-") && node.type==="blockquote" && /^\s*\[!(SETTING|NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i.test(textOf(node))){
+        const first=node.children[0];
+        if(first?.type==="paragraph" && first.children[0]?.type==="text")first.children[0].value=first.children[0].value.replace(/^\s*\[![A-Z]+\]\s*/i,"");
+        node.data={...node.data,hName:"div",hProperties:{className:["setting-note"],role:"note"}};
       }
       if ("children" in node) (node.children as RootContent[]).forEach(walk);
     };

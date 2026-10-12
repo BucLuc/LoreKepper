@@ -1,40 +1,12 @@
 "use client";
-import { editionGroups, readerEditions } from "../lib/reader-editions";
-import { readerFonts } from "../lib/reader-fonts";
-export function CollectionPdfSettings({ edition, font, onEdition, onFont, busy }: {
-  edition: string;
-  font: string;
-  onEdition: (edition: string) => void;
-  onFont: (font: string) => void;
-  busy: boolean;
-}) {
-  const fonts = readerFonts(edition);
-  const selectedFont = fonts.find(face => face.id === font) ?? fonts[0];
-  return (
-    <div className="pdf-export-settings">
-      <label>
-        <span>Display edition</span>
-        <select value={edition} onChange={e => onEdition(e.target.value)} disabled={busy}>
-          {editionGroups.map(group => (
-            <optgroup key={group.name} label={group.name}>
-              {group.ids.map(id => {
-                const theme = readerEditions.find(t => t.id === id)!;
-                return <option value={id} key={id}>{theme.name}</option>;
-              })}
-            </optgroup>
-          ))}
-        </select>
-      </label>
-      <label>
-        <span>Reading font</span>
-        <select value={font} onChange={e => onFont(e.target.value)} disabled={busy}>
-          {fonts.map(face => <option key={face.id} value={face.id}>{face.name}</option>)}
-        </select>
-      </label>
-      <p className="pdf-font-preview" style={{fontFamily:selectedFont.family}}>
-        The archive remembers every word.
-      </p>
-      <p className="v-muted">A4 pages with a matching cover, contents and end page. Every story starts on a new page.</p>
-    </div>
-  );
+import {useState} from 'react';
+import {editionGroups,readerEditions} from '../lib/reader-editions';
+import type {EditionDesign} from '../lib/edition-design';
+import {EditionCustomizer} from './edition-customizer';
+import {BookendPreview} from './collection-pdf-preview';
+import {StoryPdfPreview} from './story-pdf-preview';
+import type {Exhibit} from '../lib/archive';
+export function CollectionPdfSettings({name,count,entry,edition,design,onEdition,onDesign,busy}:{entry?:Exhibit;name:string;count:number;edition:string;design:EditionDesign;onEdition:(edition:string)=>void;onDesign:(design:EditionDesign)=>void;busy:boolean}){
+ const [part,setPart]=useState<'story'|'cover'|'end'>('cover');const bookend=part==='end'?design.endPage:design.cover;
+ return <div className="pdf-export-settings"><label><span>Display format</span><select aria-label="PDF display format" value={edition} onChange={e=>onEdition(e.target.value)} disabled={busy}>{editionGroups.map(group=><optgroup key={group.name} label={group.name}>{group.ids.map(id=><option value={id} key={id}>{readerEditions.find(e=>e.id===id)!.name}</option>)}</optgroup>)}</select></label><div className="pdf-bookend-controls">{(['cover','endPage'] as const).map(key=><label key={key}><span>{key==='cover'?'Collection cover':'Collection end page'}</span><select aria-label={key==='cover'?'Collection cover':'Collection end page'} value={design[key]??'none'} disabled={busy} onChange={e=>onDesign({...design,pages:true,[key]:e.target.value==='none'?null:e.target.value})}><option value="none">None</option>{editionGroups.map(group=><optgroup key={group.name} label={group.name}>{group.ids.map(id=><option key={id} value={id}>{readerEditions.find(e=>e.id===id)!.name}</option>)}</optgroup>)}</select></label>)}</div><EditionCustomizer preset={edition} value={{...design,pages:true}} onChange={value=>onDesign({...value,pages:true})} disabled={busy} pdf/><div className="pdf-detail-preview"><div className="pdf-detail-tabs" role="group" aria-label="PDF preview">{([{id:'cover',label:'Cover'},{id:'story',label:'Selected entry'},{id:'end',label:'End page'}] as const).map(tab=><button type="button" key={tab.id} aria-pressed={part===tab.id} onClick={()=>setPart(tab.id)}>{tab.label}</button>)}</div>{part==='story'?entry?<><p className="v-muted">No. {String(entry.number).padStart(3,'0')} · {entry.title}</p><StoryPdfPreview entry={entry} preset={edition} design={{...design,pages:true}}/></>:<p className="v-muted">Select an entry to preview its pages.</p>:bookend?<BookendPreview name={name} count={count} edition={bookend} font={design.font} end={part==='end'} background={design.background} fontPreset={edition}/>:<p className="v-muted">This {part==='end'?'end page':'cover'} is not included.</p>}</div><p className="v-muted">A4 PDF · linked contents · {count} selected {count===1?'entry':'entries'}. Every entry starts on a new page.</p></div>;
 }

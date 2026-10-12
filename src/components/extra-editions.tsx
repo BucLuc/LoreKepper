@@ -95,13 +95,12 @@ export function EditionHeader({
   reference,
   authors,
   date,
-  score,
 }: {
   style: string;
   reference: string;
   authors: string;
   date: string;
-  score: number;
+  score?: number;
 }) {
   switch (style) {
     case "museum":
@@ -154,9 +153,6 @@ export function EditionHeader({
         <div className="card-rarity">
           <span>✵ LEGENDARY</span>
           <span>#{reference} / PRIVATE COLLECTION</span>
-          <strong>
-            {score.toFixed(1)} <small>LORE POWER</small>
-          </strong>
         </div>
       );
     case "space":

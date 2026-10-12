@@ -1,7 +1,10 @@
+import {EntryRemark} from "./entry-remark";
+import {PagedDocument} from "./paged-document";
+import {GalleryDocument} from "./gallery-document";
 import type { CSSProperties } from "react";
 import type { Exhibit, Message } from "../lib/archive";
 import { withoutEmojis } from "../lib/emojis";
-import { readerFonts, editionTitleFonts } from "../lib/reader-fonts";
+import { resolveReaderFont, editionTitleFonts } from "../lib/reader-fonts";
 import { authorName, dateLabel, displayTime } from "../lib/format";
 import { EditionMarkdown } from "./edition-markdown";
 import { HistoricalDecorations, RoyalCrest } from "./historical-art";
@@ -49,48 +52,12 @@ function MessageBody({
     />
   );
 }
-export function StoryDocument({
-  entry,
-  style,
-  theme,
-  size = 18,
-  plain = false,
-  showEmojis = true,
-  font = "default",
-}: {
-  entry: Exhibit;
-  style: string;
-  theme: { mark: string; label: string };
-  size?: number;
-  plain?: boolean;
-  showEmojis?: boolean;
-  font?: string;
-}) {
-  const selectedFont =
-    readerFonts(style).find((f) => f.id === font) ?? readerFonts(style)[0];
-  const reference = String(entry.number).padStart(3, "0");
-  const isTranscript = [
-    "screenplay",
-    "incident",
-    "dossier",
-    "terminal",
-  ].includes(style);
-  return (
-    <article
-      className={`story-document theme-${style} ${plain ? "plain-mode" : ""}`}
-      data-font={selectedFont.id}
-      style={
-        {
-          "--reading-size": `${size}px`,
-          "--reader-font": selectedFont.family,
-          "--edition-title-font": editionTitleFonts[style],
-        } as CSSProperties
-      }
-    >
-      {["manuscript", "decree"].includes(style) && (
-        <HistoricalDecorations kind={style} number={entry.number} />
-      )}
-      <ArtifactMasthead
+import { normalizeDesign,  editionPalettes, type EditionDesign } from "../lib/edition-design";
+type DocumentProps = {entry:Exhibit;style:string;theme:{mark:string;label:string};size?:number;plain?:boolean;showEmojis?:boolean;font?:string;design?:EditionDesign};
+function sections({entry,style,theme,plain=false,showEmojis=true}:DocumentProps) {
+ const reference=String(entry.number).padStart(3,"0");
+ const isTranscript=["screenplay","incident","dossier","terminal"].includes(style);
+ return {header:()=> (<><ArtifactMasthead
         style={style}
         reference={reference}
         date={entry.date}
@@ -126,7 +93,7 @@ export function StoryDocument({
           </div>
         )}
         <h2>{showEmojis ? entry.title : withoutEmojis(entry.title)}</h2>
-        <div className="document-meta">
+        {entry.messages.length===1 ? <EntryRemark entry={entry} showEmojis={showEmojis}/> : <div className="document-meta">
           {style === "decree"
             ? "ISSUED IN THE NAME OF"
             : style === "screenplay"
@@ -135,7 +102,7 @@ export function StoryDocument({
                 ? "PARTIES ON RECORD"
                 : "PRESERVED WORDS OF"}{" "}
           {entry.authors.join(" & ").toUpperCase()}
-        </div>
+        </div>}
         {["incident", "dossier", "letter"].includes(style) && (
           <dl className="document-fields">
             <div>
@@ -186,7 +153,7 @@ export function StoryDocument({
           </div>
         </>
       )}
-      <div className="document-body">
+</>),body:()=> (<><div className="document-body">
         {entry.messages.map((message, index) => (
           <section
             key={message.id}
@@ -275,7 +242,7 @@ export function StoryDocument({
           </section>
         ))}
       </div>
-      <ArtifactClosure
+</>),footer:()=> (<><ArtifactClosure
         style={style}
         reference={reference}
         authors={entry.authors.join(" & ")}
@@ -308,6 +275,27 @@ export function StoryDocument({
                     : "HERE ENDS THE RECORD. THE LEGEND CONTINUES."}
         </small>
       </div>
-    </article>
-  );
+</>)};
 }
+export function StoryDocument(props:DocumentProps) {
+ if(props.style.startsWith("gallery-")) return <GalleryDocument {...props}/>;
+ const {entry,style,size=18,plain=false,design}=props;
+ const font=props.font ?? design?.font ?? "default";
+ const chosen=normalizeDesign(design ? {...design,font} : undefined,style);
+ const face=resolveReaderFont(style,font);
+ const backgroundChanged=chosen.background!==style;
+ const surface=chosen.background;
+ const palette=editionPalettes[surface];
+ const original=sections(props);
+ const article=<article className={`story-document ${"theme-"+style} ${backgroundChanged?"edition-resurfaced":""} ${plain?"plain-mode":""}`}
+ data-conversation={entry.messages.length>1?"on":"off"} data-cover={chosen.showCover?"on":"off"} data-border={chosen.border?"on":"off"} data-artwork={chosen.artwork?"on":"off"} data-font={face.id} data-background={surface} data-header={chosen.header} data-body={chosen.body} data-footer={chosen.footer} data-columns={chosen.columns} data-initial={chosen.initial} data-numbering={chosen.numbering}
+ style={{"--reading-size":`${size}px`,"--reader-font":face.family,"--edition-title-font":font==="default"?editionTitleFonts[style]:face.family,"--edition-ink":palette.ink,"--edition-accent":palette.accent,"--edition-surface":palette.surface,"--edition-panel":palette.panel,"--edition-rule":`color-mix(in srgb, ${palette.ink} 24%, transparent)`} as CSSProperties}>
+ {["manuscript","decree"].includes(style)&&<HistoricalDecorations kind={style} number={entry.number}/>}
+ {chosen.showCover ? original.header() : <div className="document-header"><h2>{entry.title}</h2><EntryRemark entry={entry} showEmojis={props.showEmojis}/></div>}
+ {original.body()}
+ {original.footer()}
+ </article>;
+ return chosen.pages ? <PagedDocument>{article}</PagedDocument> : article;
+}
+
+

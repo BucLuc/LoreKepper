@@ -1,3 +1,4 @@
+import { normalizePdfArtwork } from "./pdf-pagination";
 import { exportFilename } from "./export-name";
 // Render one page at a time to avoid browser canvas limits on long stories.
 async function withStoryClone<T>(
@@ -32,50 +33,7 @@ async function withStoryClone<T>(
       .forEach((ornament) => {
         ornament.style.filter = "none";
       });
-    // Canvas renderers do not reliably paint ::first-letter decorations.
-    // Materialize the illuminated initial in this temporary export only.
-    if (
-      clone.querySelector(
-        ".theme-ancientcodex, .theme-manuscript, .theme-scroll, .theme-decree, .theme-glorious",
-      )
-    ) {
-      clone
-        .querySelectorAll<HTMLElement>(".message-prose > p:first-child, :is(.theme-manuscript,.theme-ancientcodex) .edition-section > :is(h1,h2) + p, .theme-ancientcodex .edition-section > p:first-child")
-        .forEach((paragraph) => {
-          const walker = document.createTreeWalker(
-            paragraph,
-            NodeFilter.SHOW_TEXT,
-          );
-          const first = walker.nextNode();
-          if (!first?.textContent?.trim()) return;
-          const letter = document.createElement("span");
-          const appearance = getComputedStyle(paragraph, "::first-letter");
-          for (const property of [
-            "font-family",
-            "font-size",
-            "font-weight",
-            "font-style",
-            "line-height",
-            "color",
-            "float",
-            "padding",
-            "margin",
-            "border",
-            "background",
-            "box-shadow",
-            "text-shadow",
-          ]) {
-            letter.style.setProperty(
-              property,
-              appearance.getPropertyValue(property),
-            );
-          }
-          letter.textContent = first.textContent.slice(0, 1);
-          first.textContent = first.textContent.slice(1);
-          first.parentNode?.insertBefore(letter, first);
-        });
-      host.classList.add("pdf-export");
-    }
+    clone.querySelectorAll<HTMLElement>(".story-document").forEach(normalizePdfArtwork);
     // Preserve wide ASCII art without exporting only its visible scroll area.
     clone.querySelectorAll<HTMLElement>(".message-text").forEach((text) => {
       let size = parseFloat(getComputedStyle(text).fontSize);

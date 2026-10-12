@@ -1,3 +1,4 @@
+import {galleryEditions,galleryPapers} from "./gallery-editions";
 export type PdfEdition = {
   cover: string;
   end: string;
@@ -34,3 +35,9 @@ export const pdfEditions: Record<string, PdfEdition> = Object.fromEntries([
   ["lyrics", "The collected songbook", "The final note", "Words gathered into one volume", "The last note fades. The words remain."],
 ].map(([id, cover, end, subtitle, closing]) => [id, { cover, end, subtitle, closing }]));
 export const A4_MM = { width: 210, height: 297 } as const;
+
+export const pdfPaperColors: Record<string, string> = { "paper-cotton":"#f2ebda", "paper-laid":"#e9d9b9", "paper-ivory":"#f7efd9", "paper-rose":"#edd9ce", "paper-blue":"#dde5e5", "paper-antique":"#d9bd88", ancientcodex: "#ddc69a", manuscript: "#eadbb4", scroll: "#d9c89f", decree: "#e6d5af", glorious: "#19231d", poetry: "#e8dcc2", prophecy: "#242438", captain: "#d9c59b", tavern: "#d9c49a", wanted: "#dfcba4", light: "#ffffff", dark: "#171c23", newspaper: "#e8e5d4", social: "#f1f4f8", news: "#f5f5f2", incident: "#fafbf9", card: "#24272d", terminal: "#0c1712", space: "#0b2029", bug: "#202535", screenplay: "#fcfcf8", dossier: "#ddd8bb", museum: "#dbdccf", court: "#fafaf6", academic: "#fffefb", letter: "#faf8ef", lyrics: "#e8ddc3" };
+
+for(const edition of galleryEditions){pdfEditions[edition.id]={cover:edition.name,end:"The final folio",subtitle:"A book of preserved memories",closing:"Here ends the record. May these words endure."};pdfPaperColors[edition.id]="#f1e6c9";}
+
+for(const paper of galleryPapers)pdfPaperColors["gallery-paper-"+paper.id]=paper.surface;

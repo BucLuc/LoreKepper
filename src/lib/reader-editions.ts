@@ -1,3 +1,4 @@
+import {galleryEditions} from "./gallery-editions";
 import { extraEditions } from "../components/extra-editions";
 export const readerEditions = [
   {
@@ -22,6 +23,7 @@ export const readerEditions = [
     label: "",
   },
   ...extraEditions,
+  ...galleryEditions,
   {
     id: "ancientcodex",
     name: "Medieval Manuscript",
@@ -108,6 +110,9 @@ export const readerEditions = [
   },
 ];
 export const editionGroups = [
+  {name:"Illuminated manuscripts",ids:["gallery-codex","gallery-abbey","gallery-tapestry","gallery-gothic","gallery-vitrail"]},
+  {name:"Royal & legendary manuscripts",ids:["gallery-scroll","gallery-ledger","gallery-heraldic"]},
+  {name:"Elemental manuscripts",ids:["gallery-chancery","gallery-winter","gallery-alchemist","gallery-mariner","gallery-phoenix"]},
   { name: "Basic", ids: ["light", "dark"] },
   {
     name: "Medieval & Manuscripts",

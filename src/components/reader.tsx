@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {previewZoom} from "../lib/reader-preview";
 import {
   useEffect,
   useMemo,
@@ -7,7 +8,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { readerFonts } from "@/lib/reader-fonts";
+import { resolveReaderFont } from "@/lib/reader-fonts";
 import { storyPdfFilename } from "@/lib/export-pdf";
 import type { Exhibit } from "@/lib/archive";
 import { storyText } from "@/lib/format";
@@ -20,6 +21,9 @@ import { Icon } from "./icon";
 
 import { readerEditions as styles, editionGroups } from "@/lib/reader-editions";
 import { StoryDocument } from "./story-document";
+import { EditionCustomizer } from "./edition-customizer";
+import { BookendPreview } from "./collection-pdf-preview";
+import { normalizeDesign, presetDesign, switchEditionDesign, type EditionDesign } from "@/lib/edition-design";
 function EditionMark({ id, mark }: { id: string; mark: string }) {
   return id === "ancientcodex" ? <Icon name="book" /> : id === "captain" ? <Icon name="anchor" /> : <>{mark}</>;
 }
@@ -76,6 +80,7 @@ export function Reader({
         size: [16, 18, 20, 22].includes(value.size)
           ? (value.size as number)
           : 18,
+        design: value.design && typeof value.design === "object" ? value.design as EditionDesign : null,
         plain: value.plain === true,
         showEmojis: value.showEmojis !== false,
         fonts:
@@ -86,6 +91,7 @@ export function Reader({
     } catch {
       return {
         style: "glorious",
+        design: null as EditionDesign | null,
         size: 18,
         plain: false,
         showEmojis: true,
@@ -95,10 +101,9 @@ export function Reader({
   }, [saved]);
   const [override, setOverride] = useState<typeof stored | null>(null);
   const { style, size, plain, showEmojis, fonts } = override ?? stored;
-  const fontOptions = readerFonts(style);
-  const selectedFont =
-    fontOptions.find((font) => font.id === fonts[style]) ?? fontOptions[0];
-  const [openMenu, setOpenMenu] = useState<"format" | "export" | null>(null);
+  const design=normalizeDesign((override ?? stored).design ?? {...presetDesign(style),font:fonts[style] ?? "default"},style);
+  const selectedFont=resolveReaderFont(style,design.font);
+  const [customizerOpen, setCustomizerOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [copyingImage, setCopyingImage] = useState(false);
   const [imageDownload, setImageDownload] = useState<string | null>(null);
@@ -108,22 +113,6 @@ export function Reader({
     },
     [imageDownload],
   );
-  useEffect(() => {
-    if (!openMenu) return;
-    const closeOutside = (event: PointerEvent) => {
-      if (!toolbarRef.current?.contains(event.target as Node))
-        setOpenMenu(null);
-    };
-    const closeEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpenMenu(null);
-    };
-    document.addEventListener("pointerdown", closeOutside);
-    document.addEventListener("keydown", closeEscape);
-    return () => {
-      document.removeEventListener("pointerdown", closeOutside);
-      document.removeEventListener("keydown", closeEscape);
-    };
-  }, [openMenu]);
   const [expandedGroup, setExpandedGroup] = useState<string | null | undefined>(
     undefined,
   );
@@ -140,6 +129,12 @@ export function Reader({
   } | null>(null);
   const [fallback, setFallback] = useState<string | null>(null);
   const [maximized, setMaximized] = useState(false);
+  const [previewPercent,setPreviewPercent]=useState(100);
+  const [previewWidth,setPreviewWidth]=useState(900);
+  const previewPaneRef=useRef<HTMLDivElement>(null);
+  const previewBase=style.startsWith("gallery-")?794:900;
+  const zoom=previewZoom(previewPercent,previewWidth,previewBase);
+  useEffect(()=>{const pane=previewPaneRef.current!;const observer=new ResizeObserver(()=>setPreviewWidth(pane.clientWidth));observer.observe(pane);return()=>observer.disconnect();},[]);
   const [exporting, setExporting] = useState(false);
   const [pdfDownload, setPdfDownload] = useState<{
     url: string;
@@ -155,6 +150,7 @@ export function Reader({
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMaximized(false);
+        setCustomizerOpen(false);
         maximizeRef.current?.focus();
       }
     };
@@ -193,19 +189,16 @@ export function Reader({
           })
         : null;
       setCopyStatus("Preparing your PDF…");
-      const { exportStoryPdf } = await import("@/lib/export-pdf");
-      const download = await exportStoryPdf(
-        documentRef.current,
-        entry.title,
-        theme.name,
-      );
+      const { exportCollectionPdf } = await import("@/lib/export-collection-pdf");
+      const result = await exportCollectionPdf({name:entry.title,entries:[entry],edition:style,font:design.font,design,size,plain,showEmojis,contents:false});
+      const download = {blob:result.blob,filename:storyPdfFilename(entry.title,theme.name)};
       if (handle) {
         const writable = await handle.createWritable();
         await writable.write(download.blob);
         await writable.close();
         setCopyStatus("PDF saved.");
       } else {
-        setPdfDownload(download);
+        setPdfDownload({...download,url:URL.createObjectURL(download.blob)});
         setCopyStatus(
           "Your browser does not support Save As. Your PDF is ready below.",
         );
@@ -322,6 +315,7 @@ export function Reader({
     newPlain = plain,
     newShowEmojis = showEmojis,
     newFonts = fonts,
+    newDesign: EditionDesign = newStyle === style ? design : switchEditionDesign(design,newStyle),
   ) {
     setPdfDownload(null);
     setImageDownload(null);
@@ -331,6 +325,7 @@ export function Reader({
       plain: newPlain,
       showEmojis: newShowEmojis,
       fonts: newFonts,
+      design: newDesign,
     };
     setOverride(value);
     try {
@@ -377,7 +372,7 @@ export function Reader({
   return (
     <main
       id="main"
-      className={`reader-page ${maximized ? "reader-maximized" : ""}`}
+      className={`reader-page ${maximized ? "reader-maximized" : ""} ${customizerOpen ? "reader-customizing" : ""}`}
     >
       <header className="reader-heading">
         <nav className="eyebrow entry-breadcrumb" aria-label="Breadcrumb">
@@ -498,43 +493,53 @@ export function Reader({
               {theme.name}
             </div>
             <div className="copy-actions">
-              {maximized && (
-                <Link
-                  href={
-                    collectionId
-                      ? `/collections/${collectionId}#collection`
-                      : "/"
-                  }
-                  className="maximized-hall-link"
-                >
-                  ← Back to the Hall
-                </Link>
-              )}
+              {maximized&&<label className="reader-preview-size">Preview size <input type="range" aria-label="Preview size" min={zoom.minimum} max={zoom.maximum} value={zoom.percent} onChange={event=>setPreviewPercent(Number(event.target.value))}/><output>{zoom.percent}%</output><button type="button" onClick={()=>setPreviewPercent(200)}>Fit</button></label>}
               <button
                 ref={maximizeRef}
-                onClick={() => setMaximized((value) => !value)}
+                onClick={() => {if(!maximized)setPreviewPercent(100);setMaximized((value) => !value);setCustomizerOpen(false);}}
                 aria-pressed={maximized}
               >
                 {maximized ? "↙ Restore" : "↗ Maximize"}
               </button>
               <div className="toolbar-menu">
                 <button
-                  aria-expanded={openMenu === "format"}
+                  aria-expanded={customizerOpen}
                   aria-controls="format-panel"
                   onClick={() =>
-                    setOpenMenu(openMenu === "format" ? null : "format")
+                    {setCustomizerOpen(!customizerOpen);if(!customizerOpen){if(!maximized)setPreviewPercent(100);setMaximized(true);}}
                   }
                 >
                   <Icon name="format" />
-                  Format
+                  Customize
                 </button>
-                {openMenu === "format" && (
+
+              </div>
+              <div className="toolbar-menu">
+                <button
+                  onClick={() => {
+                    setExportOpen(true);
+                    setPdfDownload(null);
+                    setTextDownload(null);
+                  }}
+                >
+                  <Icon name="export" />
+                  Export
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="reader-workspace">
+                {customizerOpen && (
                   <div
                     id="format-panel"
-                    className="toolbar-panel"
+                    className="reader-atelier"
                     role="group"
                     aria-label="Formatting options"
                   >
+                    <div className="reader-customization-heading"><strong>Customize</strong><button type="button" aria-label="Close customization" onClick={()=>setCustomizerOpen(false)}>×</button></div>
+                    <label className="reader-format-choice">Display format<select value={style} onChange={event=>preferences(event.target.value)}>{editionGroups.map(group=><optgroup key={group.name} label={group.name}>{styles.filter(edition=>group.ids.includes(edition.id)).map(edition=><option key={edition.id} value={edition.id}>{edition.name}</option>)}</optgroup>)}</select></label>
+                    <EditionCustomizer preset={style} value={design} onChange={value=>preferences(style,size,plain,showEmojis,{...fonts,[style]:value.font},value)}/>
+                    <details className="studio-reading"><summary>Reading preferences</summary>
                     <label className="format-check">
                       <span>Show emojis</span>
                       <input
@@ -575,43 +580,11 @@ export function Reader({
                         </button>
                       </div>
                     </div>
-                    <label className="format-font" htmlFor="reader-font">
-                      Font
-                      <select
-                        id="reader-font"
-                        value={selectedFont.id}
-                        onChange={(e) =>
-                          preferences(style, size, plain, showEmojis, {
-                            ...fonts,
-                            [style]: e.target.value,
-                          })
-                        }
-                      >
-                        {fontOptions.map((font) => (
-                          <option key={font.id} value={font.id}>
-                            {font.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+
+                    </details>
                   </div>
                 )}
-              </div>
-              <div className="toolbar-menu">
-                <button
-                  onClick={() => {
-                    setOpenMenu(null);
-                    setExportOpen(true);
-                    setPdfDownload(null);
-                    setTextDownload(null);
-                  }}
-                >
-                  <Icon name="export" />
-                  Export
-                </button>
-              </div>
-            </div>
-          </div>
+          <div className="reader-preview-pane" ref={previewPaneRef}>
           {copyStatus ? (
             <Feedback
               onDismiss={() => {
@@ -641,7 +614,7 @@ export function Reader({
             }}
           >
             <p className="v-muted">
-              Choose your edition. This story is included.
+              Export this story. PDF uses your current arrangement and enabled bookends.
             </p>
             {copyStatus && (
               <Feedback onDismiss={() => setCopyStatus("")}>
@@ -702,7 +675,7 @@ export function Reader({
               <button onClick={() => setFallback(null)}>Close</button>
             </div>
           )}
-          <div ref={documentRef} className={`edition-stage stage-${style}`}>
+          <div ref={documentRef} className={`edition-stage stage-${style}`} data-preview-scale={maximized?zoom.percent:undefined} style={maximized?{width:previewBase,zoom:zoom.percent/100}:undefined}>
             {style === "scroll" && (
               <>
                 <span
@@ -715,6 +688,7 @@ export function Reader({
                 />
               </>
             )}
+            {design.cover && <div className="reader-bookend"><BookendPreview name={entry.title} count={1} edition={design.cover} font={design.font} end={false} background={design.background} fontPreset={style}/></div>}
             <StoryDocument
               entry={entry}
               style={style}
@@ -723,15 +697,10 @@ export function Reader({
               plain={plain}
               showEmojis={showEmojis}
               font={selectedFont.id}
+              design={design}
             />
+            {design.endPage && <div className="reader-bookend"><BookendPreview name={entry.title} count={1} edition={design.endPage} font={design.font} end background={design.background} fontPreset={style}/></div>}
           </div>
-          <details className="curator-note">
-            <summary>
-              Why this made the hall <span>+</span>
-            </summary>
-            <p>{entry.reason}</p>
-            <span>Archive rating: {entry.score.toFixed(1)} / 10</span>
-          </details>
           <nav className="reader-pagination" aria-label="Adjacent stories">
             {previous ? (
               <Link href={`/stories/${previous.id}`} prefetch={false}>
@@ -750,8 +719,11 @@ export function Reader({
               <span />
             )}
           </nav>
+          </div>
+          </div>
         </div>
       </div>
     </main>
   );
 }
+

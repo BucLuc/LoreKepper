@@ -17,7 +17,7 @@ export function contentUnits(root: HTMLElement): PdfUnit[] {
     const tag = node.tagName;
     if (tag === "THEAD")
       return;
-    const label = node.matches(".message-attribution,.captain-entry-label,.edition-message-label,.form-section-bar,.file-evidence-bar,.testimony-heading,.feed-author,.script-scene,.social-post-footer,.message-end,.edition-end");
+    const label = node.matches(".manuscript-message-head,.message-attribution,.captain-entry-label,.edition-message-label,.form-section-bar,.file-evidence-bar,.testimony-heading,.feed-author,.script-scene,.social-post-footer,.message-end,.edition-end");
     if (label) {
       units.push({ node: node.cloneNode(true) as HTMLElement, wrappers, keepNext: !node.matches(".social-post-footer,.message-end,.edition-end") });
       return;
@@ -53,6 +53,14 @@ export function appendUnit(page: LaidOutPage, unit: PdfUnit, node = unit.node) {
         const head = template.querySelector(":scope > thead");
         if (head)
           wrapper.append(head.cloneNode(true));
+      }
+      if(wrapper.matches('.manuscript-message') && !node.matches('.manuscript-message-head')){
+        const speaker=template.querySelector(':scope > .manuscript-message-head')?.cloneNode(true) as HTMLElement|undefined;
+        if(speaker){speaker.classList.add('is-continuation');wrapper.append(speaker);}
+      }
+      if(wrapper.matches('.story-message') && node.matches('p,li,pre,tr,h1,h2,h3,h4,h5,h6,img,hr')){
+        const attribution=template.querySelector(':scope > .message-attribution,:scope > .feed-author')?.cloneNode(true) as HTMLElement|undefined;
+        if(attribution){attribution.classList.add('is-continuation');wrapper.append(attribution);}
       }
       parent.append(wrapper);
       page.wrappers.set(template, wrapper);
@@ -208,10 +216,19 @@ export function splitToFit(page: LaidOutPage, unit: PdfUnit) {
   return [first, rest] as const;
 }
 export function normalizePdfArtwork(element: HTMLElement) {
+  for(const prose of element.querySelectorAll<HTMLElement>(".message-prose")) {
+    let passage=0;
+    for(const paragraph of prose.querySelectorAll<HTMLElement>("p")) {
+      const content=getComputedStyle(paragraph,"::before").content;
+      if(content && content!=="none" && content!=="normal" && /counter\(/.test(content))
+        paragraph.dataset.passageNumber=String(++passage).padStart(2,"0");
+    }
+  }
   element.querySelectorAll<SVGSVGElement>("svg").forEach(svg => { const ink = getComputedStyle(svg).color; svg.querySelectorAll("[fill='currentColor'],[stroke='currentColor']").forEach(shape => { if (shape.getAttribute("fill") === "currentColor")
     shape.setAttribute("fill", ink); if (shape.getAttribute("stroke") === "currentColor")
     shape.setAttribute("stroke", ink); }); });
-  for (const paragraph of element.querySelectorAll<HTMLElement>(".message-prose p")) {
+  for (const paragraph of element.querySelectorAll<HTMLElement>(".message-prose p,.gallery-prose p.opening")) {
+    if(paragraph.querySelector(".pdf-initial")) continue;
     const appearance = getComputedStyle(paragraph, "::first-letter");
     if (appearance.float !== "left" || parseFloat(appearance.fontSize) < parseFloat(getComputedStyle(paragraph).fontSize) * 1.4)
       continue;
@@ -233,6 +250,34 @@ export function normalizePdfArtwork(element: HTMLElement) {
     for (const property of ["font-family", "font-size", "font-weight", "line-height", "color", "float", "padding", "margin", "border", "background", "box-shadow", "text-shadow"])
       initial.style.setProperty(property, appearance.getPropertyValue(property));
     initial.textContent = match[2];
+    const existingHeading=element.querySelector<HTMLElement>('.column h2,.edition-section h2');
+    const heading=existingHeading??document.createElement('h2');
+    if(!existingHeading)paragraph.parentElement?.append(heading);
+    const conversation=element.dataset.conversation;
+    if(conversation==='on')element.dataset.conversation='off';
+    const headingBackground=getComputedStyle(heading).backgroundColor;
+    if(conversation==='on')element.dataset.conversation=conversation;
+    if(!existingHeading)heading.remove();
+    const initialInk=headingBackground && headingBackground!=='transparent' && !/rgba\([^)]*,\s*0\)$/.test(headingBackground)?headingBackground:appearance.color;
+    initial.style.color=initialInk;
+    // Exactly three paragraph lines, including the float's entire occupied height.
+    const line = parseFloat(getComputedStyle(paragraph).lineHeight);
+    if(Number.isFinite(line)) {
+      const height=line*3-0.5;
+      const glyphHeight=line*2+parseFloat(getComputedStyle(paragraph).fontSize)*0.72;
+      initial.style.height=height+'px';
+      initial.style.lineHeight=height+'px';
+      const canvas=document.createElement('canvas');
+      const context=canvas.getContext('2d');
+      let glyphSize=glyphHeight;
+      if(context){context.font='100px '+appearance.fontFamily;const metrics=context.measureText(match[2]);const ink=metrics.actualBoundingBoxAscent+metrics.actualBoundingBoxDescent;if(ink>0)glyphSize=glyphHeight*100/ink;}
+      initial.style.fontSize=glyphSize+'px';
+      initial.style.padding='0';initial.style.margin='0 6px 0 0';
+      initial.style.border='0';initial.style.backgroundColor='transparent';initial.style.boxShadow='none';
+      initial.style.display='block';
+      // Flourish ink follows the format's heading color rather than a fixed gold.
+      initial.style.backgroundImage=initial.style.backgroundImage.replace(/%239b733b/gi,encodeURIComponent(initialInk));
+    }
     text.textContent = match[1] + text.textContent.slice(match[0].length);
     text.parentNode?.insertBefore(initial, text);
   }

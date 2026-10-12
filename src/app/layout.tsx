@@ -14,6 +14,8 @@ import "./edition-content.css";
 import "./artifact-editions.css";
 import "./old-codex.css";
 import "./collection-pdf.css";
+import "./edition-studio.css";
+import "./gallery-editions.css";
 export const metadata: Metadata = {
   title: {
     default: "LoreKeeper — The Hall of Fame",

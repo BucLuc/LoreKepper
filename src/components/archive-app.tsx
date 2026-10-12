@@ -6,11 +6,17 @@ import type { User } from "@supabase/supabase-js";
 import { api, supabase } from "@/lib/supabase";
 import { statsFor, type Exhibit, type Message } from "@/lib/archive";
 import { validateEntries } from "@/lib/validation";
+import {messageDateTimeValue,messageDateTimeTimestamp} from "@/lib/message-datetime";
 import { MarkdownEditor } from "./markdown-editor";
 import { Feedback } from "./feedback";
 import { EntryMenu } from "./entry-menu";
 import { ExportOptions } from "./export-options";
+import {CollectionExportEntries} from "./collection-export-entries";
+import {exportEntries,orderEntries,type CollectionOrder} from "../lib/collection-order";
+import {collectionJson,collectionMarkdown} from "../lib/export-collection";
 import { CollectionPdfSettings } from "./collection-pdf-settings";
+import { presetDesign, type EditionDesign } from "@/lib/edition-design";
+import { readerEditions } from "@/lib/reader-editions";
 import { exportFilename } from "@/lib/export-name";
 import { Hall } from "./hall";
 import { Reader } from "./reader";
@@ -76,7 +82,7 @@ export function ArchiveApp({
     [adminTab, setAdminTab] = useState("general"),
     [filter, setFilter] = useState(""),
     [query, setQuery] = useState(""),
-    [format, setFormat] = useState<"json" | "md" | "pdf">("json"),
+    [format, setFormat] = useState<"json" | "md" | "pdf">("pdf"),
     [download, setDownload] = useState<{ url: string; name: string } | null>(
       null,
     ),
@@ -85,7 +91,11 @@ export function ArchiveApp({
       archive: unknown;
       count: number;
     } | null>(null);
-  const [pdfEdition,setPdfEdition]=useState("ancientcodex"), [pdfFont,setPdfFont]=useState("default");
+  const [pdfEdition,setPdfEdition]=useState("ancientcodex"), [pdfDesign,setPdfDesign]=useState<EditionDesign>(()=>({...presetDesign("ancientcodex"),pages:true,showCover:false,cover:"ancientcodex",endPage:"ancientcodex"}));
+  const [exportIds,setExportIds]=useState<Set<string>>(new Set());
+  const [pdfTitle,setPdfTitle]=useState("");
+  const [exportOrder,setExportOrder]=useState<CollectionOrder>("number");
+  const [exportPreviewId,setExportPreviewId]=useState<string|null>(null);
   const [pdfProgress,setPdfProgress]=useState<{story:number;total:number;pages:number;label:string}|null>(null);
   const pdfAbort=useRef<AbortController|null>(null);
   useEffect(()=>()=>pdfAbort.current?.abort(),[]);
@@ -247,6 +257,8 @@ export function ArchiveApp({
     admin = a?.collection.owner_id === user?.id,
     entry = a?.entries.find((e) => e.id === id),
     ownEntry = entry && a?.creators[entry.id] === user?.id;
+  const chosenExports=a?exportEntries(a.entries,exportIds,exportOrder):[];
+  const exportPreview=a?.entries.find(e=>e.id===exportPreviewId)??chosenExports[0];
   const button = (
     label: string,
     icon: IconName,
@@ -306,6 +318,7 @@ export function ArchiveApp({
   function openModal(value: string) {
     setError("");
     setConfirmation("");
+    if(value==="export"){setPdfTitle(a?.collection.name??"");setExportIds(new Set(a?.entries.map(e=>e.id)??[]));setExportOrder("number");setExportPreviewId(a?orderEntries(a.entries)[0]?.id??null:null);setFormat("pdf");}
     setModal(value);
     if (value === "rename") setName(a?.collection.name || "");
     if (value === "profileName") setName(profile);
@@ -336,15 +349,29 @@ export function ArchiveApp({
   );
   async function exportCollection() {
     await run(async () => {
-      if (!a) return;
+      if (!a || !chosenExports.length) return;
       if (format === "pdf") {
-        const controller=new AbortController();pdfAbort.current=controller;setPdfProgress({story:0,total:a.entries.length,pages:0,label:"Loading complete collection"});
+        // Choose the destination before rendering, while the click has user activation.
+        const picker = (window as SaveWindow).showSaveFilePicker;
+        const handle = picker ? await picker.call(window, {
+          suggestedName: exportFilename(pdfTitle.trim()||a.collection.name, "pdf", readerEditions.find(e => e.id === pdfEdition)?.name),
+          types: [{description: "A4 collection PDF", accept: {"application/pdf": [".pdf"]}}],
+        }) : null;
+        const controller=new AbortController();pdfAbort.current=controller;setPdfProgress({story:0,total:chosenExports.length,pages:0,label:"Loading selected entries"});
         try {
           const latest=await api("collection",{collection:a.collection.id},controller.signal);
           const {exportCollectionPdf}=await import("@/lib/export-collection-pdf");
-          const result=await exportCollectionPdf({name:latest.collection.name,entries:latest.entries,edition:pdfEdition,font:pdfFont,signal:controller.signal,onProgress:setPdfProgress});
-          setDownload({url:URL.createObjectURL(result.blob),name:result.filename});
-          setNotice(`Your collection PDF is ready: ${result.pages} A4 pages.`);
+          const result=await exportCollectionPdf({name:pdfTitle.trim()||latest.collection.name,entries:exportEntries(latest.entries,exportIds,exportOrder),edition:pdfEdition,font:pdfDesign.font,design:{...pdfDesign,pages:true},signal:controller.signal,onProgress:setPdfProgress});
+          if (handle) {
+            const writer = await handle.createWritable();
+            await writer.write(result.blob);
+            await writer.close();
+            setModal("");
+            setNotice(`Your collection PDF has been saved: ${result.pages} A4 pages.`);
+          } else {
+            setDownload({url:URL.createObjectURL(result.blob),name:result.filename});
+            setNotice(`Your collection PDF is ready: ${result.pages} A4 pages. Use Save file to keep it.`);
+          }
         } finally {pdfAbort.current=null;setPdfProgress(null);}
         return;
       }
@@ -367,8 +394,11 @@ export function ArchiveApp({
             ],
           })
         : null;
-      const r = await api("export", { collection: a.collection.id, format });
-      const blob = new Blob([r.content], {
+      const latest=await api("collection",{collection:a.collection.id});
+      const selected=exportEntries(latest.entries,exportIds,exportOrder);
+      if(!selected.length)throw new Error("The selected entries are no longer available.");
+      const content=format==="json"?JSON.stringify(collectionJson(selected),null,2):collectionMarkdown(latest.collection.name,selected);
+      const blob = new Blob([content], {
         type:
           format === "json"
             ? "application/json;charset=utf-8"
@@ -475,6 +505,7 @@ export function ArchiveApp({
   const dialog = (
     <Modal
       open={!!modal}
+      wide={modal==="export"}
       title={
         modal === "create"
           ? "Found a new hall"
@@ -557,7 +588,7 @@ export function ArchiveApp({
           </div>
         </form>
       )}
-      {modal === "export" && <><p className="v-muted">Export the entire collection.</p>{format === "pdf" && <CollectionPdfSettings edition={pdfEdition} font={pdfFont} onEdition={value=>{setPdfEdition(value);setPdfFont("default");setDownload(null);}} onFont={value=>{setPdfFont(value);setDownload(null);}} busy={busy}/>}<ExportOptions formats={["json","md","pdf"]} format={format} onFormat={f=>{setFormat(f as "json"|"md"|"pdf");setDownload(null);}} busy={busy} onExport={()=>void exportCollection()} onCancel={()=>setModal("")} download={download}/>{pdfProgress && <div className="pdf-export-progress" role="status" aria-live="polite"><progress max={Math.max(1,pdfProgress.total)} value={pdfProgress.story}/><p>{pdfProgress.story} / {pdfProgress.total} stories · {pdfProgress.pages} pages</p><p>{pdfProgress.label}</p><button className="v-button" type="button" onClick={()=>pdfAbort.current?.abort()}>Cancel PDF export</button></div>}</>}
+      {modal === "export" && <><p className="v-muted">Choose the entries and their order, then preview your collection edition.</p><ExportOptions formats={["pdf","json","md"]} format={format} onFormat={f=>{setFormat(f as "json"|"md"|"pdf");setDownload(null);}} busy={busy} exportDisabled={!chosenExports.length} onExport={()=>void exportCollection()} onCancel={()=>setModal("")} download={download}><div className="collection-export-workspace"><CollectionExportEntries entries={a?.entries??[]} selected={exportIds} order={exportOrder} previewId={exportPreview?.id} onSelection={ids=>{setExportIds(ids);setDownload(null);}} onOrder={value=>{setExportOrder(value);setDownload(null);}} onPreview={value=>setExportPreviewId(value.id)} busy={busy}/><div className="collection-export-detail">{format==="pdf"?<><label className="edition-select-label">PDF title<input type="text" value={pdfTitle} maxLength={200} placeholder={a?.collection.name??"Collection"} disabled={busy} onChange={e=>{setPdfTitle(e.target.value);setDownload(null);}}/><small>Used on the cover and end page. Your collection name stays the same.</small></label><CollectionPdfSettings entry={exportPreview} name={pdfTitle.trim()||a?.collection.name||"Collection"} count={chosenExports.length} edition={pdfEdition} design={pdfDesign} onEdition={value=>{setPdfEdition(value);setPdfDesign({...presetDesign(value),pages:true,showCover:false,cover:value,endPage:value});setDownload(null);}} onDesign={value=>{setPdfDesign({...value,pages:true});setDownload(null);}} busy={busy}/></>:<div className="v-panel"><h3>{chosenExports.length} entries in your export</h3><p className="v-muted">The selected entries are exported in the order shown. Entry numbers remain unchanged in your collection.</p><ol>{chosenExports.map(e=><li key={e.id}>No. {String(e.number).padStart(3,"0")} · {e.title}</li>)}</ol></div>}</div></div></ExportOptions>{pdfProgress&&<div className="pdf-export-progress" role="status" aria-live="polite"><progress max={Math.max(1,pdfProgress.total)} value={pdfProgress.story}/><p>{pdfProgress.story} / {pdfProgress.total} stories · {pdfProgress.pages} pages</p><p>{pdfProgress.label}</p><button className="v-button" type="button" onClick={()=>pdfAbort.current?.abort()}>Cancel PDF export</button></div>}</>}
       {modal === "credentials" && (
         <form
           onSubmit={submit(async () => {
@@ -1544,6 +1575,11 @@ export function ArchiveApp({
                       </label>
                     )}
                   </div>
+                  <label className="v-field">
+                    Message date and time
+                    <input type="datetime-local" aria-label={`Passage ${i+1} date and time`} value={messageDateTimeValue(m.timestamp)} onChange={e=>changeMessage(i,{timestamp:messageDateTimeTimestamp(e.target.value)})} required/>
+                    <small className="v-muted">Europe/Zurich time</small>
+                  </label>
                   <MarkdownEditor label={`Passage ${i + 1} content`} value={m.content} onChange={content=>changeMessage(i,{content})}/>
                   <div className="v-editor-caption">
                     <span>Markdown welcome. Words preserved.</span>
@@ -1877,8 +1913,7 @@ export function ArchiveApp({
                   <span className="eyebrow">TAKE THE LEGENDS WITH YOU</span>
                   <h2>A copy for posterity.</h2>
                   <p>
-                    Save the whole collection as a portable JSON archive or a
-                    readable Markdown chronicle.
+                    Choose entries and their order, then save a PDF edition, JSON archive or Markdown chronicle.
                   </p>
                   {button("Export collection", "export", () =>
                     openModal("export"),

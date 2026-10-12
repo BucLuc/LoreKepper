@@ -1,0 +1,67 @@
+{
+  "entry": {
+    "id": "design-fixture",
+    "number": 78,
+    "type": "discussion",
+    "title": "The sealed letter",
+    "authors": [
+      "The Chronicler"
+    ],
+    "date": "11 October 2026",
+    "source": "archive",
+    "score": 8,
+    "minutes": 5,
+    "time": 0,
+    "reason": "Fixture",
+    "preview": "",
+    "category": "Chronicles",
+    "recommended": "manuscript",
+    "messages": [
+      {
+        "id": "one",
+        "author": "The Chronicler",
+        "timestamp": "2026-10-11T09:00:00Z",
+        "source": "archive",
+        "sourceFormat": "markdown",
+        "content": "# Evidence\n\nAt dawn, **every word survived**.\n\n- A compass\n- A letter\n\n> Keep the record.\n\n| Item | State |\n| --- | --- |\n| Letter | Sealed |\n\nEND_DESIGN."
+      },
+      {
+        "id": "two",
+        "author": "Second witness",
+        "timestamp": "2026-10-11T09:02:00Z",
+        "source": "archive",
+        "sourceFormat": "markdown",
+        "content": "The second witness agreed. END_SECOND."
+      }
+    ]
+  },
+  "hashes": {
+    "captain": "3bee981a98145c181cf320c4b331ab1c8c219f2c11f04d9781c0ab1e36128626",
+    "light": "6d6089e2e0fd63c1188f20b0510ba5bb6206862b27f331577ec16cf4fbd5dd70",
+    "dark": "4e4e55a67ed4600072c30f0e14a23fe578dad4f163a4b177eee90879bf6f58e0",
+    "museum": "b83de3a060a340ac060b9f7049850393323359ed875ff38e82b2258a1b32e982",
+    "court": "f1b0757d0b18aba71ce784771016aaadc19005884d51636e6a93f00f936c35d9",
+    "poetry": "b54dc97e980a97562686f5008be4e9fc08db3fd52860213d0df7b9e4256bc642",
+    "tavern": "8a9193932c96581aaa5473ee66a6b0502f6c26fe23076303810bbad2a61493de",
+    "wanted": "fb44d97d6d802501ed9b57cdaf2d7e8a45e1ab199ca6cb4901446183f4abc636",
+    "card": "c4bd9b4510efd59c74bc6739cd6ff7f166cbe29501b8019dd0a7bcf97c1bb8d2",
+    "space": "2ddc29a424852d16d91ac75331cedfe4ef090efae87c4c4dee68a4bb1638c43f",
+    "prophecy": "5a51302afbb20b622e0c59878f37cbd74b7ea7156498fb89c9a0c2cd36b8218e",
+    "academic": "7cce3af26fb7a1f4791177a3e53c4c5edae5fa90a7bf3df508e90c746b41216a",
+    "news": "a12e30ad471de90ba7cd9d54a14fd0b645a33195a6056cb517ef456c89c8b664",
+    "bug": "7df2e2a59cfbfba611b3e8beb0657a9f1dc70dd7156c5cf4bacebae852098775",
+    "lyrics": "c259585fe8785034511063c851ed290f7153e4df513e01e47003c827ba760e7c",
+    "ancientcodex": "e272f6e40be5e08f90dd22beb211e08b9a7382dea2b77d1cd6f6df94bb3fe7d1",
+    "glorious": "7c7fdc59604112d1df6ebe2296082eadfc5cb0489a0bc4be1c993117a8f79953",
+    "newspaper": "d0e1a50647f63707e5868c3a8090828d5dd45c363a424a91cf9ffab174c7590c",
+    "manuscript": "0d06767650ab45c9d1283ec06d608f76fce8406d8184690d9e366eabc9c7dc76",
+    "scroll": "551397216a50e773549f1880e2d2fe9f11ab53011ecc14a63068e9bfa529102a",
+    "decree": "29fcf36b7163b10c9b46585c555b310844744285046e97c317e6cb87c87acf0b",
+    "screenplay": "ba9774ba7b5655faf9a208131e045c0fcd9cc9c416ebdfb48e4fba755e0351d1",
+    "social": "3d46dc4bcc1f925147db203c1d42206ed320a78e6fbfd99254611bfe1289070e",
+    "incident": "0020d68a0e032b3fc3c949294e9f9356ea375785cf7d5d51284a75803b29e97d",
+    "dossier": "0914ce613a6f76edbd14497d1a7656bdbb712f67f5a86c13a77acc14e00ead06",
+    "letter": "004e3fc50c262e9e48f352802d3b2fede2404bd008e32c07c4dd8f259ad4efe2",
+    "terminal": "16b511024687d0ca9836f3235ceeceae63f005219d5bfd38306376805b2e9d25"
+  }
+}

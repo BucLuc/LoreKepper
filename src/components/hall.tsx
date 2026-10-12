@@ -1,4 +1,5 @@
 "use client";
+import {collectionOrders,orderEntries,type CollectionOrder} from "../lib/collection-order";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,9 +20,6 @@ function EntryCard({ entry, index }: { entry: Exhibit; index: number }) {
       <div className="card-top">
         <span className="card-index">
           NO. {String(entry.number).padStart(3, "0")}
-        </span>
-        <span className="score">
-          <span aria-hidden="true">✦</span> {entry.score.toFixed(1)}
         </span>
       </div>
       <div className="card-emblem" aria-hidden="true">
@@ -71,7 +69,7 @@ export function Hall({
   const [author, setAuthor] = useState("");
   const [source, setSource] = useState("");
   const [kind, setKind] = useState("all");
-  const [sort, setSort] = useState("score");
+  const [sort, setSort] = useState<CollectionOrder>("number");
   const [view, setView] = useState("grid");
   const [page, setPage] = useState(1);
   const search = useRef<HTMLInputElement>(null);
@@ -93,27 +91,9 @@ export function Hall({
     return () => window.removeEventListener("keydown", handle);
   }, []);
   const matching = useMemo(() => {
-    return exhibits
-      .filter(
-        (e) =>
-          (!author || e.authors.includes(author)) &&
-          (!source || e.source === source) &&
-          (kind === "all" || e.type === kind) &&
-          matchesStory(e, query),
-      )
-      .sort((a, b) =>
-        sort === "score"
-          ? b.score - a.score || b.time - a.time
-          : sort === "oldest"
-            ? a.time - b.time
-            : sort === "title"
-              ? a.title.localeCompare(b.title)
-              : sort === "longest"
-                ? b.minutes - a.minutes
-                : b.time - a.time,
-      );
+    return orderEntries(exhibits.filter(e=>(!author||e.authors.includes(author))&&(!source||e.source===source)&&(kind==='all'||e.type===kind)&&matchesStory(e,query)),sort);
   }, [exhibits, query, author, source, kind, sort]);
-  const featured = exhibits.find((e) => e.score === 10) ?? exhibits[0];
+  const featured = orderEntries(exhibits)[0];
   const pages = Math.ceil(matching.length / pageSize);
   const current = Math.min(page, Math.max(1, pages));
   const visible = matching.slice((current - 1) * pageSize, current * pageSize);
@@ -228,9 +208,6 @@ export function Hall({
             <div className="featured-copy">
               <div className="eyebrow">
                 CURATOR’S SPOTLIGHT{" "}
-                <span className="feature-rating">
-                  ✦ {featured.score.toFixed(1)} / 10
-                </span>
               </div>
               <h2>{featured.title}</h2>
               <p>{featured.preview}…</p>
@@ -304,15 +281,11 @@ export function Hall({
               <select
                 value={sort}
                 onChange={(e) => {
-                  setSort(e.target.value);
+                  setSort(e.target.value as CollectionOrder);
                   setPage(1);
                 }}
               >
-                <option value="score">Highest rated</option>
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="title">Title A–Z</option>
-                <option value="longest">Longest legends</option>
+                {collectionOrders.map(option=><option key={option.id} value={option.id}>{option.name}</option>)}
               </select>
             </label>
           </div>

@@ -422,3 +422,70 @@
   accent-color:#c6a96b;
 }
 
+/* A frontispiece and colophon, rather than a story header on an empty page. */
+.collection-pdf-host .pdf-bookend {
+  --plate-gold:#b28b39;
+  --plate-red:#84352e;
+  --plate-blue:#273e64;
+}
+.collection-pdf-host .pdf-bookend-art {flex:none;position:relative;z-index:1;align-self:center;width:285px;height:257px;margin:22px auto 4px;}
+.collection-pdf-host .pdf-bookend .pdf-illuminated-plate {display:block;width:100%;height:100%;max-height:none;}
+.collection-pdf-host .pdf-bookend .document-header {position:relative;z-index:1;margin:18px 0 20px;text-align:center;flex-shrink:0;}
+.collection-pdf-host .pdf-bookend .document-header .document-ornament {display:none;}
+.collection-pdf-host .pdf-bookend[data-font] .document-header h2 {font-size:48px!important;line-height:1.2!important;overflow-wrap:anywhere;margin:12px 0;}
+.collection-pdf-host .pdf-bookend-copy {min-height:80px;gap:14px;position:relative;z-index:1;}
+.collection-pdf-host .pdf-bookend .pdf-volume-divider {font-size:26px;}
+.collection-pdf-host .pdf-bookend .pdf-volume-signature {position:relative;z-index:1;border-top:1px solid color-mix(in srgb,var(--ink) 25%,transparent);padding-top:16px;}
+.collection-pdf-host .pdf-bookend-end .pdf-bookend-art {width:225px;height:203px;margin-top:40px;}
+.collection-pdf-host .pdf-bookend-end .pdf-bookend-copy p {font-size:24px;font-style:italic;max-width:80%;}
+.collection-pdf-host .pdf-bookend-end .pdf-volume-eyebrow {font-size:23px;}
+.collection-pdf-host .pdf-bookend.theme-manuscript {
+  padding:19mm 26mm 22mm!important;
+  background-image:radial-gradient(ellipse at 50% 45%,#fff5d980,transparent 70%),url('/textures/library-vellum.svg');
+  --plate-gold:#b18b36;--plate-red:#902f32;--plate-blue:#253d65;
+}
+.collection-pdf-host .pdf-bookend.theme-manuscript .codex-illumination {inset:10mm 9mm;border:3px double #9d7a37;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .codex-vine {width:48px;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .codex-bestiary {bottom:12px;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .codex-rubric {display:none;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .artifact-running-head {border:0;font-size:11px;letter-spacing:.12em;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .pdf-bookend-art {width:360px;height:324px;margin:32px auto 8px;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .document-header {border:0;padding:0 12px;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .document-header::after {display:none;}
+.collection-pdf-host .pdf-bookend.theme-manuscript[data-font] .document-header h2 {color:#7b292e;font-size:56px!important;text-shadow:0 1px #fff3cb;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .pdf-volume-eyebrow {color:#273e64;font-size:17px;font-variant:small-caps;letter-spacing:.08em;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .pdf-bookend-copy {font-size:20px;gap:12px;}
+.collection-pdf-host .pdf-bookend.theme-manuscript .pdf-volume-signature {border-color:#a38444;color:#6c4d32;}
+.collection-pdf-host .pdf-bookend-end.theme-manuscript .pdf-bookend-art {width:300px;height:270px;margin-top:55px;}
+.collection-pdf-host .pdf-bookend.theme-ancientcodex {--plate-gold:#9b713f;--plate-red:#8c382a;--plate-blue:#514833;}
+.collection-pdf-host .pdf-bookend:is(.theme-glorious,.theme-prophecy) {--plate-gold:#d3b76c;--plate-red:#81503f;--plate-blue:#202d35;}
+.collection-pdf-host .pdf-edition-emblem {height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:22px;border-top:3px double var(--accent);border-bottom:3px double var(--accent);color:var(--accent);}
+.collection-pdf-host .pdf-edition-emblem>span {font-size:95px;line-height:1;}
+.collection-pdf-host .pdf-edition-emblem>i {font:10px var(--reader-font);letter-spacing:.18em;}
+.collection-pdf-host .pdf-bookend:is(.theme-space,.theme-terminal,.theme-bug) .pdf-edition-emblem {border:1px solid var(--accent);background:repeating-linear-gradient(0deg,transparent 0 19px,color-mix(in srgb,var(--accent) 12%,transparent) 20px),repeating-linear-gradient(90deg,transparent 0 19px,color-mix(in srgb,var(--accent) 12%,transparent) 20px);}
+.collection-pdf-host .pdf-bookend:is(.theme-incident,.theme-court,.theme-academic,.theme-screenplay) .pdf-bookend-art {height:110px;margin-top:20px;}
+.collection-pdf-host .pdf-bookend:is(.theme-incident,.theme-court,.theme-academic,.theme-screenplay) .pdf-edition-emblem>span {font-size:45px;}
+.collection-pdf-host .pdf-bookend.theme-captain .pdf-edition-emblem {border:0;}
+.collection-pdf-host .pdf-bookend.theme-captain .pdf-edition-emblem>span {font-size:130px;}
+.pdf-bookend-previews {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:16px;background:#11180f;border:1px solid #c6a96b40;border-radius:10px;}
+.pdf-preview-heading {grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#d4c398;}
+.pdf-preview-heading button {font-size:11px;padding:7px 10px;}
+.pdf-preview-figure {margin:0;min-width:0;}
+.pdf-preview-figure figcaption {font-size:12px;margin-bottom:9px;color:#c9c6b8;}
+.pdf-preview-frame {position:relative;width:100%;aspect-ratio:210/297;overflow:hidden;box-shadow:0 8px 22px #0006;background:#d9c69e;}
+.pdf-preview-paper {position:absolute;left:0;top:0;width:210mm;height:297mm;transform:scale(var(--preview-scale,0));transform-origin:top left;pointer-events:none;}
+.pdf-bookend-previews.is-expanded {grid-template-columns:minmax(0,1fr);}
+.pdf-preview-frame .story-document {max-width:none!important;}
+@media(max-width:420px) {.pdf-bookend-previews {padding:10px;gap:10px;}.pdf-preview-heading {flex-wrap:wrap;}}
+.collection-pdf-host .pdf-crest-frontispiece {height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--accent);}
+.collection-pdf-host .pdf-crest-frontispiece svg {width:230px;height:210px;max-height:none;}
+.collection-pdf-host .pdf-crest-frontispiece i {font:14px var(--reader-font);letter-spacing:.05em;}
+.collection-pdf-host .pdf-bookend-end .pdf-crest-frontispiece svg {height:155px;}
+.collection-pdf-host .pdf-bookend.theme-decree .pdf-volume-eyebrow {color:#ddc58e;}
+.collection-pdf-host .pdf-bookend.theme-light {--accent:#59616c;}
+.collection-pdf-host .pdf-bookend:is(.theme-academic,.theme-court) {--accent:#425b68;}
+.collection-pdf-host .pdf-bookend.theme-social {--accent:#37619b;}
+.collection-pdf-host .pdf-bookend.theme-news {--accent:#a42e3a;}
+.collection-pdf-host .pdf-bookend.theme-museum {--accent:#57624c;}
+.collection-pdf-host .pdf-bookend.theme-letter {--accent:#62664d;}
+.collection-pdf-host .pdf-bookend:is(.theme-tavern,.theme-wanted) {--accent:#80502e;}

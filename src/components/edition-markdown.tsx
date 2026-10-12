@@ -13,21 +13,24 @@ export function EditionMarkdown({
   style: string;
 }) {
   return (
-    <div className="message-prose edition-prose" data-edition={style}>
+    <div className={style.startsWith("gallery-")?"gallery-prose":"message-prose edition-prose"} data-edition={style}>
       <Markdown
         remarkPlugins={[
           remarkGfm,
-          remarkEditionSections,
+          ...(style.startsWith("gallery-")?[]:[remarkEditionSections]),
           remarkEditionSemantics(style),
         ]}
         skipHtml
         components={{
+          // Markdown can contain empty URLs or URLs rejected by its safe URL transform.
+          // eslint-disable-next-line @next/next/no-img-element
+          img: ({src,alt,title}) => typeof src === "string" && src.trim() ? <img src={src} alt={alt??""} title={title}/> : alt ? <span className="pdf-image-unavailable">{alt}</span> : null,
           a: ({ children, href }) => (
             <a href={href} target="_blank" rel="noopener noreferrer">
               {children}
             </a>
           ),
-          table: ({ children, ...props }) => (
+          table: ({ children, ...props }) => style.startsWith("gallery-") ? <table {...props}>{children}</table> : (
             <div
               className="edition-table"
               role="region"

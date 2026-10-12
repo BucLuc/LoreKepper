@@ -28,3 +28,27 @@
 @media(max-width:760px){.scribal-dragon{width:27px;right:1px;}.scribal-marginalia{font-size:11px;}.note-bene{left:3px;}.note-finis{right:3px;}}
 @media(max-width:480px){.scribal-flourish{width:250px;max-width:100%;}.scribal-dragon,.scribal-marginalia{display:none;}.story-document.theme-ancientcodex .message-prose :is(h1,h2)::before{left:-15px;font-size:16px;}.story-document.theme-ancientcodex .message-prose blockquote::before{left:-24px;font-size:19px;top:12px;}.story-document.theme-ancientcodex .edition-section>:is(h1,h2)+p::first-letter,.story-document.theme-ancientcodex .edition-section>p:first-child::first-letter{font-size:3.2em;padding:9px 10px 6px 5px;margin-left:-4px;margin-right:6px;}}
 .story-document.theme-ancientcodex .message-prose :is(h1,h2,h3,h4,h5,h6){clear:both;}
+/* An abbey's treasured volume: copper-gold penwork on the original parchment. */
+.codex-grand-headpiece {display:block;width:510px;max-width:100%;height:auto;margin:0 auto 8px;color:#8b472e;}
+.old-codex-headpiece {margin:2px 0 12px;}
+.old-codex-incipit {font-variant:small-caps;letter-spacing:.08em;font-size:18px;}
+.story-document.theme-ancientcodex .document-header h2 {font-size:clamp(38px,4.5vw,58px);line-height:1.2;margin:16px auto 0;max-width:18ch;text-wrap:balance;}
+.story-document.theme-ancientcodex .document-header {padding-bottom:26px;position:relative;}
+.story-document.theme-ancientcodex .document-header::after {display:block;content:'✥';position:relative;inset:auto;width:auto;height:auto;margin:18px auto 0;background:none;color:#935d32;font:23px/1 Georgia,serif;}
+.story-document.theme-ancientcodex .old-codex-explicit {border-top:1px solid #97643b45;padding-top:24px;}
+.story-document.theme-ancientcodex .message-prose :is(h1,h2) {font-variant:small-caps;letter-spacing:.025em;}
+@media(max-width:480px) {.codex-grand-headpiece {width:320px;}.story-document.theme-ancientcodex .document-header h2 {font-size:36px;}.old-codex-incipit {font-size:15px;}}
+.story-document.theme-ancientcodex .old-codex-explicit {clear:both;}
+/* A full-page interlaced border, independently toggleable and outside the text area. */
+.codex-epic-border {position:absolute;inset:14px 13px;pointer-events:none;border:3px double #a28449;box-shadow:inset 0 0 0 3px #eedba060,inset 0 0 0 5px #91734155;}
+.story-document.theme-ancientcodex .codex-epic-border .codex-border-vine {position:absolute;top:85px;bottom:85px;width:42px;height:auto;background:url('/textures/codex-vine.svg') center top/42px 160px repeat-y!important;opacity:.9;}
+.codex-border-vine.vine-left {left:5px;}.codex-border-vine.vine-right {right:5px;transform:scaleX(-1);}
+.codex-border-corner {position:absolute;width:90px;height:90px;}.codex-border-corner.corner-nw {left:0;top:0;}.codex-border-corner.corner-ne {right:0;top:0;transform:scaleX(-1);}.codex-border-corner.corner-sw {left:0;bottom:0;transform:scaleY(-1);}.codex-border-corner.corner-se {right:0;bottom:0;transform:scale(-1);}
+.story-document.theme-ancientcodex .document-header h2 {width:100%;max-width:100%;font-size:clamp(34px,3.8vw,52px);overflow-wrap:anywhere;text-wrap:balance;line-height:1.22;}
+.story-document.theme-ancientcodex .old-codex-folio {padding:0 14px;}
+.story-document.theme-ancientcodex .scribal-marginalia,.story-document.theme-ancientcodex .scribal-dragon,.story-document.theme-ancientcodex .old-codex-marginal-note {display:none;}
+@media(max-width:480px) {.codex-epic-border {inset:8px 6px;}.codex-border-corner {width:48px;height:48px;}.story-document.theme-ancientcodex .codex-epic-border .codex-border-vine {width:20px;background-size:20px 96px!important;top:44px;bottom:44px;}.story-document.theme-ancientcodex .document-header h2 {font-size:32px;}.story-document.theme-ancientcodex .old-codex-folio {padding:0;font-size:11px;}}
+.story-document.theme-ancientcodex .old-codex-folio {padding:0 38px;}
+.story-document.theme-ancientcodex .old-codex-library-mark {right:112px;bottom:32px;}
+@media(max-width:480px) {.story-document.theme-ancientcodex .old-codex-folio {padding:0 20px;}.story-document.theme-ancientcodex .old-codex-library-mark {right:62px;font-size:11px;}}
+.collection-pdf-host .theme-ancientcodex .pdf-continuation-head {padding-left:44px;padding-right:44px;}

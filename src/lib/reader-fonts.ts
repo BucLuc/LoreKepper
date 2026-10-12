@@ -1,5 +1,9 @@
 // Every option resolves to a different bundled face, including the original edition.
 const families = {
+  galleryclassic: '"Palatino Linotype", "Book Antiqua", Georgia, serif',
+  galleryfell: '"Scriptorium Fell", serif',
+  galleryblackletter: '"Scriptorium Blackletter", serif',
+  galleryuncial: '"Scriptorium Uncial", serif',
   fondamento: '"LK Fondamento", cursive',
   gentiumbookplus: '"LK Gentium Book Plus", serif',
   barlow: '"LK Barlow", sans-serif',
@@ -34,6 +38,10 @@ const families = {
   medieval: '"LK Medieval Sharp", serif',
 } as const;
 const names = {
+  galleryclassic:"Classical manuscript",
+  galleryfell:"Historic letterpress",
+  galleryblackletter:"Gothic blackletter",
+  galleryuncial:"Illuminated uncial",
   fondamento: "Fondamento",
   gentiumbookplus: "Gentium Book Plus",
   barlow: "Barlow",
@@ -196,9 +204,17 @@ export const editionFontChoices = {
   lyrics: ["caveat", "nunito", "alegreya", "lora", "worksans"],
 } as const;
 type Face = keyof typeof families;
+export const allReaderFonts = (Object.keys(families) as Face[]).map(id=>({id,name:names[id],family:families[id]}));
+export function designFonts(style:string) {
+  const suggested=readerFonts(style);
+  return [...suggested,...allReaderFonts.filter(face=>!suggested.some(f=>f.family===face.family))];
+}
+export function resolveReaderFont(style:string,id:string) {
+  return readerFonts(style).find(f=>f.id===id) ?? allReaderFonts.find(f=>f.id===id) ?? readerFonts(style)[0];
+}
 export function readerFonts(style: string) {
   const faces: readonly Face[] =
-    editionFontChoices[style as keyof typeof editionFontChoices] ??
+    (style.startsWith("gallery-") ? ["galleryclassic","galleryfell","galleryblackletter","galleryuncial","medieval","ebgaramond"] as readonly Face[] : editionFontChoices[style as keyof typeof editionFontChoices]) ??
     editionFontChoices.manuscript;
   return faces.map((face, index) => ({
     id: index === 0 ? "default" : face,

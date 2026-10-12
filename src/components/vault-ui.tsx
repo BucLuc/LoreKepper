@@ -6,11 +6,13 @@ export function Modal({
   title,
   onClose,
   children,
+  wide=false,
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  wide?:boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null),
     label = useId();
@@ -29,7 +31,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className="vault-modal"
+      className={`vault-modal ${wide?"vault-modal-wide":""}`}
       aria-labelledby={label}
       onCancel={(e) => {
         e.preventDefault();

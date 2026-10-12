@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {readFileSync} from 'node:fs';
+import type {Exhibit} from '../src/lib/archive';
+import {collectionOrders,orderEntries,exportEntries} from '../src/lib/collection-order';
+import {CollectionExportEntries} from '../src/components/collection-export-entries';
+import {CollectionPdfSettings} from '../src/components/collection-pdf-settings';
+import {presetDesign} from '../src/lib/edition-design';
+import {StoryDocument} from '../src/components/story-document';
+import {readerEditions} from '../src/lib/reader-editions';
+const base=JSON.parse(readFileSync(new URL('./fixtures/edition-presets.json',import.meta.url),'utf8')).entry as Exhibit;
+const entries=[{...base,id:'92',number:92,title:'Chapter 10',time:3,minutes:9},{...base,id:'3',number:3,title:'Chapter 2',time:1,minutes:2},{...base,id:'11',number:11,title:'Chapter 3',time:2,minutes:5}];
+test('collection order defaults to numeric exhibit numbers without renumbering or mutating entries',()=>{assert.deepEqual(orderEntries(entries).map(e=>e.number),[3,11,92]);assert.deepEqual(entries.map(e=>e.number),[92,3,11]);assert.deepEqual(orderEntries(entries,'title').map(e=>e.number),[3,11,92]);assert.deepEqual(orderEntries(entries,'newest').map(e=>e.number),[92,11,3]);assert.equal(collectionOrders.some(o=>o.id as string==='score'),false);});
+test('export includes only the selected IDs, ordered independently of source order',()=>{assert.deepEqual(exportEntries(entries,new Set(['3','92']),'number-desc').map(e=>e.number),[92,3]);assert.equal(exportEntries(entries,new Set(),'number').length,0);const html=renderToStaticMarkup(createElement(CollectionExportEntries,{entries,selected:new Set(['3','92']),order:'number',onSelection:()=>{},onOrder:()=>{},onPreview:()=>{}}));assert.ok(html.includes('2 of 3 selected'));assert.equal(html.match(/is-excluded/g)?.length,1);assert.equal(html.match(/is-selected/g)?.length,2);});
+test('PDF settings always provide pages without exposing the A4 reading toggle',()=>{for(const edition of readerEditions){const html=renderToStaticMarkup(createElement(CollectionPdfSettings,{name:'Collection',count:3,edition:edition.id,design:{...presetDesign(edition.id),cover:edition.id,endPage:edition.id},onEdition:()=>{},onDesign:()=>{},busy:false}));assert.ok(!html.includes('Show A4 pages'));assert.ok(html.includes('A4 PDF'));if(edition.id.startsWith('gallery-'))assert.ok(html.includes('pdf-gallery-bookend'));}});
+test('rating is absent from trading card output',()=>{const theme=readerEditions.find(e=>e.id==='card')!;const html=renderToStaticMarkup(createElement(StoryDocument,{entry:{...base,score:0},style:'card',theme}));assert.ok(!html.includes('LORE POWER'));assert.ok(!html.toLowerCase().includes('rating'));});

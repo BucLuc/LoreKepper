@@ -65,7 +65,7 @@ export function GalleryDocument({ entry, style, size = 18, design, font, plain =
                             art.removeAttribute('viewBox');art.replaceChildren();
                             const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
                             const pattern=document.createElementNS('http://www.w3.org/2000/svg','pattern');
-                            pattern.id=patternId;pattern.setAttribute('patternUnits','userSpaceOnUse');pattern.setAttribute('width','794');pattern.setAttribute('height','723');pattern.setAttribute('viewBox',viewBox);
+                            pattern.id=patternId;pattern.setAttribute('patternUnits','userSpaceOnUse');pattern.setAttribute('width','100%');pattern.setAttribute('height','723');pattern.setAttribute('viewBox',viewBox);pattern.setAttribute('preserveAspectRatio','none');
                             pattern.append(...Array.from(originalFrame.childNodes).map(node=>node.cloneNode(true)));defs.append(pattern);art.append(defs);
                             const fill=document.createElementNS('http://www.w3.org/2000/svg','rect');fill.setAttribute('width','100%');fill.setAttribute('height','100%');fill.setAttribute('fill',`url(#${patternId})`);art.append(fill);
                         }
@@ -172,6 +172,7 @@ export function GalleryDocument({ entry, style, size = 18, design, font, plain =
         text = withoutEmojis(text); const speaker=message.userId?message.author:authorName(message.author);return <section key={message.id} className={conversation?"manuscript-message":undefined} data-speaker={speakers.indexOf(speaker)%2}>{conversation&&<header className="manuscript-message-head"><span className="manuscript-speaker">{showEmojis?speaker:withoutEmojis(speaker)}</span>{message.timestamp&&<time dateTime={message.timestamp}>{dateLabel(message.timestamp)} · {displayTime(message.timestamp)}</time>}</header>}{plain ? <pre>{text}</pre> : <EditionMarkdown text={text} style={style}/>}</section>; })}</div></div></div><div className="page-footer"><span className="running-section"></span><span className="folio-number">1</span></div></article></div>
  <div className="gallery-output" style={{ zoom: scale }} ref={output}/></div>;
 }
+
 
 
 

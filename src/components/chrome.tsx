@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Icon } from "./icon";
 import { AccountMenu } from "./account-menu";
+import { MainNavigation, NavigationLinks } from "./main-navigation";
 export function Header() {
   return (
     <header className="site-header">
@@ -14,7 +16,9 @@ export function Header() {
         </span>
       </Link>
       <nav aria-label="Main navigation">
-        <span className="nav-motto">MANY MINDS. ENDLESS LEGENDS.</span>
+        <Suspense fallback={<NavigationLinks />}>
+          <MainNavigation />
+        </Suspense>
         <span className="nav-divider" />
         <AccountMenu />
       </nav>

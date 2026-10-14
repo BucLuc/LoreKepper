@@ -75,3 +75,18 @@
 .gallery-reader .sheet .column .gallery-title-opening .entry-title-remark{margin-top:0}
 .gallery-reader .sheet .gallery-cover .cover-title:has(+.entry-title-remark){margin-bottom:4px;padding-bottom:0}
 .gallery-reader .sheet .gallery-cover .cover-title+.entry-title-remark{margin-top:0}
+/* Continuous reading reflows on small screens instead of shrinking A4 text.
+   Explicit paged layouts and the existing PDF pipeline keep physical geometry. */
+.gallery-reader{container-type:inline-size}
+@container(max-width:700px){
+ .gallery-output:has(.gallery-block){zoom:1!important;width:100%}
+ .gallery-output .gallery-block{width:100%!important;min-height:141.4cqw}
+ .gallery-output .gallery-block .block-frame-top,.gallery-output .gallery-block .block-frame-bottom{height:70.7cqw;flex:0 0 70.7cqw}
+ .gallery-output .gallery-block .paper-body{margin:65px 40px 50px!important}
+ .gallery-output .gallery-block .column{font-size:calc(var(--font)*.9);line-height:1.8}
+ .gallery-output .gallery-block .column h1{font-size:27px}
+ .gallery-output .gallery-block .column h2{font-size:24px}
+ .gallery-output .gallery-block .page-head{left:25px;right:25px;font-size:9px}
+ .gallery-output .gallery-block .margin-note,.gallery-output .gallery-block .page-emblem{display:none}
+ .gallery-output .gallery-block .cover-illustration{max-width:100%;height:auto}
+}

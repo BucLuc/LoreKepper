@@ -1,4 +1,5 @@
 "use client";
+import { AISettings } from "./ai-settings";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -54,10 +55,12 @@ export function ArchiveApp({
   mode = "home",
   id,
   token,
+  initialProfileTab,
 }: {
   mode?: string;
   id?: string;
   token?: string;
+  initialProfileTab?: "settings";
 }) {
   const router = useRouter();
   const [selectedStory,setSelectedStory]=useState<{e:Exhibit;v:Archive}|null>(null);
@@ -78,7 +81,7 @@ export function ArchiveApp({
     [messages, setMessages] = useState<DraftMessage[]>([]);
   const [modal, setModal] = useState(""),
     [confirmation, setConfirmation] = useState(""),
-    [tab, setTab] = useState("entries"),
+    [tab, setTab] = useState(initialProfileTab || "entries"),
     [adminTab, setAdminTab] = useState("general"),
     [filter, setFilter] = useState(""),
     [query, setQuery] = useState(""),
@@ -168,7 +171,7 @@ export function ArchiveApp({
             setArchives([]);
             if (!["home", "login"].includes(mode))
               router.replace(
-                `/login?next=${encodeURIComponent(window.location.pathname)}`,
+                `/login?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`,
               );
             return;
           }
@@ -1266,6 +1269,7 @@ export function ArchiveApp({
         </div>
         {tab === "settings" ? (
           <div className="v-settings-grid">
+            <AISettings />
             <section className="v-panel">
               <div className="v-panel-head">
                 <Icon name="user" />

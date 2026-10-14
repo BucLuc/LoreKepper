@@ -53,7 +53,7 @@ function MessageBody({
   );
 }
 import { normalizeDesign,  editionPalettes, type EditionDesign } from "../lib/edition-design";
-type DocumentProps = {entry:Exhibit;style:string;theme:{mark:string;label:string};size?:number;plain?:boolean;showEmojis?:boolean;font?:string;design?:EditionDesign};
+type DocumentProps = {entry:Exhibit;style:string;theme:{mark:string;label:string};size?:number;plain?:boolean;showEmojis?:boolean;font?:string;design?:EditionDesign;ongoing?:boolean};
 function sections({entry,style,theme,plain=false,showEmojis=true}:DocumentProps) {
  const reference=String(entry.number).padStart(3,"0");
  const isTranscript=["screenplay","incident","dossier","terminal"].includes(style);
@@ -293,7 +293,7 @@ export function StoryDocument(props:DocumentProps) {
  {["manuscript","decree"].includes(style)&&<HistoricalDecorations kind={style} number={entry.number}/>}
  {chosen.showCover ? original.header() : <div className="document-header"><h2>{entry.title}</h2><EntryRemark entry={entry} showEmojis={props.showEmojis}/></div>}
  {original.body()}
- {original.footer()}
+ {!props.ongoing && original.footer()}
  </article>;
  return chosen.pages ? <PagedDocument>{article}</PagedDocument> : article;
 }

@@ -391,6 +391,8 @@ export function Reader({
           {titleActions}
         </div>
         <div className="reader-meta">
+          {entry.sourceAdventureId && <Link href={`/interactive/${entry.sourceAdventureId}`}>Source adventure</Link>}
+          {entry.sourceChatId && <Link href={`/chat/${entry.sourceChatId}`}>Source chat</Link>}
           <span className="avatar-pair">
             {entry.authors.map((a) => (
               <span key={a} className={`avatar ${a === "Liri" ? "liri" : ""}`}>

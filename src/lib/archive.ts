@@ -15,6 +15,8 @@ export type Message = {
   presentation?: string;
 };
 export type Entry = {
+  sourceAdventureId?: string;
+  sourceChatId?: string;
   id: string;
   type: string;
   title: string;

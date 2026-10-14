@@ -117,7 +117,7 @@ export async function POST(request: Request) {
         const profileNames = new Map(members.map(m => [m.user_id, (m.profiles as unknown as {name:string}).name]));
         const original = rows.map(r => {
           const e = decrypt(r.payload, c.id, r.id) as Entry;
-          return {...e, id:r.id, author:profileNames.get(r.author_user_id) || r.author, authorUserId:r.author_user_id,
+          return {...e, id:r.id, sourceAdventureId:r.source_adventure_id || undefined, sourceChatId:r.source_chat_id || undefined, author:profileNames.get(r.author_user_id) || r.author, authorUserId:r.author_user_id,
             messages:e.messages.map((m,index) => {
               const linked = byMessage.get(`${r.id}:${index}`);
               return {...m, author:profileNames.get(linked?.user_id) || linked?.author || m.author,

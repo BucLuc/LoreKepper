@@ -1,5 +1,3 @@
-import { canonicalPayload } from "@/lib/handoff";
-import { handoffContext, validateHandoffTurn } from "@/lib/handoff";
 import { conversationMessages } from "@/lib/chat-selection";
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -12,9 +10,11 @@ import {
   voice,
   voicePrompt,
   parseTurn,
+  playerVoice,
   storyMarkdown,
   type Adventure,
   type Player,
+  type Voice,
 } from "@/lib/play";
 import { readerEditions } from "@/lib/reader-editions";
 import { normalizeDesign } from "@/lib/edition-design";
@@ -298,7 +298,7 @@ export async function POST(req: Request) {
             mode: b.mode === "multiplayer" ? "multiplayer" : "solo",
             world:
               typeof b.world === "string" ? b.world.trim().slice(0, 6000) : "",
-            voice: voice(b.voice || { style: "Medieval", scope: "entire" }),
+            voice: voice(b.voice || { scope: "entire" }),
             edition,
             design: normalizeDesign(b.design, edition),
           }),
@@ -377,15 +377,58 @@ export async function POST(req: Request) {
         if (!Array.isArray(b.identities) || b.identities.length > 8)
           throw new Error("Invalid player settings.");
         const identities = b.identities.map(
-          (p: { user: string; name?: string; description?: string }) => ({
+          (p: {
+            user: string;
+            name?: string;
+            description?: string;
+            voice?: unknown;
+          }) => ({
             user: p.user,
             name: typeof p.name === "string" ? p.name.trim().slice(0, 100) : "",
             description:
               typeof p.description === "string"
                 ? p.description.trim().slice(0, 2000)
                 : "",
+            voice: playerVoice(p.voice),
           }),
         );
+        // A narrator replaces the old writing style for the story as a whole; its
+        // persona is copied in so the story keeps it even if the preset changes.
+        const chosen =
+          typeof b.voice?.narrator === "string" ? b.voice.narrator : "";
+        let narrator: Partial<Voice> = {};
+        if (chosen === "custom") {
+          const persona =
+            typeof b.voice.persona === "string"
+              ? b.voice.persona.trim().slice(0, 600)
+              : "";
+          narrator = {
+            narrator: "custom",
+            narratorName: "a narrator of the player's own design",
+            persona,
+          };
+        } else if (chosen) {
+          const preset = (
+            await admin
+              .from("narrators")
+              .select("id,name,persona")
+              .eq("id", chosen)
+              .maybeSingle()
+          ).data;
+          if (preset)
+            narrator = {
+              narrator: preset.id,
+              narratorName: preset.name,
+              persona: preset.persona,
+            };
+        }
+        const storyVoice: Voice = {
+          ...voice(b.voice),
+          style: "Modern",
+          tone: "Default",
+          scope: "entire",
+          ...narrator,
+        };
         result = unwrap(
           await admin.rpc("configure_adventure", {
             a: b.id,
@@ -398,7 +441,7 @@ export async function POST(req: Request) {
                 typeof b.world === "string"
                   ? b.world.trim().slice(0, 6000)
                   : "",
-              voice: voice(b.voice),
+              voice: storyVoice,
               edition,
               design: normalizeDesign(b.design, edition),
               ai_mode: b.aiMode === "chatgpt" ? "chatgpt" : "api",
@@ -412,86 +455,6 @@ export async function POST(req: Request) {
         await member(db, b.id, false, user.id);
         result = unwrap(
           await admin.rpc("arm_chatgpt_story", { a: b.id, u: user.id }),
-        );
-        break;
-      }
-      case "handoffContext": {
-        await member(db, b.id, false, user.id);
-        const story: Adventure = unwrap(
-          await db.from("adventures").select("*").eq("id", b.id).single(),
-        );
-        const players: Player[] = unwrap(
-          await db
-            .from("adventure_players")
-            .select("*")
-            .eq("adventure_id", b.id),
-        );
-        result = handoffContext(story, players);
-        break;
-      }
-      case "saveHandoff": {
-        await member(db, b.id, false, user.id);
-        const story: Adventure = unwrap(
-          await db.from("adventures").select("*").eq("id", b.id).single(),
-        );
-        if (story.owner_id !== user.id || story.ai_mode !== "chatgpt")
-          throw new Error("Only the creator can save a ChatGPT scene.");
-        const players: Player[] = unwrap(
-          await db
-            .from("adventure_players")
-            .select("*")
-            .eq("adventure_id", b.id),
-        );
-        if (typeof b.output !== "string" || b.output.length > 96000)
-          throw new Error("Paste the narrator's complete response.");
-        const value = {
-          ...decodeNarratorOutput(b.output),
-          revision: b.revision,
-          requestId: b.requestId,
-        };
-        const turn = validateHandoffTurn(story, players, value);
-        result = unwrap(
-          await admin.rpc("commit_gpt_turn", {
-            a: b.id,
-            u: user.id,
-            r: b.revision,
-            request_id: b.requestId,
-            digest: createHash("sha256")
-              .update(canonicalPayload(value))
-              .digest("hex"),
-            segment: { ...turn.segment, created: new Date().toISOString() },
-            memory: turn.summary,
-            ending: value.ending === true,
-            story_title: turn.title,
-            story_world: turn.world,
-          }),
-        );
-        break;
-      }
-      case "chatGPTConnection": {
-        const connections = unwrap(
-          await admin
-            .from("gpt_connections")
-            .select("id,refresh_expires,created_at")
-            .eq("user_id", user.id)
-            .gt("refresh_expires", new Date().toISOString()),
-        );
-        result = {
-          connected: connections.length > 0,
-          connections,
-          configured:
-            !!process.env.LORE_GPT_CLIENT_ID &&
-            !!process.env.LORE_GPT_CLIENT_SECRET &&
-            !!process.env.LORE_GPT_REDIRECT_URI,
-        };
-        break;
-      }
-      case "disconnectChatGPT": {
-        unwrap(
-          await admin.from("gpt_connections").delete().eq("user_id", user.id),
-        );
-        unwrap(
-          await admin.from("gpt_oauth_codes").delete().eq("user_id", user.id),
         );
         break;
       }
@@ -751,7 +714,9 @@ export async function POST(req: Request) {
       case "exportCollection": {
         const chat = b.kind === "chat";
         await member(db, b.id, chat, user.id);
-        let title: string, content: string;
+        let title: string,
+          content: string,
+          started = new Date().toISOString();
         let savedMessages: Record<string, unknown>[] | undefined;
         if (chat) {
           const c = unwrap(
@@ -788,6 +753,8 @@ export async function POST(req: Request) {
             await db.from("adventures").select("*").eq("id", b.id).single(),
           );
           title = s.title;
+          // Date the saved copy like the live story: when the adventure began.
+          started = s.segments[0]?.created || started;
           content = storyMarkdown(
             s,
             unwrap(
@@ -826,7 +793,7 @@ export async function POST(req: Request) {
               {
                 id: randomUUID(),
                 author: "",
-                timestamp: new Date().toISOString(),
+                timestamp: started,
                 content,
                 source: "LoreKeeper",
                 sourceFormat: "markdown",

@@ -79,6 +79,13 @@ export async function POST(request: Request) {
         };
         break;
       case "createCollection":
+        // Row-level security enforces this too; this gives a clear message.
+        if (
+          unwrap(
+            await db.from("profiles").select("role").eq("id", user.id).single(),
+          ).role !== "admin"
+        )
+          throw new Error("Only an admin can create collections.");
         result = unwrap(
           await db
             .from("collections")

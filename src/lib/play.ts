@@ -34,7 +34,26 @@ export type Voice = {
   style: string;
   tone: string;
   scope: "dialogue" | "entire";
+  // Who tells the story: a preset id from the narrators table, or "custom".
+  // The persona is copied in when chosen, so the story keeps its narrator.
+  narrator?: string;
+  narratorName?: string;
+  persona?: string;
 };
+export type NarratorPreset = {
+  id: string;
+  name: string;
+  mood: "pirate" | "medieval" | "comedic" | "atmospheric" | "wildcard";
+  blurb: string;
+  sample: string;
+};
+// One shared phrasing for both narrators (Lorekeeper's own and ChatGPT). A preset
+// is a writing voice: it lives in the prose, never in a storyteller who frames it.
+export function narratorLine(v: Partial<Voice>) {
+  return v.persona
+    ? `Write the story itself in this voice${v.narratorName ? ` (${v.narratorName})` : ""}: ${v.persona} The voice lives in the prose: no storyteller character, no frame, nobody talking to a listener or the reader.`
+    : "";
+}
 export const defaultVoice: Voice = {
   language: "English",
   style: "Modern",
@@ -70,19 +89,36 @@ export type Adventure = {
   edition: string;
   design: EditionDesign;
   segments: Segment[];
+  // Sections of the chapter ChatGPT is writing right now.
+  draft?: { parts: string[] } | null;
   summary: string;
   revision: number;
   generating_until?: string | null;
   last_error?: string | null;
   created_at?: string;
 };
+// A player's own language/style for their character; empty fields follow the story.
+export type PlayerVoice = { language?: string; style?: string };
 export type Player = {
   user_id: string;
   name: string;
   character: Character | null;
   description?: string;
   identity_name?: string;
+  voice?: PlayerVoice | null;
 };
+export function playerVoice(value: unknown): PlayerVoice | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as Record<string, unknown>;
+  const language =
+    typeof v.language === "string" ? v.language.trim().slice(0, 60) : "";
+  const style = styles.includes(v.style as (typeof styles)[number])
+    ? (v.style as string)
+    : "";
+  return language || style
+    ? { ...(language ? { language } : {}), ...(style ? { style } : {}) }
+    : null;
+}
 export function voice(value: Partial<Voice> = {}): Voice {
   return {
     language:
@@ -116,6 +152,10 @@ export function characterSnapshot(
     voice: voice(custom),
   };
 }
+function characterLabel(players: Player[], id: string) {
+  const name = players.find((p) => p.user_id === id)?.identity_name;
+  return name ? `**${name}:** ` : "";
+}
 export function storyMarkdown(
   s: Adventure,
   players: Player[],
@@ -130,8 +170,9 @@ export function storyMarkdown(
           ? part.questions
               .map((q, question) =>
                 hidden.includes(`${scene}-${question}`)
-                  ? "\n\n---\n\nDecision\n\n---"
-                  : `\n\n> **${players.find((p) => p.user_id === q.player)?.identity_name || players.find((p) => p.user_id === q.player)?.name || "Player"}:** ${q.text}${q.answer ? `\n\n**Decision:** ${q.answer}` : ""}`,
+                  ? "\n\n---\n\nQuestion\n\n---"
+                  : // The story only names characters, never accounts.
+                    `\n\n> ${characterLabel(players, q.player)}${q.text}${q.answer ? `\n\n**Decision:** ${q.answer}` : ""}`,
               )
               .join("")
           : ""),
@@ -156,6 +197,8 @@ export function storyEntry(
         {
           id: s.id,
           author: players.map((p) => p.name).join(" & ") || "Narrator",
+          // Account names are already display names; skip chat-import author normalization.
+          userId: s.owner_id,
           timestamp: s.segments[0]?.created || "",
           content:
             storyMarkdown(s, players, interactions, hidden) ||

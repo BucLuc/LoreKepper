@@ -1,14 +1,21 @@
 "use client";
 import { useId } from "react";
-import { styles, tones, type Voice } from "@/lib/play";
+import { styles, type Voice } from "@/lib/play";
+export const languages = [
+  "English",
+  "German",
+  "French",
+  "Italian",
+  "Spanish",
+  "Portuguese",
+  "Japanese",
+];
 export function VoiceSettings({
   value,
   onChange,
-  scope = true,
 }: {
   value: Voice;
   onChange: (v: Voice) => void;
-  scope?: boolean;
 }) {
   const id = useId();
   return (
@@ -22,15 +29,7 @@ export function VoiceSettings({
           list={id}
         />
         <datalist id={id}>
-          {[
-            "English",
-            "German",
-            "French",
-            "Italian",
-            "Spanish",
-            "Portuguese",
-            "Japanese",
-          ].map((l) => (
+          {languages.map((l) => (
             <option key={l}>{l}</option>
           ))}
         </datalist>
@@ -46,32 +45,6 @@ export function VoiceSettings({
           ))}
         </select>
       </label>
-      <label>
-        Tone
-        <select
-          value={value.tone}
-          onChange={(e) => onChange({ ...value, tone: e.target.value })}
-        >
-          {tones.map((t) => (
-            <option key={t}>{t}</option>
-          ))}
-        </select>
-        <small>Default follows the scene naturally.</small>
-      </label>
-      {scope && (
-        <label>
-          Style applies to
-          <select
-            value={value.scope}
-            onChange={(e) =>
-              onChange({ ...value, scope: e.target.value as Voice["scope"] })
-            }
-          >
-            <option value="dialogue">Dialogue only</option>
-            <option value="entire">Entire story</option>
-          </select>
-        </label>
-      )}
     </div>
   );
 }

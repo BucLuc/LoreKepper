@@ -1,7 +1,7 @@
 "use client";
 import { readerEditions, editionGroups } from "@/lib/reader-editions";
 import {
-  presetDesign,
+  switchEditionDesign,
   editionPalettes,
   type EditionDesign,
 } from "@/lib/edition-design";
@@ -90,7 +90,7 @@ export function EditionPicker({
                 }
                 onClick={() => {
                   onEdition(e.id);
-                  onDesign({ ...presetDesign(e.id), showCover: false });
+                  onDesign(switchEditionDesign(design, e.id));
                 }}
               >
                 <span>{e.mark}</span>

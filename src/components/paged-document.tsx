@@ -2,7 +2,8 @@
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {pdfPaperColors} from '../lib/pdf-editions';
 
-export function PagedDocument({children}:{children:ReactNode}) {
+/** `layoutKey` must change exactly when the rendered document changes; `children` is a new element on every parent render. */
+export function PagedDocument({children,layoutKey}:{children:ReactNode;layoutKey:string}) {
  const source=useRef<HTMLDivElement>(null),output=useRef<HTMLDivElement>(null),host=useRef<HTMLDivElement>(null);
  const [scale,setScale]=useState(1),[error,setError]=useState('');
  useEffect(()=>{const observer=new ResizeObserver(()=>setScale(Math.min(1,(host.current?.clientWidth??794)/794)));observer.observe(host.current!);return()=>observer.disconnect();},[]);
@@ -11,7 +12,8 @@ export function PagedDocument({children}:{children:ReactNode}) {
   async function render(){
    let slot:HTMLDivElement|undefined;
    try{
-    const target=output.current!;target.replaceChildren();target.dataset.ready='false';
+    // Previous pages stay visible until the new layout is complete.
+    const target=output.current!;target.dataset.ready='false';
     await document.fonts.ready;
     const article=source.current!.querySelector<HTMLElement>('article')!;
     await Promise.all(Array.from(article.querySelectorAll('img')).map(img=>img.decode().catch(()=>{})));
@@ -29,6 +31,6 @@ export function PagedDocument({children}:{children:ReactNode}) {
    finally{slot?.remove();}
   }
   void render();return()=>controller.abort();
- },[children]);
+ },[layoutKey]);
  return <div className="reader-paged collection-pdf-host" ref={host}>{error?<><p role="status">Page layout unavailable: {error}</p>{children}</>:null}<div className="reader-page-source" ref={source} aria-hidden="true">{children}</div><div className="reader-page-output" ref={output} style={{zoom:scale}}/></div>;
 }

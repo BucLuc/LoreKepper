@@ -1,13 +1,8 @@
 "use client";
 import Link from "next/link";
 import {previewZoom} from "../lib/reader-preview";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useRef, useState } from "react";
+import { useReaderPreferences, saveReaderPreferences, type ReaderPreferences } from "@/lib/reader-preferences";
 import { resolveReaderFont } from "@/lib/reader-fonts";
 import { storyPdfFilename } from "@/lib/export-pdf";
 import type { Exhibit } from "@/lib/archive";
@@ -27,21 +22,6 @@ import { normalizeDesign, presetDesign, switchEditionDesign, type EditionDesign 
 function EditionMark({ id, mark }: { id: string; mark: string }) {
   return id === "ancientcodex" ? <Icon name="book" /> : id === "captain" ? <Icon name="anchor" /> : <>{mark}</>;
 }
-function readPreferences() {
-  try {
-    return localStorage.getItem("lorekeeper-reader") ?? "";
-  } catch {
-    return "";
-  }
-}
-function subscribeToPreferences(callback: () => void) {
-  window.addEventListener("storage", callback);
-  window.addEventListener("lorekeeper-preferences", callback);
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener("lorekeeper-preferences", callback);
-  };
-}
 export function Reader({
   entry,
   previous,
@@ -59,47 +39,16 @@ export function Reader({
   previous: { id: string; title: string } | null;
   next: { id: string; title: string } | null;
 }) {
-  const saved = useSyncExternalStore(
-    subscribeToPreferences,
-    readPreferences,
-    () => "",
-  );
-  const stored = useMemo(() => {
-    try {
-      const value = JSON.parse(saved || "{}");
-      return {
-        style: ["transcript", "monastic", "gothic", "charter"].includes(
-          value.style,
-        )
-          ? "manuscript"
-          : value.style === "pirate"
-            ? "captain"
-            : styles.some((s) => s.id === value.style)
-              ? (value.style as string)
-              : "glorious",
-        size: [16, 18, 20, 22].includes(value.size)
-          ? (value.size as number)
-          : 18,
-        design: value.design && typeof value.design === "object" ? value.design as EditionDesign : null,
-        plain: value.plain === true,
-        showEmojis: value.showEmojis !== false,
-        fonts:
-          value.fonts && typeof value.fonts === "object"
-            ? (value.fonts as Record<string, string>)
-            : {},
-      };
-    } catch {
-      return {
-        style: "glorious",
-        design: null as EditionDesign | null,
-        size: 18,
-        plain: false,
-        showEmojis: true,
-        fonts: {} as Record<string, string>,
-      };
-    }
-  }, [saved]);
-  const [override, setOverride] = useState<typeof stored | null>(null);
+  const stored = useReaderPreferences();
+  const [override, setOverride] = useState<ReaderPreferences | null>(null);
+  // While a different renderer mounts and lays out, hold the stage at its
+  // previous height so the page never collapses to an empty, dark strip.
+  const [hold, setHold] = useState(0);
+  useEffect(() => {
+    if (!hold) return;
+    const timer = setTimeout(() => setHold(0), 1500);
+    return () => clearTimeout(timer);
+  }, [hold]);
   const { style, size, plain, showEmojis, fonts } = override ?? stored;
   const design=normalizeDesign((override ?? stored).design ?? {...presetDesign(style),font:fonts[style] ?? "default"},style);
   const selectedFont=resolveReaderFont(style,design.font);
@@ -319,6 +268,7 @@ export function Reader({
   ) {
     setPdfDownload(null);
     setImageDownload(null);
+    if (newStyle !== style) setHold(documentRef.current?.offsetHeight ?? 0);
     const value = {
       style: newStyle,
       size: newSize,
@@ -328,12 +278,7 @@ export function Reader({
       design: newDesign,
     };
     setOverride(value);
-    try {
-      localStorage.setItem("lorekeeper-reader", JSON.stringify(value));
-      window.dispatchEvent(new Event("lorekeeper-preferences"));
-    } catch {
-      /* Preferences still work when storage is disabled. */
-    }
+    saveReaderPreferences(value);
   }
   useEffect(() => {
     if (!copyStatus || /PDF/i.test(copyStatus)) return;
@@ -677,7 +622,7 @@ export function Reader({
               <button onClick={() => setFallback(null)}>Close</button>
             </div>
           )}
-          <div ref={documentRef} className={`edition-stage stage-${style}`} data-preview-scale={maximized?zoom.percent:undefined} style={maximized?{width:previewBase,zoom:zoom.percent/100}:undefined}>
+          <div ref={documentRef} className={`edition-stage stage-${style}`} data-preview-scale={maximized?zoom.percent:undefined} style={{...(maximized?{width:previewBase,zoom:zoom.percent/100}:{}),...(hold?{minHeight:hold}:{})}}>
             {style === "scroll" && (
               <>
                 <span

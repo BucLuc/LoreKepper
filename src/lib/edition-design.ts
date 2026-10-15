@@ -85,8 +85,9 @@ export function normalizeDesign(value:unknown,preset:string):EditionDesign {
 export function isPresetComposition(design:EditionDesign,preset:string) {
   return [design.background,design.header,design.body,design.footer].every(id=>id===preset) && design.columns==="preset" && design.initial==="preset" && design.numbering==="preset" && design.border && design.artwork;
 }
+/** Whether Reset has anything to undo. Pages and cover are reading layout and survive a reset. */
 export function isCustomDesign(design:EditionDesign,preset:string) {
-  return design.pages===true || design.showCover===false || !isPresetComposition(design,preset) || design.font!=="default" || design.cover!==null || design.endPage!==null;
+  return !isPresetComposition(design,preset) || design.font!=="default" || design.cover!==null || design.endPage!==null;
 }
 // The surface owns the palette. Modules borrow it without importing foreign paper.
 export const editionPalettes:Record<string,{ink:string;accent:string;surface:string;panel:string}> = {

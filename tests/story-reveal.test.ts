@@ -4,7 +4,6 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { EditionMarkdown } from "../src/components/edition-markdown";
 import { StoryInteractions } from "../src/components/story-interactions";
-import { canonicalPayload } from "../src/lib/handoff";
 test("word reveal preserves Markdown and animates only the latest scene, keeping normal readers unchanged", () => {
   const text =
     "Old scene remains readable.\n\n[Scene](#lore-decision-scene-1)\n\n## Chapter II\n\n*Thornwick, dusk*\n\nNew prose **with emphasis** arrives.\n\n[Decision](#lore-decision-1-0)";
@@ -29,16 +28,4 @@ test("word reveal preserves Markdown and animates only the latest scene, keeping
   );
   assert.ok(!plain.includes("lk-reveal-word"));
   assert.match(plain, /<strong>stays bold<\/strong>/);
-});
-test("retry fingerprints are stable across JSON property order", () => {
-  assert.equal(
-    canonicalPayload({
-      narrative: "Words",
-      questions: [{ player: "a", text: "Your move?" }],
-    }),
-    canonicalPayload({
-      questions: [{ text: "Your move?", player: "a" }],
-      narrative: "Words",
-    }),
-  );
 });

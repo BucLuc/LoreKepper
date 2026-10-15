@@ -2641,3 +2641,20 @@ input:focus, select:focus, textarea:focus,
 
 .v-md-preview :not(pre) > code {padding:3px 6px;border:1px solid #c6a96b30;border-radius:4px;background:#c6a96b0d;color:var(--gold-bright);box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .v-md-preview pre code {padding:0;border:0;background:transparent}
+.v-consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 4px 0 16px;
+  text-align: left;
+}
+.v-consent input {
+  margin-top: 3px;
+  accent-color: var(--gold);
+}
+.v-consent a {
+  color: var(--gold);
+  text-decoration: underline;
+}

@@ -3,13 +3,14 @@ import { useState } from "react";
 import { AdventureExperience } from "@/components/adventure-experience";
 import { PlayHub } from "@/components/play-hub";
 import { presetDesign } from "@/lib/edition-design";
-import { defaultVoice, type Adventure, type Player } from "@/lib/play";
+import { Reader } from "@/components/reader";
+import { defaultVoice, storyEntry, type Adventure, type Player } from "@/lib/play";
 const now = "2026-10-14T10:00:00.000Z";
 const players: Player[] = [
   { user_id: "u1", name: "Luc", character: null, identity_name: "Aldric" },
   { user_id: "u2", name: "Liri", character: null, identity_name: "Maren" },
 ];
-function mockStory(edition: string, view: string): Adventure {
+function mockStory(edition: string, view: string, pages = false): Adventure {
   const fresh = view === "lobby-new";
   return {
     id: "preview-story",
@@ -22,7 +23,7 @@ function mockStory(edition: string, view: string): Adventure {
       "A drowned kingdom where the tide never fully recedes, and the bells of sunken chapels still ring at dusk.",
     voice: defaultVoice,
     edition,
-    design: presetDesign(edition),
+    design: { ...presetDesign(edition), pages },
     summary: "",
     revision: 3,
     created_at: now,
@@ -64,9 +65,33 @@ function mockStory(edition: string, view: string): Adventure {
         ],
   };
 }
-export function DesignPreview({ view, edition }: { view: string; edition: string }) {
-  const [story, setStory] = useState(() => mockStory(edition, view));
+// ChatGPT halfway through the next chapter, after everyone answered.
+function writingStory(edition: string, pages: boolean): Adventure {
+  const story = mockStory(edition, "play", pages);
+  const answers = ["I snatch the green lantern before the water reaches the altar.", "She drops the stone into the rising water."];
+  return {
+    ...story,
+    ai_mode: "chatgpt",
+    segments: story.segments.map((s, i) =>
+      i === story.segments.length - 1 ? { ...s, questions: s.questions.map((q, j) => ({ ...q, answer: answers[j] })) } : s,
+    ),
+    draft: {
+      parts: [
+        "## Chapter III: What the Water Wanted\n\nThe lantern was warm in Aldric's hands, warmer than any glass had a right to be.",
+        "The stone hissed as it sank. For a heartbeat the whole chapter held its breath — and then, very slowly, the water began to draw back.",
+      ],
+    },
+  };
+}
+export function DesignPreview({ view, edition, pages = false }: { view: string; edition: string; pages?: boolean }) {
+  const [story, setStory] = useState(() => (view === "writing" ? writingStory(edition, pages) : mockStory(edition, view, pages)));
   const noop = async () => {};
+  if (view === "reader") {
+    // Long enough to span several A4 pages in every edition.
+    const chapters = mockStory(edition, "play").segments.map((s) => s.narrative);
+    const long = Array.from({ length: 4 }, (_, i) => chapters.join("\n\n").replace("Chapter I", `Chapter ${["I", "II", "III", "IV"][i]}`)).join("\n\n");
+    return <Reader entry={storyEntry({ ...mockStory(edition, "play"), segments: [{ narrative: long, questions: [], created: now }] }, players, false)} previous={null} next={null} />;
+  }
   if (view === "library")
     return (
       <PlayHub
@@ -96,7 +121,7 @@ export function DesignPreview({ view, edition }: { view: string; edition: string
       generating={false}
       online
       error=""
-      initialLobby={view !== "play"}
+      initialLobby={view !== "play" && view !== "writing"}
       onGenerate={noop}
       onAnswer={async (answer) =>
         setStory((s) => ({

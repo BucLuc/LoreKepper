@@ -4,6 +4,8 @@ import {
   voice,
   voicePrompt,
   parseTurn,
+  playerVoice,
+  narratorLine,
   storyMarkdown,
   type Adventure,
 } from "../src/lib/play";
@@ -71,12 +73,40 @@ test("clean export preserves story while interaction export preserves chronologi
   const clean = storyMarkdown(story, [], false),
     full = storyMarkdown(
       story,
-      [{ user_id: "a", name: "Ada", character: null }],
+      [{ user_id: "a", name: "ada_account", identity_name: "Ada", character: null }],
       true,
     );
   assert.equal(clean, "First scene.\n\nThey stayed.");
   assert.ok(full.indexOf("First scene.") < full.indexOf("Stay."));
   assert.ok(full.indexOf("Stay.") < full.indexOf("They stayed."));
-  assert.match(full, /Ada/);
+  assert.match(full, /\*\*Ada:\*\*/);
+  assert.doesNotMatch(full, /ada_account/);
+  // Without a character name, the story names nobody, not even the account.
+  const unnamed = storyMarkdown(
+    story,
+    [{ user_id: "a", name: "ada_account", character: null }],
+    true,
+  );
+  assert.match(unnamed, /> Run\?/);
+  assert.doesNotMatch(unnamed, /ada_account/);
   assert.equal(story.segments[0].questions[0].answer, "Stay.");
+  // A single hidden question leaves only a marked gap in the export.
+  const hidden = storyMarkdown(story, [], true, ["0-0"]);
+  assert.equal(hidden, "First scene.\n\n---\n\nQuestion\n\n---\n\nThey stayed.");
+});
+test("players can keep their own language and style; empty choices follow the story", () => {
+  assert.deepEqual(playerVoice({ language: " German ", style: "Pirate" }), {
+    language: "German",
+    style: "Pirate",
+  });
+  assert.deepEqual(playerVoice({ language: "", style: "Shouting" }), null);
+  assert.equal(playerVoice(null), null);
+});
+
+test("a writing voice is phrased once for both narrators, without a framing storyteller", () => {
+  assert.equal(narratorLine({}), "");
+  assert.match(
+    narratorLine({ narratorName: "The Cat", persona: "The party's cat." }),
+    /^Write the story itself in this voice \(The Cat\): The party's cat\. The voice lives in the prose: no storyteller character, no frame/,
+  );
 });

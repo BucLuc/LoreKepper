@@ -295,7 +295,9 @@ export function StoryDocument(props:DocumentProps) {
  {original.body()}
  {!props.ongoing && original.footer()}
  </article>;
- return chosen.pages ? <PagedDocument>{article}</PagedDocument> : article;
+ if(!chosen.pages) return article;
+ const layoutKey=[entry.id,entry.title,...entry.messages.map(m=>m.presentation??m.content),style,size,plain,props.showEmojis,props.ongoing,face.id,JSON.stringify(chosen)].join("\u0000");
+ return <PagedDocument layoutKey={layoutKey}>{article}</PagedDocument>;
 }
 
 

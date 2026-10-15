@@ -72,11 +72,13 @@ export function ArchiveApp({
   const [collections, setCollections] = useState<Collection[]>([]),
     [archives, setArchives] = useState<Archive[]>([]),
     [profile, setProfile] = useState(""),
+    [role, setRole] = useState("member"),
+    [invitation, setInvitation] = useState<{ collection?: string; error?: string } | null>(null),
     [invite, setInvite] = useState("");
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [name, setName] = useState(""),
-    [signup, setSignup] = useState(false),
+    [accepted, setAccepted] = useState(false),
     [title, setTitle] = useState(""),
     [messages, setMessages] = useState<DraftMessage[]>([]);
   const [modal, setModal] = useState(""),
@@ -106,6 +108,7 @@ export function ArchiveApp({
     const home = await api("home");
     setCollections(home.collections);
     setProfile(home.profile.name);
+    setRole(home.profile.role || "member");
     if (mode === "invite" && token) {
       const joined = await api("accept", { token });
       router.replace(`/collections/${joined.id}`);
@@ -169,6 +172,16 @@ export function ArchiveApp({
             setUser(null);
             setCollections([]);
             setArchives([]);
+            if (mode === "invite" && token) {
+              // Signed-out guests may register only through a valid invitation.
+              const r = await fetch("/api/invite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "check", token }),
+              }).then((x) => x.json());
+              if (active) setInvitation(r.error ? { error: r.error } : r);
+              return;
+            }
             if (!["home", "login"].includes(mode))
               router.replace(
                 `/login?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`,
@@ -189,7 +202,7 @@ export function ArchiveApp({
           setCollections([]);
           setProfile("");
           setModal("");
-          if (!["home", "login"].includes(mode)) router.replace("/");
+          if (!["home", "login", "invite"].includes(mode)) router.replace("/");
         } else if (event === "USER_UPDATED" && session) setUser(session.user);
       });
       return () => {
@@ -233,26 +246,27 @@ export function ArchiveApp({
     const next = new URLSearchParams(window.location.search).get("next");
     return next && /^\/(?!\/)/.test(next) && !next.includes("\\") ? next : "/";
   }
-  async function authenticate(guest = false) {
+  async function authenticate() {
     await run(async () => {
-      const db = supabase();
-      const r = guest
-        ? await db.auth.signInAnonymously({
-            options: { data: { name: name || "Wandering chronicler" } },
-          })
-        : signup
-          ? await db.auth.signUp({
-              email,
-              password,
-              options: { data: { name: name || "Chronicler" } },
-            })
-          : await db.auth.signInWithPassword({ email, password });
+      const r = await supabase().auth.signInWithPassword({ email, password });
       if (r.error) throw r.error;
-      if (!r.data.session)
-        throw new Error(
-          "Email sign-up is awaiting confirmation. Check your inbox.",
-        );
       router.replace(nextPath());
+      router.refresh();
+    });
+  }
+  // LoreKeeper is invite-only: a valid collection invitation creates the account.
+  async function register() {
+    await run(async () => {
+      const response = await fetch("/api/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "register", token, name, email, password, accepted }),
+      });
+      const r = await response.json();
+      if (!response.ok) throw new Error(r.error || "Could not accept the invitation.");
+      const signedIn = await supabase().auth.signInWithPassword({ email, password });
+      if (signedIn.error) throw signedIn.error;
+      router.replace(`/collections/${r.id}`);
       router.refresh();
     });
   }
@@ -296,7 +310,7 @@ export function ArchiveApp({
         minLength={type === "password" ? 8 : undefined}
         autoComplete={
           type === "password"
-            ? signup
+            ? mode === "invite"
               ? "new-password"
               : "current-password"
             : type === "email"
@@ -911,12 +925,8 @@ export function ArchiveApp({
             <Icon name="crown" width="30" height="30" />
           </div>
           <span className="eyebrow">WELCOME, CHRONICLER</span>
-          <h2>{signup ? "Begin your legend." : "The archives await."}</h2>
-          <p>
-            {signup
-              ? "Your first chapter starts here."
-              : "Step back into your world of stories."}
-          </p>
+          <h2>The archives await.</h2>
+          <p>Step back into your world of stories.</p>
           {feedback}
           {user ? (
             <Link className="v-button v-primary" href={nextPath()}>
@@ -925,48 +935,22 @@ export function ArchiveApp({
             </Link>
           ) : (
             <>
-              <div className="v-segmented" aria-label="Account access">
-                <button aria-pressed={!signup} onClick={() => setSignup(false)}>
-                  Sign in
-                </button>
-                <button aria-pressed={signup} onClick={() => setSignup(true)}>
-                  Create account
-                </button>
-              </div>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   void authenticate();
                 }}
               >
-                {signup && field("Your name", name, setName)}
                 {field("Email address", email, setEmail, "email")}
                 {field("Password", password, setPassword, "password")}
                 <button className="v-button v-primary v-full" disabled={busy}>
-                  {busy
-                    ? "Opening the gates…"
-                    : signup
-                      ? "Create account"
-                      : "Enter the archives"}
+                  {busy ? "Opening the gates…" : "Enter the archives"}
                   <Icon name="arrow" />
                 </button>
               </form>
-              <div className="v-or">
-                <span />
-                or
-                <span />
-              </div>
-              <button
-                className="v-button v-full"
-                disabled={busy}
-                onClick={() => authenticate(true)}
-              >
-                <Icon name="user" />
-                Explore as a guest
-              </button>
               <p className="v-auth-note">
-                No email needed. You can keep your guest account by upgrading
-                later.
+                LoreKeeper is invite-only. To join, open the invitation link a
+                collection keeper shared with you.
               </p>
             </>
           )}
@@ -1002,9 +986,100 @@ export function ArchiveApp({
           <div className="v-empty">
             <Icon name="book" width="40" height="40" />
             <h2>Your stories start here.</h2>
-            <p>Sign in or explore as a guest to create your own collections and join your people.</p>
+            <p>Sign in to return to your collections. New chroniclers join through an invitation link.</p>
             <Link href="/login" className="v-button">Login <Icon name="arrow" /></Link>
           </div>
+        </section>
+      </main>,
+    );
+  if (!user && mode === "invite")
+    return frame(
+      <main id="main" className="v-auth">
+        <section className="v-auth-world">
+          <span className="eyebrow">AN INVITATION TO THE CHRONICLES</span>
+          <h1>
+            A place has been
+            <br />
+            kept <em>for you.</em>
+          </h1>
+          <p>
+            {invitation?.collection ? (
+              <>
+                You have been invited to <strong>{invitation.collection}</strong>.
+              </>
+            ) : (
+              "Someone has saved you a seat among their stories."
+            )}
+            <br />
+            Create your account to step inside.
+          </p>
+          <VaultMonument />
+          <div className="v-auth-footer">
+            <Icon name="shield" />
+            Invite-only. Private collections. Shared memories.
+          </div>
+        </section>
+        <section className="v-auth-form">
+          <div className="v-auth-mark">
+            <Icon name="link" width="30" height="30" />
+          </div>
+          <span className="eyebrow">WELCOME, CHRONICLER</span>
+          {invitation?.error ? (
+            <>
+              <h2>This invitation has faded.</h2>
+              <p>{invitation.error} Ask the collection keeper for a new link.</p>
+              <Link className="v-button v-full" href="/login">
+                I already have an account <Icon name="arrow" />
+              </Link>
+            </>
+          ) : !invitation ? (
+            <p>Checking your invitation…</p>
+          ) : (
+            <>
+              <h2>Begin your legend.</h2>
+              <p>Your first chapter starts here.</p>
+              {feedback}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void register();
+                }}
+              >
+                {field("Your name", name, setName)}
+                {field("Email address", email, setEmail, "email")}
+                {field("Password", password, setPassword, "password")}
+                <label className="v-consent">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={accepted}
+                    onChange={(e) => setAccepted(e.target.checked)}
+                  />
+                  <span>
+                    I am at least 16 and agree to the{" "}
+                    <Link href="/terms" target="_blank">
+                      Terms of Service
+                    </Link>
+                    . I have read the{" "}
+                    <Link href="/privacy" target="_blank">
+                      Privacy Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
+                <button className="v-button v-primary v-full" disabled={busy || !accepted}>
+                  {busy ? "Opening the gates…" : "Create account & join"}
+                  <Icon name="arrow" />
+                </button>
+              </form>
+              <p className="v-auth-note">
+                Already have an account?{" "}
+                <Link href={`/login?next=${encodeURIComponent(`/invite/${token}`)}`}>
+                  Sign in to accept
+                </Link>
+              </p>
+            </>
+          )}
         </section>
       </main>,
     );
@@ -1064,12 +1139,13 @@ export function ArchiveApp({
               <br />
               Built for your people. Filled with your stories.
             </p>
-            {button(
-              "Create a collection",
-              "plus",
-              () => openModal("create"),
-              true,
-            )}
+            {role === "admin" &&
+              button(
+                "Create a collection",
+                "plus",
+                () => openModal("create"),
+                true,
+              )}
             <div className="v-lobby-footnote">
               <span>EST. IN QUESTIONABLE JUDGEMENT</span>
               <i>❧</i>
@@ -1086,13 +1162,15 @@ export function ArchiveApp({
                 <span>{collections.length.toString().padStart(2, "0")}</span>
               </h2>
             </div>
-            <button
-              className="v-icon v-plus"
-              aria-label="Create a collection"
-              onClick={() => openModal("create")}
-            >
-              <Icon name="plus" />
-            </button>
+            {role === "admin" && (
+              <button
+                className="v-icon v-plus"
+                aria-label="Create a collection"
+                onClick={() => openModal("create")}
+              >
+                <Icon name="plus" />
+              </button>
+            )}
           </div>
           {feedback}
           <div className="v-collection-grid">
@@ -1132,6 +1210,7 @@ export function ArchiveApp({
                 </div>
               </Link>
             ))}
+            {role === "admin" ? (
             <button
               className="v-new-collection"
               onClick={() => openModal("create")}
@@ -1146,6 +1225,15 @@ export function ArchiveApp({
               </strong>
               <p>Found a new collection</p>
             </button>
+            ) : !collections.length ? (
+              <div className="v-new-collection" role="note">
+                <span>
+                  <Icon name="link" width="26" height="26" />
+                </span>
+                <strong>Your shelves are waiting.</strong>
+                <p>Collections appear here when a keeper invites you.</p>
+              </div>
+            ) : null}
           </div>
         </section>
       </main>,

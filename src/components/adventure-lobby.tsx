@@ -1,11 +1,18 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useState, useRef } from "react";
-import type { Adventure, Player, Voice } from "@/lib/play";
-import { storyEntry } from "@/lib/play";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  type CSSProperties,
+} from "react";
+import type { Adventure, Player, PlayerVoice, Voice } from "@/lib/play";
+import { storyEntry, styles } from "@/lib/play";
 import { readerEditions } from "@/lib/reader-editions";
 import { EditionPicker } from "./edition-picker";
-import { VoiceSettings } from "./voice-settings";
+import { languages } from "./voice-settings";
+import { NarratorPicker } from "./narrator-picker";
 import { StoryDocument } from "./story-document";
 import { UserPicker, type PickedUser } from "./user-picker";
 import { ChatGPTHandoff } from "./chatgpt-handoff";
@@ -16,8 +23,17 @@ export type LobbySettings = {
   edition: string;
   design: Adventure["design"];
   aiMode: "api" | "chatgpt";
-  identities: { user: string; name: string; description: string }[];
+  identities: {
+    user: string;
+    name: string;
+    description: string;
+    voice: PlayerVoice | null;
+  }[];
 };
+const LEDGER_KEY = "lorekeeper-lobby-ledger",
+  LEDGER_DEFAULT = 440,
+  LEDGER_MIN = 320,
+  LEDGER_PREVIEW_MIN = 420;
 function settings(story: Adventure, players: Player[]): LobbySettings {
   return {
     title: story.title,
@@ -30,6 +46,7 @@ function settings(story: Adventure, players: Player[]): LobbySettings {
       user: p.user_id,
       name: p.identity_name || "",
       description: p.description || "",
+      voice: p.voice || null,
     })),
   };
 }
@@ -63,30 +80,42 @@ export function AdventureLobby({
     [link, setLink] = useState(""),
     [people, setPeople] = useState<PickedUser[]>([]),
     [saveError, setSaveError] = useState("");
-  const latest = useRef(form);
+  // Counts edits, so a finished save knows whether newer edits are still pending.
+  // (Comparing form objects fails: React may run state updaters twice.)
+  const edits = useRef(0);
   useEffect(() => {
     if (dirty || busy) return;
-    const next = settings(story, players);
+    const next = settings(story, players),
+      seen = edits.current;
     queueMicrotask(() => {
-      latest.current = next;
-      setForm(next);
+      // An edit made in the meantime wins over the server copy.
+      if (edits.current === seen) setForm(next);
     });
   }, [story, players, dirty, busy]);
   const update = (change: Partial<LobbySettings>) => {
-    setForm((f) => {
-      const next = { ...f, ...change };
-      latest.current = next;
-      return next;
-    });
+    edits.current++;
+    setForm((f) => ({ ...f, ...change }));
     setDirty(true);
     setSaveError("");
   };
   useEffect(() => {
-    if (!dirty || busy || generating || !master || saveError) return;
+    // The database refuses lobby edits while Lorekeeper's narrator story is
+    // active or ChatGPT is mid-chapter; wait until that is over.
+    if (
+      !dirty ||
+      busy ||
+      generating ||
+      !master ||
+      saveError ||
+      (story.status === "active" && story.ai_mode !== "chatgpt") ||
+      !!story.draft?.parts.length
+    )
+      return;
     const timer = setTimeout(() => {
+      const saving = edits.current;
       void onSave(form)
         .then(() => {
-          if (latest.current === form) {
+          if (edits.current === saving) {
             setDirty(false);
             setSaveError("");
           }
@@ -94,7 +123,37 @@ export function AdventureLobby({
         .catch((e) => setSaveError(e.message));
     }, 750);
     return () => clearTimeout(timer);
-  }, [form, dirty, busy, generating, master, onSave, saveError]);
+  }, [
+    form,
+    dirty,
+    busy,
+    generating,
+    master,
+    onSave,
+    saveError,
+    story.status,
+    story.ai_mode,
+    story.draft,
+  ]);
+  // The settings column can be dragged wider; the preview takes the rest.
+  const grid = useRef<HTMLDivElement>(null);
+  const [ledger, setLedger] = useState(LEDGER_DEFAULT);
+  useEffect(() => {
+    try {
+      const saved = Number(localStorage.getItem(LEDGER_KEY));
+      if (saved) queueMicrotask(() => setLedger(saved));
+    } catch {}
+  }, []);
+  const resizeLedger = (width: number) => {
+    const room = (grid.current?.clientWidth ?? 1200) - LEDGER_PREVIEW_MIN;
+    const next = Math.round(
+      Math.min(Math.max(width, LEDGER_MIN), Math.max(LEDGER_MIN, room)),
+    );
+    setLedger(next);
+    try {
+      localStorage.setItem(LEDGER_KEY, String(next));
+    } catch {}
+  };
   const visible = master ? form : settings(story, players),
     theme =
       readerEditions.find((e) => e.id === visible.edition) || readerEditions[0];
@@ -114,6 +173,7 @@ export function AdventureLobby({
     titleHead = titleWords.slice(0, -1).join(" "),
     titleTail = titleWords.at(-1),
     scenes = story.segments.length,
+    done = story.status === "completed",
     begin = async () => {
       try {
         await onSave(form);
@@ -151,6 +211,7 @@ export function AdventureLobby({
                 : "The creator is preparing your adventure. Settings appear here as they change."}
           </p>
           <ul className="lkx-hero-facts" aria-label="Story details">
+            {done && <li>Complete</li>}
             <li>
               {scenes
                 ? `${scenes} scene${scenes === 1 ? "" : "s"} written`
@@ -158,10 +219,25 @@ export function AdventureLobby({
             </li>
             <li>{theme.name}</li>
             <li>{visible.voice.language}</li>
-            <li>{visible.aiMode === "chatgpt" ? "ChatGPT narrator" : "AI narrator"}</li>
+            {visible.voice.persona && (
+              <li>
+                {visible.voice.narrator === "custom"
+                  ? "Own voice"
+                  : visible.voice.narratorName}
+              </li>
+            )}
+            <li>{visible.aiMode === "chatgpt" ? "Written by ChatGPT" : "Lorekeeper AI"}</li>
           </ul>
           <div className="lkx-hero-actions">
-            {master ? (
+            {done ? (
+              <button
+                className="gold-button lkx-begin"
+                disabled={busy}
+                onClick={() => void (master ? begin() : onStart())}
+              >
+                Read the story <span aria-hidden="true">→</span>
+              </button>
+            ) : master ? (
               <button
                 className="gold-button lkx-begin"
                 disabled={busy || generating}
@@ -233,13 +309,17 @@ export function AdventureLobby({
           {error || saveError}
         </p>
       )}
-      <div className="lkx-lobby-grid">
+      <div
+        className="lkx-lobby-grid"
+        ref={grid}
+        style={{ "--ledger": `${ledger}px` } as CSSProperties}
+      >
         <div className="lkx-ledger lk-lobby-settings">
           <nav className="lkx-ledger-tabs" aria-label="Lobby settings">
             {[
-              ["world", "The story"],
-              ["players", "The party"],
-              ["pages", "The book"],
+              ["world", "World"],
+              ["players", "Players"],
+              ["pages", "Display"],
             ].map(([id, label]) => (
               <button
                 key={id}
@@ -251,51 +331,102 @@ export function AdventureLobby({
               </button>
             ))}
           </nav>
-          <fieldset hidden={panel !== "world"} disabled={!master || generating}>
-            <legend>Story settings</legend>
-            <div className="lk-form">
-              <label>
-                Story title <small>Optional — the narrator can choose</small>
-                <input
-                  maxLength={120}
-                  value={visible.title}
-                  onChange={(e) => update({ title: e.target.value })}
-                  placeholder="Leave blank for the narrator"
-                />
-              </label>
-              <label>
-                World setting{" "}
-                <small>Optional — write as much or as little as you like</small>
-                <textarea
-                  rows={4}
-                  maxLength={6000}
-                  value={visible.world}
-                  onChange={(e) => update({ world: e.target.value })}
-                  placeholder="A place, an era, a situation, or something completely unexpected…"
-                />
-              </label>
-              <details className="lk-disclosure">
-                <summary>Story language and writing voice</summary>
-                <VoiceSettings
-                  value={visible.voice}
-                  onChange={(voice) => update({ voice })}
-                />
-              </details>
+          <fieldset
+            className="lkx-sheet"
+            aria-label="World"
+            hidden={panel !== "world"}
+            disabled={!master || generating}
+          >
+            <label className="lkx-field">
+              <span>Title</span>
+              <input
+                className="lkx-title-input"
+                maxLength={120}
+                value={visible.title}
+                onChange={(e) => update({ title: e.target.value })}
+                placeholder="Untitled — the narrator names it"
+              />
+            </label>
+            <label className="lkx-field">
+              <span>
+                Setting <small>optional</small>
+              </span>
+              <textarea
+                className="lkx-parchment"
+                rows={6}
+                maxLength={6000}
+                value={visible.world}
+                onChange={(e) => update({ world: e.target.value })}
+                placeholder="A place, an era, a situation — or nothing at all, and let the story surprise you…"
+              />
+            </label>
+            <label className="lkx-field">
+              <span>Language</span>
+              <input
+                list="lkx-story-languages"
+                maxLength={60}
+                value={visible.voice.language}
+                onChange={(e) =>
+                  update({
+                    voice: { ...visible.voice, language: e.target.value },
+                  })
+                }
+              />
+              <datalist id="lkx-story-languages">
+                {languages.map((l) => (
+                  <option key={l}>{l}</option>
+                ))}
+              </datalist>
+            </label>
+            <div className="lkx-field" role="group" aria-label="Writing voice">
+              <span>
+                Writing voice <small>how the story sounds</small>
+              </span>
+              <NarratorPicker
+                value={visible.voice}
+                onChange={(voice) => update({ voice })}
+              />
+            </div>
+            <div className="lkx-field" role="group" aria-label="Written by">
+              <span>Written by</span>
+              <div className="lkx-choices">
+                {(
+                  [
+                    ["api", "Lorekeeper AI", "Writes each chapter by itself"],
+                    ["chatgpt", "ChatGPT", "Start and Continue in ChatGPT"],
+                  ] as const
+                ).map(([mode, label, hint]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={visible.aiMode === mode}
+                    onClick={() => update({ aiMode: mode })}
+                  >
+                    <strong>{label}</strong>
+                    <small>{hint}</small>
+                  </button>
+                ))}
+              </div>
             </div>
           </fieldset>
-          <fieldset hidden={panel !== "players"} disabled={!master || generating}>
-            <legend>Player identities</legend>
-            <p className="lk-hint">
-              A name and a description are enough. Leave them blank to discover
-              your identity through the story.
+          <fieldset
+            className="lkx-sheet"
+            aria-label="Players"
+            hidden={panel !== "players"}
+            disabled={!master || generating}
+          >
+            <p className="lkx-sheet-hint">
+              Everything is optional. Leave a character blank to discover it
+              through the story.
             </p>
             {players.map((player) => {
               const identity = visible.identities.find(
                 (i) => i.user === player.user_id,
               ) || {
                 user: player.user_id,
-                name: player.name,
-                description: player.description || "",
+                name: "",
+                description: "",
+                voice: null,
               };
               const change = (value: Partial<typeof identity>) =>
                 update({
@@ -304,68 +435,93 @@ export function AdventureLobby({
                     { ...identity, ...value },
                   ],
                 });
+              // Empty choices mean "same as story", so they are dropped.
+              const setVoice = (value: PlayerVoice) => {
+                const next: PlayerVoice = { ...identity.voice, ...value };
+                if (!next.language) delete next.language;
+                if (!next.style) delete next.style;
+                change({ voice: Object.keys(next).length ? next : null });
+              };
+              const language = identity.voice?.language || "";
               return (
-                <details
-                  className="lk-lobby-player"
-                  key={player.user_id}
-                  open={players.length === 1}
-                >
-                  <summary>{player.name}</summary>
-                  <div className="lk-form">
-                    <label>
-                      Name <small>Optional</small>
-                      <input
-                        maxLength={100}
-                        value={identity.name}
-                        onChange={(e) => change({ name: e.target.value })}
-                      />
+                <article className="lkx-player" key={player.user_id}>
+                  <header>
+                    <span className="lkx-seal" aria-hidden="true">
+                      {(identity.name || player.name).slice(0, 1)}
+                    </span>
+                    <span>
+                      <strong>{identity.name || player.name}</strong>
+                      <small>
+                        {player.name}
+                        {player.user_id === story.owner_id ? " · Creator" : ""}
+                        {player.user_id === user ? " · You" : ""}
+                      </small>
+                    </span>
+                  </header>
+                  <label className="lkx-field">
+                    <span>Character name</span>
+                    <input
+                      maxLength={100}
+                      value={identity.name}
+                      onChange={(e) => change({ name: e.target.value })}
+                      placeholder="Found in the story"
+                    />
+                  </label>
+                  <label className="lkx-field">
+                    <span>Who are they?</span>
+                    <textarea
+                      rows={3}
+                      maxLength={2000}
+                      value={identity.description}
+                      onChange={(e) => change({ description: e.target.value })}
+                      placeholder="Looks, past, quirks — anything the narrator should know…"
+                    />
+                  </label>
+                  <div className="lkx-field-row">
+                    <label className="lkx-field">
+                      <span>Language</span>
+                      <select
+                        value={language}
+                        onChange={(e) => setVoice({ language: e.target.value })}
+                      >
+                        <option value="">
+                          Same as story ({visible.voice.language || "English"})
+                        </option>
+                        {[
+                          ...languages,
+                          ...(language && !languages.includes(language)
+                            ? [language]
+                            : []),
+                        ].map((l) => (
+                          <option key={l}>{l}</option>
+                        ))}
+                      </select>
                     </label>
-                    <label>
-                      Description <small>Optional</small>
-                      <textarea
-                        rows={3}
-                        maxLength={2000}
-                        value={identity.description}
-                        onChange={(e) =>
-                          change({ description: e.target.value })
-                        }
-                        placeholder="Anything the narrator should know about you…"
-                      />
+                    <label className="lkx-field">
+                      <span>How they speak</span>
+                      <select
+                        value={identity.voice?.style || ""}
+                        onChange={(e) => setVoice({ style: e.target.value })}
+                      >
+                        <option value="">Normally</option>
+                        {styles
+                          .filter((s) => s !== "Modern")
+                          .map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
+                      </select>
                     </label>
                   </div>
-                </details>
+                </article>
               );
             })}
           </fieldset>
-          <fieldset hidden={panel !== "world"} disabled={!master || generating}>
-            <legend>Narrator</legend>
-            <div className="lk-narrator-modes">
-              <button
-                type="button"
-                aria-pressed={visible.aiMode === "api"}
-                onClick={() => update({ aiMode: "api" })}
-              >
-                <strong>AI API</strong>
-                <small>
-                  The app writes each scene automatically using your configured
-                  AI access.
-                </small>
-              </button>
-              <button
-                type="button"
-                aria-pressed={visible.aiMode === "chatgpt"}
-                onClick={() => update({ aiMode: "chatgpt" })}
-              >
-                <strong>ChatGPT web chat</strong>
-                <small>
-                  Use your connected GPT. Send start and continue there; scenes
-                  appear here live.
-                </small>
-              </button>
-            </div>
-          </fieldset>
-          <fieldset hidden={panel !== "pages"} disabled={!master || generating}>
-            <legend>Display format</legend>
+          <fieldset
+            className="lkx-sheet"
+            aria-label="Display format"
+            hidden={panel !== "pages"}
+            disabled={!master || generating}
+          >
             <EditionPicker
               hidePreview
               previewEntry={story.segments.length ? preview : undefined}
@@ -375,7 +531,10 @@ export function AdventureLobby({
               onDesign={(design) => update({ design })}
             />
           </fieldset>
-          <section hidden={panel !== "players" || !master} className="lk-settings-card lkx-invite">
+          <section
+            hidden={panel !== "players" || !master || done}
+            className="lkx-sheet lkx-invite"
+          >
             <h2>Invite companions</h2>
             {master && (
               <>
@@ -434,13 +593,46 @@ export function AdventureLobby({
             )}
           </section>
         </div>
+        <div
+          className="lkx-splitter"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize settings and preview"
+          aria-valuenow={ledger}
+          aria-valuemin={LEDGER_MIN}
+          tabIndex={0}
+          title="Drag to resize · double-click to reset"
+          onPointerDown={(e) => {
+            const start = e.clientX,
+              width = ledger,
+              handle = e.currentTarget;
+            handle.setPointerCapture(e.pointerId);
+            const move = (ev: PointerEvent) =>
+              resizeLedger(width + ev.clientX - start);
+            const stop = () => {
+              handle.removeEventListener("pointermove", move);
+              handle.removeEventListener("pointerup", stop);
+              handle.removeEventListener("pointercancel", stop);
+            };
+            handle.addEventListener("pointermove", move);
+            handle.addEventListener("pointerup", stop);
+            handle.addEventListener("pointercancel", stop);
+          }}
+          onDoubleClick={() => resizeLedger(LEDGER_DEFAULT)}
+          onKeyDown={(e) => {
+            const step = e.shiftKey ? 80 : 24;
+            if (e.key === "ArrowLeft") resizeLedger(ledger - step);
+            else if (e.key === "ArrowRight") resizeLedger(ledger + step);
+            else return;
+            e.preventDefault();
+          }}
+        />
         <aside className="lkx-lectern">
           {visible.aiMode === "chatgpt" && (
             <ChatGPTHandoff
               story={{ ...story, ai_mode: "chatgpt" }}
               players={players}
               compact
-              canSave={master}
               pending={dirty || busy}
             />
           )}

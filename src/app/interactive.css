@@ -482,9 +482,46 @@
 }
 .lkx-lobby-grid {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
-  gap: 36px;
+  grid-template-columns: var(--ledger, 440px) 28px minmax(0, 1fr);
   align-items: start;
+}
+/* Drag handle between the settings and the preview. */
+.lkx-splitter {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  height: clamp(560px, calc(100dvh - 48px), 1100px);
+  cursor: col-resize;
+  touch-action: none;
+}
+.lkx-splitter::before {
+  content: "";
+  position: absolute;
+  inset: 0 13px;
+  border-radius: 2px;
+  background: var(--line);
+  transition: background 0.2s, inset 0.2s;
+}
+.lkx-splitter::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 36px;
+  border-radius: 3px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, var(--gold) 1.2px, transparent 1.6px) 0 0 / 6px 7px;
+  opacity: 0.6;
+}
+.lkx-splitter:hover::before,
+.lkx-splitter:focus-visible::before,
+.lkx-splitter:active::before {
+  inset: 0 12px;
+  background: var(--gold);
+}
+.lkx-splitter:focus-visible {
+  outline: none;
 }
 .lkx-ledger.lk-lobby-settings {
   position: sticky;
@@ -613,8 +650,7 @@
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
   .lkx-lobby-grid {
-    grid-template-columns: 320px minmax(0, 1fr);
-    gap: 24px;
+    grid-template-columns: min(var(--ledger, 440px), 50%) 24px minmax(0, 1fr);
   }
 }
 @media (max-width: 860px) {
@@ -623,6 +659,10 @@
   }
   .lkx-lobby-grid {
     grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .lkx-splitter {
+    display: none;
   }
   .lkx-ledger.lk-lobby-settings,
   .lkx-lectern {
@@ -777,7 +817,7 @@
 .lkx-play-body {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden auto;
   padding: clamp(24px, 4vw, 56px) clamp(12px, 3vw, 32px) 140px;
   overscroll-behavior: contain;
   scrollbar-color: #c6a96b44 transparent;
@@ -959,100 +999,170 @@
   scroll-margin-top: 28px;
 }
 
-/* ─── Ink inside the book: decisions and the quill use the edition's own
-   font and colour, so every display format writes in its own hand. ─── */
-.lkx-ink {
+/* ─── Turns inside the book: questions and answers use the edition's own font
+   and colour, so they read as part of the story. A small flag reaches past the
+   page's right edge (--reach is measured in JS) so every turn is easy to spot. ─── */
+.lkx-turn {
   --ink-accent: var(--edition-accent, var(--play-accent, currentColor));
-  margin: 1.5em 0 1.7em;
-  padding: 0.15em 0 0.15em 1.1em;
-  border-left: 2px solid color-mix(in srgb, var(--ink-accent) 55%, transparent);
+  --reach: 2.4em;
+  position: relative;
+  margin: 1.6em 0 1.8em;
+  padding: 0.55em 0 0.6em 1em;
+  border-left: 3px solid color-mix(in srgb, var(--ink-accent) 70%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ink-accent) 9%, transparent),
+    transparent 85%
+  );
   text-align: left;
+  text-indent: 0;
+  animation: lkx-ink-in 0.7s ease both;
 }
-.lkx-ink .lkx-ink-question,
-.lkx-ink .lkx-ink-answer {
+.lkx-turn p,
+.lkx-turn label {
   margin: 0;
   text-indent: 0;
+  text-align: left;
 }
-.lkx-ink .lkx-ink-question {
-  margin-bottom: 0.4em;
-  font-size: 0.82em;
+.lkx-tab {
+  position: absolute;
+  top: 0.45em;
+  left: 100%;
+  width: var(--reach);
+  height: 1.7em;
+  pointer-events: none;
+}
+.lkx-tab::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.6em;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--ink-accent) 60%, transparent)
+  );
+}
+/* Flags sit above the page (outside its clipping) at measured positions. */
+.lkx-flags {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.lkx-flag {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 26px;
+  margin: 0;
+  padding: 0 12px 0 9px;
+  border: 0;
+  font: 13px / 1 var(--serif);
+  color: #1b150b;
+  background: var(--play-accent, var(--gold));
+  clip-path: polygon(0 0, 100% 0, 80% 50%, 100% 100%, 0 100%);
+  filter: drop-shadow(0 2px 4px #0006);
+  pointer-events: auto;
+  animation: lkx-flag-in 0.5s ease both;
+}
+button.lkx-flag {
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+}
+button.lkx-flag:hover,
+button.lkx-flag:focus-visible {
+  outline: none;
+  transform: translateX(3px);
+  filter: drop-shadow(0 2px 4px #0006) brightness(1.15);
+}
+.lkx-flag:is([data-state="hidden"], [data-state="waiting"]) {
+  opacity: 0.55;
+}
+.lkx-flag[data-state="mine"] {
+  animation:
+    lkx-flag-in 0.5s ease both,
+    lkx-flag-call 2.8s 0.5s ease-in-out infinite;
+}
+@keyframes lkx-flag-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+@keyframes lkx-flag-call {
+  50% {
+    transform: translateX(4px);
+  }
+}
+.lkx-turn-q {
+  display: block;
+  margin-bottom: 0.45em !important;
+  font-size: 0.86em;
   font-style: italic;
   line-height: 1.55;
-  opacity: 0.72;
 }
-.lkx-ink b,
-.lkx-quill b {
+.lkx-turn b {
+  margin-right: 0.45em;
   font-style: normal;
   font-weight: 600;
   font-variant: small-caps;
   letter-spacing: 0.08em;
   color: var(--ink-accent);
 }
-.lkx-ink .lkx-ink-question b {
-  margin-right: 0.45em;
+.lkx-turn-a {
+  line-height: 1.6;
 }
-.lkx-ink .lkx-ink-answer::before {
+.lkx-turn-a::before {
   content: "“";
 }
-.lkx-ink .lkx-ink-answer::after {
+.lkx-turn-a::after {
   content: "”";
 }
-.lkx-quill {
-  --ink-accent: var(--edition-accent, var(--play-accent, currentColor));
-  margin: 2.4em 0 0.6em;
-  text-align: left;
+.lkx-turn[data-state="hidden"] {
+  padding: 0;
+  border-left: 0;
+  background: none;
 }
-.lkx-quill .lkx-ink {
-  margin: 1em 0;
-}
-.lkx-quill-ornament {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-bottom: 1.5em;
+.lkx-turn-hidden {
+  padding: 0.5em 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 30%, transparent);
   font-size: 0.8em;
-  color: var(--ink-accent);
+  font-variant: small-caps;
+  letter-spacing: 0.14em;
+  opacity: 0.6;
 }
-.lkx-quill-ornament i {
-  flex: 0 1 90px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.5;
+.lkx-turn[data-state="waiting"] {
+  border-left-style: dashed;
+  background: none;
 }
-.lkx-quill .lkx-quill-waiting {
-  margin: 0.8em 0;
-  font-size: 0.85em;
+.lkx-turn-wait {
+  font-size: 0.82em;
   font-style: italic;
-  text-align: center;
-  text-indent: 0;
-  opacity: 0.65;
+  opacity: 0.6;
 }
-.lkx-quill-field {
-  margin-top: 1.4em;
-  animation: lkx-ink-in 0.9s ease both;
-}
-.lkx-quill-question {
-  display: block;
-  margin-bottom: 0.9em;
-  font-style: italic;
-  line-height: 1.6;
+/* Your turn: the page invites you to keep writing. */
+.lkx-turn[data-state="mine"] {
   cursor: text;
+  animation:
+    lkx-ink-in 0.7s ease both,
+    lkx-your-turn 2.8s 0.7s ease-in-out infinite;
 }
-.lkx-quill-question b {
-  display: block;
-  margin-bottom: 0.35em;
-  font-size: 0.74em;
-  letter-spacing: 0.16em;
+.lkx-turn[data-state="mine"]:focus-within {
+  animation: none;
+  border-left-color: var(--ink-accent);
 }
-.lkx-quill-field textarea {
+.lkx-turn-input {
   display: block;
   width: 100%;
-  height: 3.6em;
-  min-height: 3.6em;
+  min-height: 1.7em;
   overflow: hidden;
-  margin: 0;
-  padding: 0 0.1em;
+  margin: 0.2em 0 0;
+  padding: 0;
   resize: none;
   appearance: none;
   border: 0;
@@ -1060,44 +1170,36 @@
   outline: 0;
   box-shadow: none;
   background: transparent;
-  background-image: linear-gradient(
-    transparent calc(1.8em - 1px),
-    color-mix(in srgb, currentColor 20%, transparent) calc(1.8em - 1px)
-  );
-  background-size: 100% 1.8em;
-  background-attachment: local;
   font: inherit;
-  font-size: 1.02em;
-  line-height: 1.8em;
+  line-height: 1.6;
   color: inherit;
   caret-color: var(--ink-accent);
-  transition: background-image 0.3s;
 }
-.lkx-quill-field textarea:focus {
-  background-image: linear-gradient(
-    transparent calc(1.8em - 1px),
-    color-mix(in srgb, var(--ink-accent) 45%, transparent) calc(1.8em - 1px)
-  );
-}
-.lkx-quill-field textarea::placeholder {
+.lkx-turn-input::placeholder {
   color: inherit;
   font-style: italic;
-  opacity: 0.38;
+  opacity: 0.45;
 }
-.lkx-quill-foot {
+.lkx-turn-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1em;
-  margin-top: 0.8em;
+  margin-top: 0.6em;
   font-size: 0.72em;
+  opacity: 0;
+  transition: opacity 0.3s;
 }
-.lkx-quill-foot small {
+.lkx-turn:focus-within .lkx-turn-foot,
+.lkx-turn-foot[data-ready="yes"] {
+  opacity: 1;
+}
+.lkx-turn-foot small {
   font-size: 1em;
   font-style: italic;
-  opacity: 0.5;
+  opacity: 0.55;
 }
-.lkx-quill-foot button {
+.lkx-turn-foot button {
   padding: 0.3em 0 0.2em;
   border: 0;
   border-bottom: 1px solid currentColor;
@@ -1105,14 +1207,34 @@
   font: inherit;
   font-size: 1.1em;
   font-variant: small-caps;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: var(--ink-accent);
   cursor: pointer;
-  transition: opacity 0.2s;
 }
-.lkx-quill-foot button:disabled {
+.lkx-turn-foot button:disabled {
   opacity: 0.35;
   cursor: default;
+}
+.lkx-quill {
+  --ink-accent: var(--edition-accent, var(--play-accent, currentColor));
+  margin: 2em 0 0.6em;
+  text-align: left;
+}
+.lkx-continuing {
+  margin: 1.4em 0 0 !important;
+  font-style: italic;
+  text-align: left;
+  color: var(--ink-accent);
+  opacity: 0.85;
+}
+@keyframes lkx-your-turn {
+  0%,
+  100% {
+    border-left-color: color-mix(in srgb, var(--ink-accent) 70%, transparent);
+  }
+  50% {
+    border-left-color: color-mix(in srgb, var(--ink-accent) 25%, transparent);
+  }
 }
 @keyframes lkx-ink-in {
   from {
@@ -1144,10 +1266,298 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .lkx-reading .lk-reveal-word,
-  .lkx-quill-field,
+  .lkx-turn,
+  .lkx-flag,
   .lkx-skip,
   .lkx-narrating-mark,
   .lkx-dots i {
     animation: none !important;
   }
+}
+
+/* ─── Lobby settings sheets: World, Players, Display ─── */
+.lkx-ledger .lkx-sheet {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+  padding: 22px 24px 28px;
+  border: 0;
+  min-width: 0;
+}
+.lkx-ledger .lkx-sheet[hidden] {
+  display: none;
+}
+.lkx-ledger .lkx-sheet > legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 0;
+  font: 400 24px / 1.2 var(--serif);
+  color: #f0e8d6;
+}
+.lkx-sheet-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.lkx-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.lkx-field > span {
+  font: 600 10px var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.lkx-field > span small {
+  margin-left: 6px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--muted);
+}
+.lkx-sheet .lkx-field :is(input, select, textarea) {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #0f100d;
+  font: 14px / 1.5 var(--sans);
+  color: var(--foreground);
+  transition: border-color 0.2s, background 0.2s;
+}
+.lkx-sheet .lkx-field :is(input, select, textarea):hover {
+  border-color: #c6a96b55;
+}
+.lkx-sheet .lkx-field :is(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--gold);
+  background: #12130f;
+}
+.lkx-sheet .lkx-field :is(input, textarea)::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+.lkx-sheet .lkx-field .lkx-title-input {
+  padding: 4px 0 8px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font: 400 22px / 1.3 var(--serif);
+  color: #f0e8d6;
+}
+.lkx-sheet .lkx-field .lkx-title-input:focus {
+  background: none;
+}
+.lkx-sheet .lkx-field .lkx-parchment {
+  resize: vertical;
+  font: 16px / 1.65 var(--serif);
+  background: linear-gradient(180deg, #16170f, #10110d);
+}
+.lkx-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.lkx-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.lkx-choices button {
+  display: grid;
+  gap: 3px;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #0f100d;
+  text-align: left;
+  color: var(--foreground);
+  transition: border-color 0.2s, background 0.2s;
+}
+.lkx-choices button:hover {
+  border-color: #c6a96b55;
+}
+.lkx-choices button[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: #c6a96b14;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+.lkx-choices strong {
+  font: 400 16px var(--serif);
+}
+.lkx-choices small {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.lkx-player {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #11120ecc;
+}
+.lkx-player > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.lkx-player .lkx-seal {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+.lkx-player > header strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 18px / 1.25 var(--serif);
+  color: #f0e8d6;
+}
+.lkx-player > header small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.lkx-ledger .lkx-invite {
+  border-top: 1px solid var(--line);
+}
+.lkx-ledger .lkx-invite h2 {
+  margin: 0;
+  font: 400 20px var(--serif);
+  color: #f0e8d6;
+}
+@media (max-width: 420px) {
+  .lkx-field-row,
+  .lkx-choices {
+    grid-template-columns: 1fr;
+  }
+}
+/* Gallery manuscripts style every textarea as an editor panel; the answer field stays ink. */
+.gallery-reader .lkx-turn .lkx-turn-input,
+.lkx-reading .lkx-turn .lkx-turn-input {
+  height: auto;
+  min-height: 1.7em;
+  margin: 0.2em 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  line-height: 1.6;
+  color: inherit;
+  tab-size: inherit;
+  resize: none;
+}
+
+/* ─── Storyteller: the current choice in the lobby, the presets in a dialog ─── */
+.lkx-storyteller {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: 3px;
+  background: linear-gradient(90deg, #c6a96b12, transparent 70%), #0f100d;
+}
+.lkx-storyteller > div {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.lkx-storyteller strong {
+  font: 400 18px / 1.25 var(--serif);
+  color: #f0e8d6;
+}
+.lkx-storyteller q,
+.lkx-teller q {
+  font: italic 14px / 1.5 var(--serif);
+  color: var(--gold-bright);
+  quotes: "“" "”";
+}
+.lkx-storyteller > button {
+  flex: none;
+  padding: 8px 14px;
+  border: 1px solid #c6a96b66;
+  border-radius: 999px;
+  background: none;
+  font-size: 12px;
+  color: var(--gold-bright);
+}
+.lkx-storyteller > button:hover {
+  border-color: var(--gold);
+  background: #c6a96b14;
+}
+.lkx-sheet .lkx-field .lkx-narrator-custom {
+  font: 15px / 1.55 var(--serif);
+}
+.lkx-teller-moods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.lkx-teller-moods button {
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  font-size: 12px;
+  color: var(--muted);
+}
+.lkx-teller-moods button[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: #c6a96b1f;
+  color: var(--gold-bright);
+}
+.lkx-teller-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+  max-height: min(62dvh, 640px);
+  overflow: auto;
+  padding: 2px;
+}
+.lkx-teller {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #0f100d;
+  text-align: left;
+  color: var(--foreground);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.lkx-teller:hover {
+  border-color: #c6a96b77;
+  transform: translateY(-2px);
+}
+.lkx-teller[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: #c6a96b14;
+  box-shadow: inset 0 3px 0 var(--gold);
+}
+.lkx-teller q {
+  font-size: 15px;
+  color: #f0e8d6;
+}
+.lkx-teller strong {
+  font: 400 15px var(--serif);
+  color: var(--gold-bright);
+}
+.lkx-teller small {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
 }

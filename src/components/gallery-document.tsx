@@ -34,16 +34,20 @@ export function GalleryDocument({ entry, style, size = 18, design, font, plain =
     useEffect(() => { const observer = new ResizeObserver(() => setScale(Math.min(1, (host.current?.clientWidth ?? 794) / 794))); observer.observe(host.current!); return () => observer.disconnect(); }, []);
     useEffect(() => {
         let cancelled = false;
+        // Lay out off-screen and swap in one step, so the previous pages stay
+        // visible (no collapsed, empty stage) while the new layout is measured.
+        const target = document.createElement('div');
+        target.className = 'gallery-output gallery-staging';
+        target.setAttribute('aria-hidden', 'true');
+        const publish = () => { if (cancelled) return; output.current!.replaceChildren(...Array.from(target.children)); output.current!.dataset.ready = 'true'; target.remove(); };
         async function layout() {
             await document.fonts.ready;
             const images = Array.from(source.current!.querySelectorAll('img'));
             await Promise.all(images.map(img => img.decode().catch(() => { })));
             if (cancelled)
                 return;
-            const target = output.current!;
-            target.dataset.ready = 'false';
+            host.current!.append(target);
             const template = source.current!.querySelector<HTMLElement>('article')!;
-            target.replaceChildren();
             setError("");
             const firstProse=template.querySelector<HTMLElement>('.gallery-content .gallery-prose p:not(.setting-note):not(.manuscript-field)');
             template.classList.remove('pdf-initials-ready');
@@ -78,7 +82,7 @@ export function GalleryDocument({ entry, style, size = 18, design, font, plain =
                 const cover=block.querySelector<HTMLElement>('.gallery-cover');if(cover)flow.prepend(cover);
                 flow.style.margin=`${metrics.top} ${metrics.right} ${metrics.bottom} ${metrics.left}`;
                 target.append(block);
-                target.dataset.ready = 'true';
+                publish();
                 return;
             }
             let number = 0;
@@ -157,15 +161,15 @@ export function GalleryDocument({ entry, style, size = 18, design, font, plain =
                 const footer=leaf.querySelector('.running-section');if(footer)footer.textContent=running.slice(0,70);
                 const note=leaf.querySelector('.margin-note');if(note)note.textContent=(headings[0]?.textContent??running).slice(0,180);
             }
-            target.dataset.ready = 'true';
+            publish();
         }
         void layout();
-        return () => { cancelled = true; };
+        return () => { cancelled = true; target.remove(); };
     }, [entry, style, size, chosen.pages, chosen.showCover, chosen.background, chosen.border, chosen.artwork, chosen.initial, frame, conversation, selectedFont, plain, showEmojis]);
     const fontClass=selectedFont==="galleryblackletter"?"blackletter":selectedFont==="galleryuncial"?"illuminated":selectedFont==="galleryfell"?"letterpress":"classic";
     const fontScale=fontClass==="blackletter"?1.15:["illuminated","letterpress"].includes(fontClass)?1.05:1;
     const vars = { "--line": fontClass==="blackletter"?"1.75":"1.63", "--font": `${size*19/18*fontScale}px`, "--body-font": fontClass==="illuminated"?'"Scriptorium Fell", Georgia, serif':face.family, "--heading-font": face.family, "--paper-surface": palette.surface } as CSSProperties;
-    return <div className="gallery-reader" ref={host} style={vars}>{error && <p role="status">{error}</p>}<div className="gallery-measure" ref={source} aria-hidden="true"><article className={`sheet t-${id} font-${fontClass} ${chosen.background.startsWith("gallery-paper-") ? "paper-" + chosen.background.replace("gallery-paper-", "") : ""}`} data-initial={chosen.initial} data-conversation={conversation?"on":"off"} data-border={chosen.border ? 'on' : 'off'} style={{ ...vars, ...(chosen.background !== style ? { backgroundColor: palette.surface, backgroundImage: chosen.background === "ancientcodex" ? "url(/textures/library-vellum.svg)" : undefined } : {}) }}>
+    return <div className="gallery-reader" ref={host} style={vars}>{error && <p role="status">{error}</p>}<div className="gallery-measure" ref={source} aria-hidden="true"><article className={`sheet t-${id} font-${fontClass} ${chosen.background.startsWith("gallery-paper-") ? "paper-" + chosen.background.replace("gallery-paper-", "") : ""} ${chosen.background !== style ? "sheet-resurfaced" : ""}`} data-background={chosen.background} data-initial={chosen.initial} data-conversation={conversation?"on":"off"} data-border={chosen.border ? 'on' : 'off'} style={{ ...vars, ...(chosen.background !== style ? { backgroundColor: palette.surface } : {}) }}>
  <svg className="frame-art" style={{color:"#a77e3d"}} viewBox="0 0 794 1123" preserveAspectRatio="none" aria-hidden="true" dangerouslySetInnerHTML={{ __html: frame }}/><div className="paper-grain"/><div className="page-head">{title}<span className="head-ornament" aria-hidden="true">· ◆ ·</span></div><div className="page-emblem" aria-hidden="true">✣</div><div className="margin-note"/><div className="paper-body"><div className="column">
  {chosen.showCover ? <div className="gallery-cover cover-content"><div className="cover-kicker">{galleryEditions.find(edition=>edition.id===style)?.name}</div><h1 className="cover-title">{title}</h1><EntryRemark entry={entry} showEmojis={showEmojis}/><div className="cover-rule" aria-hidden="true"/>{chosen.artwork && <svg className="cover-illustration" viewBox="0 0 400 380" aria-hidden="true" dangerouslySetInnerHTML={{ __html: galleryCovers[id] }}/>}{coverSubtitle&&<p className="cover-subtitle">{coverSubtitle}</p>}<div className="cover-ribbon">AN ILLUMINATED MANUSCRIPT</div></div> : <div className="gallery-title-opening"><h1 className="gallery-title-only">{title}</h1><EntryRemark entry={entry} showEmojis={showEmojis}/></div>}
  <div className="gallery-content">{entry.messages.map((message, index) => { let text=prepared[index].body; if (!showEmojis)

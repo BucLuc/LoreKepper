@@ -126,9 +126,12 @@ export function PlaySession({ id }: { id: string }) {
     [id, load],
   );
   useEffect(() => {
+    // Pausing stops Lorekeeper's own narrator; ChatGPT only writes when asked,
+    // and a pause would block it, so ChatGPT stories stay active.
     if (
       !entered &&
       story?.status === "active" &&
+      story.ai_mode !== "chatgpt" &&
       story.owner_id === user &&
       !busy &&
       !generating
@@ -140,6 +143,7 @@ export function PlaySession({ id }: { id: string }) {
   }, [
     entered,
     story?.status,
+    story?.ai_mode,
     story?.owner_id,
     user,
     busy,

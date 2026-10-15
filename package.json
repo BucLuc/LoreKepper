@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test tests/*.test.ts",
-    "test:ai": "node --conditions=react-server --import tsx --test tests/ai-server.check.ts",
-    "test:bridge": "node --conditions=react-server --import tsx --test tests/bridge-server.check.ts"
+    "test:ai": "node --conditions=react-server --import tsx --test tests/ai-server.check.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

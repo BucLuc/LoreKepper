@@ -499,7 +499,7 @@ export function PlayChat({
               Choose the language and writing voice for messages in this
               conversation.
             </p>
-            <VoiceSettings value={v} onChange={setVoice} scope={false} />
+            <VoiceSettings value={v} onChange={setVoice} />
             <button
               className="lk-button is-primary"
               onClick={() => setVoiceOpen(false)}

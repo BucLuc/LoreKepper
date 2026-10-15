@@ -1,29 +1,26 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { playApi } from "@/lib/play-client";
+import { supabase } from "@/lib/supabase";
+type Grant = { client: { id: string; name: string }; granted_at: string };
+export const mcpServerUrl = () =>
+  `${(process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "")}/functions/v1/lorekeeper-mcp`;
 export function ChatGPTConnectionSettings() {
-  const [connected, setConnected] = useState(false),
-    [configured, setConfigured] = useState(false),
+  const [grants, setGrants] = useState<Grant[]>([]),
     [loaded, setLoaded] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState("");
   useEffect(() => {
     let alive = true;
-    playApi("chatGPTConnection")
+    supabase()
+      .auth.oauth.listGrants()
       .then((r) => {
-        if (alive) {
-          setConnected(r.connected);
-          setConfigured(r.configured);
-          setLoaded(true);
-        }
-      })
-      .catch((e) => {
-        if (alive) {
-          setError(e.message);
-          setLoaded(true);
-        }
+        if (!alive) return;
+        // Fails when the OAuth server is not enabled yet; the setup guide covers that.
+        if (r.error) setError("Connected apps are unavailable until the Supabase OAuth server is enabled.");
+        else setGrants(r.data);
+        setLoaded(true);
       });
     return () => {
       alive = false;
@@ -34,57 +31,53 @@ export function ChatGPTConnectionSettings() {
       id="chatgpt-connection"
       className="lk-settings-card lk-gpt-settings"
     >
-      <h2>ChatGPT web chat</h2>
+      <h2>ChatGPT</h2>
       <p>
-        Use a connected Custom GPT as your narrator. No AI provider key is
-        needed for this mode.
+        Add Lorekeeper to ChatGPT as an app (MCP connector), then choose
+        ChatGPT in a story lobby and send <code>Start: session-id</code> and{" "}
+        <code>Continue</code> there. No AI provider key is needed.
       </p>
+      <label>
+        MCP server URL
+        <input
+          value={mcpServerUrl()}
+          readOnly
+          onFocus={(e) => e.target.select()}
+        />
+      </label>
       <strong>
         {!loaded
-          ? "Checking connection…"
-          : connected
-            ? "Your ChatGPT connection is active"
-            : configured
-              ? "Ready to connect from your GPT"
-              : "App owner setup required"}
+          ? "Checking connections…"
+          : grants.length
+            ? `Connected: ${grants.map((g) => g.client.name || "ChatGPT").join(", ")}`
+            : "Not connected yet"}
       </strong>
-      <p>
-        Choose ChatGPT web chat in a story lobby, then use{" "}
-        <code>start: session-id</code> and <code>continue</code> in your GPT.
-      </p>
       <div className="lk-handoff-actions">
         <Link href="/chatgpt-setup.md" target="_blank">
           Step-by-step setup guide
         </Link>
-        <Link href="/api/story-bridge/openapi" target="_blank">
-          Action schema
-        </Link>
-        <Link href="/chatgpt-gpt-instructions.md" target="_blank">
-          GPT instructions
-        </Link>
-        {connected && (
+        {grants.map((g) => (
           <button
+            key={g.client.id}
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              try {
-                await playApi("disconnectChatGPT");
-                setConnected(false);
+              const r = await supabase().auth.oauth.revokeGrant({
+                clientId: g.client.id,
+              });
+              if (r.error) setError(r.error.message);
+              else {
+                setGrants((all) => all.filter((x) => x !== g));
                 setNotice(
-                  "Disconnected. Connect again from ChatGPT when you want to return.",
+                  "Disconnected. ChatGPT asks you to sign in again next time.",
                 );
-              } catch (e) {
-                setError(
-                  e instanceof Error ? e.message : "Could not disconnect",
-                );
-              } finally {
-                setBusy(false);
               }
+              setBusy(false);
             }}
           >
-            Disconnect ChatGPT
+            Disconnect {g.client.name || "ChatGPT"}
           </button>
-        )}
+        ))}
       </div>
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}

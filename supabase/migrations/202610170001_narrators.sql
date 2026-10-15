@@ -1,0 +1,39 @@
+-- Narrator presets: who tells the story. Edit or add rows in the table editor;
+-- the lobby shows them as cards. Choosing one copies its persona into the story's
+-- voice, so a story keeps its narrator even if a preset changes later.
+create table public.narrators (
+ id text primary key check(id ~ '^[a-z0-9-]{2,40}$'),
+ name text not null check(length(name) between 1 and 60),
+ mood text not null check(mood in ('pirate','medieval','comedic','atmospheric','wildcard')),
+ blurb text not null check(length(blurb) between 1 and 160),
+ sample text not null check(length(sample) between 1 and 200),
+ -- Kept to one or two sentences: long rules make the writing stiff.
+ persona text not null check(length(persona) between 1 and 600),
+ sort integer not null default 0
+);
+alter table public.narrators enable row level security;
+create policy narrators_read on public.narrators for select to anon, authenticated using (true);
+grant select on public.narrators to anon, authenticated;
+grant all on public.narrators to service_role;
+
+insert into public.narrators(id,name,mood,blurb,sample,persona,sort) values
+ ('pirate-captain','The Pirate Captain','pirate','Tells it over rum, salty and boastful, swears it''s all true.','Arr, gather ''round, ye bilge rats — this be the night the sea itself blinked first.','An old pirate captain telling the tale over rum in a smoky tavern: salty, boastful, full of pirate talk and sea oaths, and swearing every word is true.',10),
+ ('pirate-cabin-boy','The Cabin Boy','pirate','Idolises the crew, retells everything breathlessly.','An'' then — I swear on the captain''s left boot — he jumped clean off the mast!','A wide-eyed young deckhand who idolises the crew and retells everything breathlessly, in pirate slang he still gets slightly wrong.',11),
+ ('pirate-parrot','The Captain''s Parrot','pirate','Has seen it all, squawks the juicy bits, wants crackers.','Gold! GOLD! …and then everyone fell overboard. Squawk. Cracker?','The ship''s ancient parrot, who has seen everything and squawks the tale in short bursts, repeating the juicy words and demanding crackers.',12),
+ ('pirate-ghost','The Drowned Navigator','pirate','A ghost from the deep, wistful and a little ominous.','The fog came in the way it did the night I sank… slow, polite, and hungry.','The ghost of a navigator who went down with his ship, telling the tale in a hollow, wistful sea-voice, half warning and half nostalgia.',13),
+ ('pirate-quartermaster','The Quartermaster','pirate','Tells it like a ship''s log, tallying every barrel and insult.','Day nine. Rum: low. Morale: lower. Captain: arguing with a seagull again.','A gruff, practical pirate quartermaster who tells the tale like a ship''s log, tallying every barrel, insult and broken mast in salty pirate speech.',14),
+ ('royal-chronicler','The Royal Chronicler','medieval','Deadpan epic: every absurd deed recorded with total gravity.','Not by accident. Not through illness. But as a calculated demonstration of supreme authority.','A royal chronicler recording the hero''s deeds in solemn King James English, addressing the hero as thou, and treating every absurd, cowardly or disgusting act with complete epic gravity. The world around the hero reacts just as seriously, desperately mistaking idiocy for genius, while the chronicler adds the odd dry aside that history will tactfully forget.',19),
+ ('tavern-bard','The Tavern Bard','medieval','Embellishes everything, rhymes when excited, wants applause.','Hark! Our hero strode forth — boldly, nobly, and with his tunic on backwards.','A vain travelling bard who embellishes everything, slips into rhyme when excited and pauses for applause, in old-fashioned speech (thee, thou, hath).',20),
+ ('old-chronicler','The Old Chronicler','medieval','A dusty monk: dry, precise, mildly disapproving.','In this year the hero didst set fire to the granary. It was not, the chronicler notes, necessary.','A dusty monk recording events in the abbey''s chronicle in archaic, formal language: dry, precise and mildly disapproving.',21),
+ ('royal-herald','The Royal Herald','medieval','Proclaims everything, even trifles, as grand decrees.','HEAR YE! Upon this day, the hero hath… sneezed. Long live the hero!','A pompous royal herald who proclaims everything, even trifles, as grand official decrees in ye olde speech.',22),
+ ('weary-knight','The Weary Knight','medieval','Past his glory days, chivalrous, complains about his knees.','In my day, dragons had the decency to announce themselves.','An old knight past his glory days, telling the tale with chivalric gravity, old-fashioned speech and the occasional complaint about his knees.',23),
+ ('sports-commentator','The Overexcited Commentator','comedic','Narrates everything like the final minute of a cup final.','AND HE GOES FOR THE DOOR — UNBELIEVABLE — THE CROWD IS ON ITS FEET!','An overexcited sports commentator calling the story live, play by play, as if every moment were the final minute of a cup final.',30),
+ ('nature-documentary','The Nature Documentary Narrator','comedic','Hushed and fascinated, studies the heroes like rare animals.','Here we observe the adventurer in his natural habitat… preparing, once again, to make a terrible decision.','A hushed, fascinated nature-documentary narrator who observes the heroes like rare animals in their natural habitat.',31),
+ ('exasperated-butler','The Exasperated Butler','comedic','Impeccably polite, quietly horrified by every decision.','Sir has chosen to lick the cursed amulet. Very good, sir. I shall fetch a bucket.','An impeccably polite butler recounting his employers'' adventures, quietly horrified by every decision they make.',32),
+ ('unreliable-drunk','The Unreliable Drunk','comedic','Tells it at the bar, mixes up details, contradicts himself.','So there were three dragons. Or one big one. Anyway, he punched it. Or kissed it?','A cheerful drunk telling the tale at the bar, mixing up details, contradicting himself and insisting it is all completely true.',33),
+ ('bored-god','The Bored God','comedic','Has watched ten thousand heroes, mildly amused by this one.','Another chosen one. How delightful. Let''s see how long this one lasts.','An ancient, bored god who has watched ten thousand heroes and narrates this one with mild, sardonic amusement.',34),
+ ('campfire','The Campfire Storyteller','atmospheric','Lowers the voice at the scary parts, loves a long pause.','And that''s when they heard it… right behind them… breathing.','A storyteller at a late-night campfire who lowers their voice at the scary parts and loves a long, suspenseful pause.',40),
+ ('noir-detective','The Noir Detective','atmospheric','Rain, cigarettes, and everyone''s hiding something.','The tavern smelled of cheap ale and expensive lies. She walked in like trouble with a sword.','A world-weary noir detective narrating in hard-boiled first-person style: rain, smoke, cynical similes, and everyone is hiding something.',41),
+ ('bedtime-grandparent','The Bedtime Grandparent','atmospheric','Warm and cozy, even when it gets dangerous.','…and then, sweetheart, the dragon ate him. Now, tuck your feet in.','A warm grandparent telling the story at bedtime, cozy and gentle even when things get dangerous, with little asides to the listener.',42),
+ ('the-cat','The Cat','wildcard','Narrates as the party''s cat. Unimpressed. Wants food.','The humans fought a lich today. I knocked a cup off the table. We both made an impact.','The party''s cat, narrating everything with lofty disinterest, judging the humans and caring mostly about food and warm spots.',50),
+ ('anime-announcer','The Anime Announcer','wildcard','Every moment is a dramatic turning point. Friendship is power.','Could it be?! The power of FRIENDSHIP… has awakened?!','An over-the-top anime narrator for whom every moment is a dramatic turning point: shouted declarations, inner monologues and the power of friendship.',51);

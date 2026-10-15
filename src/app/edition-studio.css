@@ -151,13 +151,19 @@
 .story-document[data-initial="off"]:not(.pdf-initials-ready) .message-prose.edition-prose p::first-letter {float:none!important;font:inherit!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;text-shadow:none!important;}
 .story-document[data-initial="on"]:not(.pdf-initials-ready) .message-prose.edition-prose .edition-section>p:first-of-type::first-letter {float:left!important;font:400 4.2em/.9 var(--reader-font)!important;color:var(--edition-accent)!important;padding:.08em .15em .04em 0!important;margin:0 .08em 0 0!important;border:0!important;background:none!important;box-shadow:none!important;text-shadow:none!important;}
 .story-document.theme-ancientcodex[data-initial="on"]:not(.pdf-initials-ready) .message-prose.edition-prose .edition-section>p:first-of-type::first-letter {font-family:"Unifraktur",serif!important;padding:.16em .22em .12em .1em!important;background:url('/textures/penwork-initial.svg') center/100% 100% no-repeat!important;}
-/* Additional paper surfaces use fixed-size grain, independent of page length. */
-.story-document.edition-resurfaced[data-background="paper-cotton"] {background-image:url('/textures/cotton-rag.svg')!important;background-size:180px 180px!important;}
-.story-document.edition-resurfaced[data-background="paper-laid"] {background-image:url('/textures/laid-paper.svg')!important;background-size:160px 160px!important;}
-.story-document.edition-resurfaced[data-background="paper-ivory"] {background-image:url('/textures/ivory-vellum.svg')!important;background-size:240px 240px!important;}
-.story-document.edition-resurfaced[data-background="paper-rose"] {background-image:url('/textures/cotton-rag.svg')!important;background-size:180px 180px!important;}
-.story-document.edition-resurfaced[data-background="paper-blue"] {background-image:url('/textures/laid-paper.svg')!important;background-size:160px 160px!important;}
-.story-document.edition-resurfaced[data-background="paper-antique"] {background-image:url('/textures/golden-parchment.svg')!important;background-size:320px 320px!important;}
+/* Off-screen layout target: same width and styles as the live output, never visible. */
+.gallery-reader{position:relative}
+.gallery-reader .gallery-output.gallery-staging{position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;zoom:1}
+/* Illuminated sheets paint their parchment as a gradient image; a chosen surface replaces it (paint only, sheet geometry is fixed). */
+.gallery-reader .sheet.sheet-resurfaced {background-image:none!important;}
+.gallery-reader .sheet.sheet-resurfaced[data-background="ancientcodex"] {background-image:url("/textures/library-vellum.svg")!important;}
+/* Additional paper surfaces use fixed-size grain, independent of page length. Shared by both renderers. */
+:is(.story-document.edition-resurfaced,.gallery-reader .sheet.sheet-resurfaced)[data-background="paper-cotton"] {background-image:url('/textures/cotton-rag.svg')!important;background-size:180px 180px!important;}
+:is(.story-document.edition-resurfaced,.gallery-reader .sheet.sheet-resurfaced)[data-background="paper-laid"] {background-image:url('/textures/laid-paper.svg')!important;background-size:160px 160px!important;}
+:is(.story-document.edition-resurfaced,.gallery-reader .sheet.sheet-resurfaced)[data-background="paper-ivory"] {background-image:url('/textures/ivory-vellum.svg')!important;background-size:240px 240px!important;}
+:is(.story-document.edition-resurfaced,.gallery-reader .sheet.sheet-resurfaced)[data-background="paper-rose"] {background-image:url('/textures/cotton-rag.svg')!important;background-size:180px 180px!important;}
+:is(.story-document.edition-resurfaced,.gallery-reader .sheet.sheet-resurfaced)[data-background="paper-blue"] {background-image:url('/textures/laid-paper.svg')!important;background-size:160px 160px!important;}
+:is(.story-document.edition-resurfaced,.gallery-reader .sheet.sheet-resurfaced)[data-background="paper-antique"] {background-image:url('/textures/golden-parchment.svg')!important;background-size:320px 320px!important;}
 .edition-swatches {flex-wrap:wrap;max-width:340px;padding:4px;}
 .edition-swatches .swatch-paper-cotton {background:#f2ebda;}.edition-swatches .swatch-paper-laid {background:repeating-linear-gradient(0deg,#e9d9b9 0 3px,#ceba93 4px);}.edition-swatches .swatch-paper-ivory {background:#f7efd9;}.edition-swatches .swatch-paper-rose {background:#edd9ce;}.edition-swatches .swatch-paper-blue {background:#dde5e5;}.edition-swatches .swatch-paper-antique {background:#d9bd88;}
 @media(max-width:600px) {.edition-swatches {max-width:100%;}}

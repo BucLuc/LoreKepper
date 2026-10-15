@@ -31,11 +31,13 @@ test("current actions are authoritative inputs, independent from questions and c
   assert.deepEqual(JSON.parse(r.prompt).currentPlayerActions, [
     { player: "a", action: "I shit my pants" },
   ]);
-  assert.match(r.system, /Never ignore, sanitize/);
+  assert.match(r.system, /Never ignore, soften, sanitize/);
   assert.equal(r.history.at(-1)?.role, "assistant");
   assert.equal(r.history.at(-1)?.content, "A guard asks for your name.");
   assert.match(r.system, /Never invent a player's next action/);
-  assert.match(r.system, /450–800/);
+  // One short chapter per turn, numbered after the existing scenes.
+  assert.match(r.system, /250–450 words/);
+  assert.match(r.system, /## Chapter II — /);
   const effect = "The guard notices your soiled breeches and steps back.";
   assert.deepEqual(
     validateResolutions(

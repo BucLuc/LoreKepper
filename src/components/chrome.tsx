@@ -32,6 +32,10 @@ export function Footer() {
         LoreKeeper <span>EST. IN QUESTIONABLE JUDGEMENT</span>
       </span>
       <span>Preserved for posterity. Unfortunately.</span>
+      <span className="footer-legal">
+        <Link href="/terms">Terms</Link>
+        <Link href="/privacy">Privacy</Link>
+      </span>
       <a href="#top">Back to the heavens ↑</a>
     </footer>
   );

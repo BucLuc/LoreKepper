@@ -96,11 +96,7 @@ export function CharacterCasting({
               voice.
             </p>
           ) : (
-            <VoiceSettings
-              value={customVoice}
-              onChange={onVoice}
-              scope={false}
-            />
+            <VoiceSettings value={customVoice} onChange={onVoice} />
           )}
         </section>
       )}

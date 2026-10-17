@@ -21,3 +21,11 @@ export const providers: Record<string, { url: string; model: string }> = {
     model: "claude-sonnet-4-6",
   },
 };
+export const providerName = (p: string) =>
+  ({
+    groq: "Groq",
+    gemini: "Google Gemini",
+    openrouter: "OpenRouter",
+    openai: "OpenAI",
+    anthropic: "Anthropic",
+  })[p] || p;

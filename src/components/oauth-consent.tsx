@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { SkeletonLines } from "./vault-ui";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 type Details = {
@@ -76,7 +77,7 @@ export function OAuthConsent({ authorizationId }: { authorizationId: string }) {
             {error}
           </p>
         )}
-        {state === "loading" && <p>Checking your account…</p>}
+        {state === "loading" && <SkeletonLines lines={3} label="Checking your account" />}
         {state === "signin" && (
           <Link
             className="lk-button is-primary"

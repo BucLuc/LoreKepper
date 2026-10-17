@@ -1,4 +1,4 @@
-import { PlayHub } from "@/components/play-hub";
+import { ChatHall } from "@/components/chat-hall";
 export default function Page() {
-  return <PlayHub tab="chat" />;
+  return <ChatHall />;
 }

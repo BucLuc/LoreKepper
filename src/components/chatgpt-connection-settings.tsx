@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { SkeletonLines } from "./vault-ui";
 type Grant = { client: { id: string; name: string }; granted_at: string };
 export const mcpServerUrl = () =>
   `${(process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "")}/functions/v1/lorekeeper-mcp`;
@@ -45,13 +46,15 @@ export function ChatGPTConnectionSettings() {
           onFocus={(e) => e.target.select()}
         />
       </label>
-      <strong>
-        {!loaded
-          ? "Checking connections…"
-          : grants.length
+      {loaded ? (
+        <strong>
+          {grants.length
             ? `Connected: ${grants.map((g) => g.client.name || "ChatGPT").join(", ")}`
             : "Not connected yet"}
-      </strong>
+        </strong>
+      ) : (
+        <SkeletonLines lines={1} label="Checking connections" />
+      )}
       <div className="lk-handoff-actions">
         <Link href="/chatgpt-setup.md" target="_blank">
           Step-by-step setup guide

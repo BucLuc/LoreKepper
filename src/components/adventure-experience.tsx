@@ -25,7 +25,9 @@ import { resolveReaderFont } from "@/lib/reader-fonts";
 import { StoryDocument } from "./story-document";
 import { ChatGPTHandoff } from "./chatgpt-handoff";
 import { StoryInteractions } from "./story-interactions";
-import { AdventureLobby, type LobbySettings } from "./adventure-lobby";
+import { AdventureLobby } from "./adventure-lobby";
+import { StorySetup } from "./story-setup";
+import type { PlayerCast, StorySettings } from "./story-form";
 import { PlayExport } from "./play-export";
 import { Modal } from "./vault-ui";
 import { Icon } from "./icon";
@@ -44,7 +46,8 @@ export type ExperienceProps = {
   onStatus: (s: string) => Promise<void>;
   onInvite: () => Promise<string>;
   onArmChatGPT: () => Promise<void>;
-  onConfigure: (settings: LobbySettings) => Promise<void>;
+  onConfigure: (settings: StorySettings) => Promise<void>;
+  onPlayer: (player: string, cast: PlayerCast) => Promise<void>;
   onInviteUser: (id: string) => Promise<void>;
   onEnter?: () => void;
   onTyping?: (typing: boolean) => void;
@@ -190,18 +193,38 @@ export function AdventureExperience(p: ExperienceProps) {
         className={`lkx-lobby-page play-edition-${story.edition}`}
         style={vars}
       >
-        <AdventureLobby
-          story={story}
-          players={players}
-          user={user}
-          busy={busy}
-          generating={generating}
-          error={p.error || story.last_error || ""}
-          onSave={p.onConfigure}
-          onStart={start}
-          onInvite={p.onInvite}
-          onInviteUser={p.onInviteUser}
-        />
+        {story.setup &&
+        !story.setup.done &&
+        story.status === "lobby" &&
+        !story.segments.length &&
+        !draft ? (
+          <StorySetup
+            story={story}
+            players={players}
+            user={user}
+            busy={busy}
+            generating={generating}
+            error={p.error || story.last_error || ""}
+            onSave={p.onConfigure}
+            onPlayer={p.onPlayer}
+            onInvite={p.onInvite}
+            onInviteUser={p.onInviteUser}
+          />
+        ) : (
+          <AdventureLobby
+            story={story}
+            players={players}
+            user={user}
+            busy={busy}
+            generating={generating}
+            error={p.error || story.last_error || ""}
+            onSave={p.onConfigure}
+            onPlayer={p.onPlayer}
+            onStart={start}
+            onInvite={p.onInvite}
+            onInviteUser={p.onInviteUser}
+          />
+        )}
       </main>
     );
   return (

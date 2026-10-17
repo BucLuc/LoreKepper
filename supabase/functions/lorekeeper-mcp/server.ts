@@ -43,14 +43,12 @@ type Player = {
   identity_name?: string;
   description?: string;
   character?: { name?: string; kind?: string; personality?: string } | null;
-  voice?: { language?: string; style?: string } | null;
+  voice?: { language?: string; style?: string; speech?: string } | null;
 };
 
 const FUNCTION_NAME = "lorekeeper-mcp";
 const PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 const MAX_CONTEXT = 400_000;
-// Parts stay small enough that the players start reading early.
-const SECTION_MAX = 5_000;
 // Matches presetDesign("glorious") with the cover hidden, as the app uses for imports.
 const IMPORT_DESIGN = {
   pages: false,
@@ -89,9 +87,9 @@ const cors = {
   "Access-Control-Expose-Headers": "WWW-Authenticate",
 };
 
-const INSTRUCTIONS = `Lorekeeper is the user's story library. These tools only load and save stories; they don't tell you how to tell them. Roleplay just as you normally would in ChatGPT: free-form, no game mechanics.
+const INSTRUCTIONS = `Lorekeeper is the user's story library. These tools only load and save stories. Roleplay just as you normally would in ChatGPT: free-form, no game mechanics.
 
-- "Start: <sessionId>": load it with get_roleplay and write the next chapter. Send it to Lorekeeper with write_section as you go (the players read it live there; the parts don't make the chapter any shorter), then call save_chapter with the question for the player(s). In the chat, just say briefly that it's in Lorekeeper.
+- "Start: <sessionId>": load it with get_roleplay and write your next roleplay reply in the chat, exactly as you would in a normal ChatGPT roleplay. Then save it with save_chapter: the reply unchanged as the chapter, and the question it ends on as the question for the player(s).
 - "Continue": load the same session again (list_roleplays if you don't know it). The players answered in Lorekeeper; carry on from their answers the same way.
 - "Save this roleplay to Lorekeeper" after playing here: save_roleplay with your replies as chapters, unchanged, and the user's replies as answers. Reuse the returned sessionId for later saves.
 - An uploaded Markdown story + "Save this to Lorekeeper": import_story with the content unchanged.`;
@@ -123,46 +121,10 @@ const tools = [
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
   {
-    name: "write_section",
-    title: "Write a section into Lorekeeper",
-    description:
-      "Sends the next part of the chapter you are writing to Lorekeeper, where the players read it live. Parts only change how the chapter is delivered, not how long it is: write the chapter at its natural full length and send it in as many parts as that takes, each as soon as it's written, numbered from 1 (sectionNumber 1 starts the chapter over). Call save_chapter with the question once the chapter is complete.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        sessionId,
-        revision: {
-          type: "integer",
-          description: "The revision returned by get_roleplay (unchanged by sections).",
-        },
-        sectionNumber: { type: "integer", minimum: 1 },
-        section: {
-          type: "string",
-          description: "This part in Markdown, without the closing question.",
-        },
-        title: {
-          type: "string",
-          description: "Story title, if the session has none yet.",
-        },
-        world: {
-          type: "string",
-          description: "Short description of the setting, if the session has none yet.",
-        },
-      },
-      required: ["sessionId", "revision", "sectionNumber", "section"],
-      additionalProperties: false,
-    },
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: false,
-      openWorldHint: false,
-    },
-  },
-  {
     name: "save_chapter",
-    title: "Finish the chapter in Lorekeeper",
+    title: "Save the chapter to Lorekeeper",
     description:
-      "Finishes the chapter you wrote with write_section and adds the question the players answer in Lorekeeper (shown below the chapter). Use the revision returned by get_roleplay.",
+      "Saves the roleplay reply you just wrote in the chat as the next chapter in Lorekeeper, plus the question the players answer there (shown below the chapter). Use the revision returned by get_roleplay.",
     inputSchema: {
       type: "object",
       properties: {
@@ -170,6 +132,11 @@ const tools = [
         revision: {
           type: "integer",
           description: "The revision returned by get_roleplay.",
+        },
+        chapter: {
+          type: "string",
+          description:
+            "Your reply exactly as you wrote it in the chat (Markdown), without the closing question.",
         },
         question: {
           type: "string",
@@ -207,7 +174,7 @@ const tools = [
           description: "True only if this chapter ends the story (no question).",
         },
       },
-      required: ["sessionId", "revision"],
+      required: ["sessionId", "revision", "chapter"],
       additionalProperties: false,
     },
     annotations: {
@@ -434,35 +401,10 @@ async function runTool(name: string, args: Record<string, unknown>, user: string
     return roleplayView(story, players, link(id));
   }
 
-  if (name === "write_section") {
-    const id = uuid(args.sessionId, "sessionId");
-    if (!Number.isInteger(args.revision)) throw new ToolError("revision must be the integer from get_roleplay.");
-    if (!Number.isInteger(args.sectionNumber) || (args.sectionNumber as number) < 1)
-      throw new ToolError("sectionNumber must be 1, 2, 3 …");
-    const saved = (await call("mcp_write_section", {
-      u: user,
-      a: id,
-      r: args.revision,
-      part: section(args.section),
-      n: args.sectionNumber,
-      story_title: str(args.title, "title", 120) ?? "",
-      story_world: str(args.world, "world", 6000) ?? "",
-    })) as { section: number; duplicate: boolean };
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Part ${saved.section} is in Lorekeeper. Keep writing; call save_chapter only when the chapter is complete.`,
-        },
-      ],
-      structuredContent: { sessionId: id, ...saved },
-    };
-  }
-
   if (name === "save_chapter") {
     const id = uuid(args.sessionId, "sessionId");
     if (!Number.isInteger(args.revision)) throw new ToolError("revision must be the integer from get_roleplay.");
-    // Without chapter text, the sections sent with write_section form the chapter.
+    // Without chapter text, a half-written draft (from the earlier live mode) is used.
     const chapter = str(args.chapter, "chapter", 60_000) ?? null;
     const ending = args.ending === true;
     const { players } = (await call("mcp_get_roleplay", { u: user, a: id })) as { players: Player[] };
@@ -596,88 +538,99 @@ async function runTool(name: string, args: Record<string, unknown>, user: string
   };
 }
 
-// Plain data for the model: settings plus the complete history as readable Markdown.
+// Written the way a player starts a roleplay in a normal chat ("make a roleplay,
+// you choose the world but I make the choices, write like …"): a short, natural
+// prompt gets ChatGPT's best roleplay, while a settings dossier turns it into a
+// briefing to work through. Saving details stay in one line at the very end.
+// Account names never appear: unnamed players get a neutral label.
 export function roleplayView(story: Story, players: Player[], url?: string) {
-  // Account names never reach the model: unnamed players get a neutral label
-  // and stay unnamed in the story until they name themselves.
+  const solo = players.length <= 1;
   const nameOf = (id: string) => {
     const p = players.find((x) => x.user_id === id);
     if (p?.identity_name || p?.character?.name) return (p.identity_name || p.character?.name)!;
-    if (players.length === 1) return "The player";
+    if (solo) return "Me";
     const i = players.findIndex((x) => x.user_id === id);
     return i < 0 ? "A player" : `Player ${i + 1}`;
   };
-  const named = (p: Player) => !!(p.identity_name || p.character?.name);
-  const last = story.segments.at(-1);
-  const draft = story.draft?.parts || [];
-  const waiting = (last?.questions || []).filter((q) => q.answer === undefined).map((q) => nameOf(q.player));
+  const about = (p: Player) =>
+    p.description || (p.character ? [p.character.kind, p.character.personality].filter(Boolean).join(". ") : "");
   const v = story.voice || {};
   const language = v.language || "English";
-  // A writing voice replaces the older writing styles for the story as a whole. It
-  // lives in the prose; a framed storyteller would talk to the reader instead.
-  const narrator = v.persona
-    ? `${v.narratorName ? `${v.narratorName} — ` : ""}${v.persona} (the story itself is written this way: no storyteller character, no frame, nobody talking to the reader)`
-    : "";
-  const guide = narrator ? "" : styleGuide(v.style);
-  const style = [
-    guide && `${guide}${v.scope === "dialogue" ? " (dialogue only)" : ""}`,
-    v.tone && v.tone !== "Default" ? `${v.tone.toLowerCase()} tone` : "",
-  ].filter(Boolean);
-  const voiceNote = `in ${language}${narrator ? `, in the ${v.narratorName || "chosen"} voice` : guide ? `, ${v.style} style` : ""}`;
-  const nextStep =
-    story.status === "completed"
-      ? "This story is finished. Nothing more to write."
-      : story.generating_until && new Date(story.generating_until) > new Date()
-          ? "Lorekeeper's built-in narrator is writing a chapter right now. Try again shortly."
-          : waiting.length
-            ? `Waiting for ${waiting.join(", ")} to answer in Lorekeeper. Don't write the next chapter yet; tell the user.`
-            : draft.length
-              ? `Chapter ${story.segments.length + 1} is half written (parts 1–${draft.length} above). Go on with part ${draft.length + 1}, then save_chapter. Revision ${story.revision}.`
-              : `Write ${story.segments.length ? `chapter ${story.segments.length + 1}, carrying on from the players' answers` : "the opening chapter"} (${voiceNote}). Revision ${story.revision}.`;
+  const last = story.segments.at(-1);
+  const waiting = (last?.questions || []).filter((q) => q.answer === undefined).map((q) => nameOf(q.player));
 
-  const playerLines = players.map((p) => {
-    const c = p.character;
-    const about = [p.description, c && !p.description ? [c.kind, c.personality].filter(Boolean).join(". ") : ""]
-      .filter(Boolean)
-      .join(" ");
+  const setup: string[] = [
+    `Make a roleplay${story.title ? ` called "${story.title}"` : ""}. ${
+      story.world ? `Set it here: ${story.world}` : "You choose the world"
+    }${story.world ? "\n" : ", but "}${solo ? "I make the choices." : `${story.world ? "W" : "w"}e're ${players.length} players and we make the choices.`}`,
+  ];
+  if (solo) {
+    const p = players[0];
+    const name = p && (p.identity_name || p.character?.name);
+    const desc = p ? about(p) : "";
+    const end = (t: string) => (/[.!?…]$/.test(t) ? t : `${t}.`);
+    if (name || desc) setup.push(name ? `I play ${name}${desc ? `: ${end(desc)}` : "."}` : `My character: ${end(desc)}`);
+  } else {
+    setup.push(
+      `We play: ${players
+        .map((p) => {
+          const desc = about(p);
+          return `${nameOf(p.user_id)}${desc ? ` (${desc})` : ""}`;
+        })
+        .join("; ")}.`,
+    );
+  }
+  for (const p of players) {
     const own = [
       p.voice?.language && `speaks ${p.voice.language}`,
-      styleGuide(p.voice?.style) && `speaks in ${styleGuide(p.voice?.style)}`,
+      p.voice?.speech || (p.voice?.style && `talks in ${p.voice.style} style`),
     ].filter(Boolean);
-    return `- ${nameOf(p.user_id)} (playerId ${p.user_id}${named(p) ? "" : "; unnamed"})${about ? `: ${about}` : ""}${own.length ? ` (${own.join("; ")})` : ""}`;
+    if (own.length) setup.push(`${solo ? "My character" : nameOf(p.user_id)} ${own.join(" and ")}.`);
+  }
+  if (language !== "English") setup.push(`Write in ${language}.`);
+  if (v.persona) setup.push(v.persona);
+  else if (styleGuide(v.style)) setup.push(`Write in ${v.style} style (${STYLE_GUIDES[v.style!]}).`);
+
+  // The story so far reads like the chat it would have been: each reply, then the choice.
+  const chapters = story.segments.map((s) => {
+    const qa = s.questions.map((q) => {
+      const who = nameOf(q.player);
+      const asked = solo || s.questions.every((x) => x.text === q.text) ? "" : `> To ${who}: ${q.text}\n\n`;
+      return `${asked}**${who}:** ${q.answer ?? "_(no answer yet)_"}`;
+    });
+    const question = s.questions.length && (solo || s.questions.every((x) => x.text === s.questions[0].text))
+      ? `> ${s.questions[0].text}\n\n`
+      : "";
+    return `${s.narrative}\n\n${question}${qa.join("\n\n")}`;
   });
-  const chapterText = story.segments.map((s, i) => {
-    const qa = s.questions.map(
-      (q) => `\n\n> **Question to ${nameOf(q.player)}:** ${q.text}\n>\n> **${nameOf(q.player)} answered:** ${q.answer ?? "_(not answered yet)_"}`,
-    );
-    return `### Chapter ${i + 1}\n\n${s.narrative}${qa.join("")}`;
-  });
-  if (draft.length)
-    chapterText.push(
-      `### Chapter ${story.segments.length + 1} (in progress, ${draft.length} section${draft.length === 1 ? "" : "s"} saved)\n\n${draft.join("\n\n")}`,
-    );
-  const head = [
-    `# ${story.title || "(untitled — choose a title for the opening)"}`,
-    `Session ${story.id} · revision ${story.revision} · status ${story.status}`,
-    "## Settings",
-    `- Language: ${language}`,
-    ...(narrator ? [`- Writing voice: ${narrator}`] : []),
-    ...(style.length ? [`- Writing style: ${style.join("; ")}`] : []),
-    `- World: ${story.world || "(not set — invent one in the opening)"}`,
-    "## Players",
-    ...playerLines,
-    ...(story.summary ? ["## Continuity notes", story.summary] : []),
-    "## Story so far",
-  ].join("\n");
-  const tail = `## Next step\n${nextStep}`;
+  const nextStep =
+    story.status === "completed"
+      ? "This story is finished."
+      : story.generating_until && new Date(story.generating_until) > new Date()
+        ? "Lorekeeper's own narrator is writing right now. Try again shortly."
+        : waiting.length
+          ? `${solo ? "I haven't" : `${waiting.join(", ")} ${waiting.length === 1 ? "hasn't" : "haven't"}`} answered in Lorekeeper yet. Don't continue yet; just tell me.`
+          : story.segments.length
+            ? solo
+              ? "Continue from my last choice."
+              : "Continue from our choices."
+            : "Start the story right away, no intro.";
+  const multi = solo
+    ? ""
+    : ` For different questions per player, use questions with these playerIds: ${players.map((p) => `${nameOf(p.user_id)} = ${p.user_id}`).join(", ")}.`;
+  const footer = `(Lorekeeper: after your reply, save it with save_chapter: sessionId ${story.id}, revision ${story.revision}, chapter = your reply without its closing question, question = that question.${multi})`;
+
+  const head = setup.join("\n");
   let omitted = 0;
-  while (omitted < chapterText.length - 1 && head.length + tail.length + chapterText.slice(omitted).join("\n\n").length > MAX_CONTEXT)
-    omitted++;
-  const history = chapterText.length
-    ? (omitted ? `_(Chapters 1–${omitted} omitted for length; see the continuity notes.)_\n\n` : "") + chapterText.slice(omitted).join("\n\n")
-    : "_(No chapters yet.)_";
+  const size = () => head.length + chapters.slice(omitted).join("\n\n---\n\n").length;
+  while (omitted < chapters.length - 1 && size() > MAX_CONTEXT) omitted++;
+  const history = chapters.length
+    ? `\n\nThe story so far:\n\n${
+        omitted ? `(The first ${omitted} chapters are left out for length.${story.summary ? ` What happened: ${story.summary}` : ""})\n\n---\n\n` : ""
+      }${chapters.slice(omitted).join("\n\n---\n\n")}`
+    : "";
   return {
-    content: [{ type: "text", text: `${head}\n\n${history}\n\n${tail}` }],
+    content: [{ type: "text", text: `${head}${history}${nextStep ? `\n\n${nextStep}` : ""}\n\n${footer}` }],
     structuredContent: {
       sessionId: story.id,
       revision: story.revision,
@@ -700,14 +653,6 @@ function str(v: unknown, field: string, max: number, required = false): string |
   if (typeof v !== "string" || (required && !v.trim())) throw new ToolError(`${field} must be text.`);
   if (v.length > max) throw new ToolError(`${field} is longer than ${max} characters.`);
   return v.trim();
-}
-function section(v: unknown) {
-  const text = str(v, "section", 60_000, true)!;
-  if (text.length > SECTION_MAX)
-    throw new ToolError(
-      "This part is too long for the players to read along. Split it into smaller parts (a few paragraphs each).",
-    );
-  return text;
 }
 function uuid(v: unknown, field: string) {
   const s = typeof v === "string" ? v.trim() : "";

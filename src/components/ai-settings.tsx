@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { playApi } from "@/lib/play-client";
-import { providers } from "@/lib/ai-config";
+import { providerName, providers } from "@/lib/ai-config";
 import { ChatGPTConnectionSettings } from "./chatgpt-connection-settings";
 import { Icon } from "./icon";
+import { SkeletonLines } from "./vault-ui";
 export function AISettings() {
   const [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -11,10 +12,7 @@ export function AISettings() {
   const [provider, setProvider] = useState("groq"),
     [model, setModel] = useState(providers.groq.model),
     [key, setKey] = useState(""),
-    [settings, setSettings] = useState<{
-      provider: string;
-      model: string;
-    } | null>(null),
+    [keys, setKeys] = useState<{ provider: string; model: string }[]>([]),
     [shared, setShared] = useState(false),
     [aiLoaded, setAiLoaded] = useState(false),
     [usage, setUsage] = useState(0);
@@ -23,13 +21,9 @@ export function AISettings() {
     playApi("aiSettings")
       .then((r) => {
         if (!alive) return;
-        setSettings(r.settings);
+        setKeys(r.keys);
         setShared(r.shared);
         setUsage(r.usage[0]?.units || 0);
-        if (r.settings) {
-          setProvider(r.settings.provider);
-          setModel(r.settings.model);
-        }
         setAiLoaded(true);
       })
       .catch((e) => {
@@ -39,6 +33,7 @@ export function AISettings() {
       alive = false;
     };
   }, []);
+  const saved = keys.some((k) => k.provider === provider);
   async function run(task: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -74,29 +69,68 @@ export function AISettings() {
         <section className="lk-settings-card">
           <div className="lk-ai-status">
             <span
-              className={aiLoaded && (settings || shared) ? "is-ready" : ""}
+              className={aiLoaded && (keys.length || shared) ? "is-ready" : ""}
             />
+            {!aiLoaded && !error ? (
+              <SkeletonLines lines={2} label="Checking AI access" />
+            ) : (
             <div>
               <strong>
                 {!aiLoaded
-                  ? error
-                    ? "Unable to load AI access"
-                    : "Checking AI access…"
-                  : settings
-                    ? "Your personal key is connected"
+                  ? "Unable to load AI access"
+                  : keys.length
+                    ? `${keys.length} personal key${keys.length === 1 ? "" : "s"} connected`
                     : shared
                       ? "Shared AI is ready"
                       : "Connect AI to start a story"}
               </strong>
               <small>
-                {settings
-                  ? `${settings.provider} · ${settings.model}`
+                {keys.length
+                  ? "Choose which one writes when you set up a story."
                   : shared
                     ? "You can begin an adventure without a personal key."
                     : "Ordinary chat works without AI."}
               </small>
             </div>
+            )}
           </div>
+          {keys.length > 0 && (
+            <ul className="lk-ai-keys">
+              {keys.map((k) => (
+                <li key={k.provider}>
+                  <span>
+                    <strong>{providerName(k.provider)}</strong>
+                    <small>{k.model}</small>
+                  </span>
+                  <button
+                    type="button"
+                    className="lk-text-button"
+                    disabled={busy}
+                    onClick={() => {
+                      setProvider(k.provider);
+                      setModel(k.model);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="lk-text-button"
+                    disabled={busy}
+                    onClick={() =>
+                      void run(async () => {
+                        await playApi("saveAI", { remove: true, provider: k.provider });
+                        setKeys((all) => all.filter((x) => x.provider !== k.provider));
+                        setNotice(`${providerName(k.provider)} key removed.`);
+                      })
+                    }
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           <form
             className="lk-form"
             onSubmit={(e) => {
@@ -104,8 +138,8 @@ export function AISettings() {
               void run(async () => {
                 await playApi("saveAI", { provider, model, key });
                 setKey("");
-                setSettings({ provider, model });
-                setNotice("AI settings saved.");
+                setKeys((all) => [{ provider, model }, ...all.filter((x) => x.provider !== provider)]);
+                setNotice(`${providerName(provider)} key saved.`);
               });
             }}
           >
@@ -120,30 +154,23 @@ export function AISettings() {
               >
                 {Object.keys(providers).map((p) => (
                   <option key={p} value={p}>
-                    {p === "groq"
-                      ? "Groq"
-                      : p === "gemini"
-                        ? "Google Gemini"
-                        : p === "openai"
-                          ? "OpenAI"
-                          : p === "anthropic"
-                            ? "Anthropic"
-                            : "OpenRouter"}
+                    {providerName(p)}
+                    {keys.some((k) => k.provider === p) ? " · saved" : ""}
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              {settings ? "Replace API key" : "API key"}
+              {saved ? "Replace API key" : "API key"}
               <input
                 type="password"
                 autoComplete="new-password"
                 value={key}
                 maxLength={500}
-                required={!settings || settings.provider !== provider}
+                required={!saved}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder={
-                  settings
+                  saved
                     ? "Leave blank to keep your saved key"
                     : "Paste your provider’s API key"
                 }
@@ -167,33 +194,15 @@ export function AISettings() {
               className="lk-button is-primary"
               disabled={busy || !aiLoaded}
             >
-              {busy ? "Saving…" : "Save AI settings"}
+              {busy ? "Saving…" : saved ? `Update ${providerName(provider)} key` : `Add ${providerName(provider)} key`}
             </button>
-            {settings && (
-              <button
-                type="button"
-                className="lk-text-button"
-                disabled={busy || !aiLoaded}
-                onClick={() =>
-                  void run(async () => {
-                    await playApi("saveAI", { remove: true });
-                    setSettings(null);
-                    setNotice(
-                      "Personal key removed. Shared AI will be used when available.",
-                    );
-                  })
-                }
-              >
-                Remove personal key
-              </button>
-            )}
           </form>
         </section>
         <aside className="lk-ai-help">
           <h2>One key. A whole party.</h2>
           <p>
-            The story’s creator provides AI access for the adventure. Friends
-            only need to join.
+            The story’s creator picks which AI writes it — the shared one,
+            ChatGPT, or any of their keys. Friends only need to join.
           </p>
           <p>
             Personal keys are encrypted and never shared with other players.

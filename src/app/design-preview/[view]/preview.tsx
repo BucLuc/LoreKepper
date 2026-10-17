@@ -4,6 +4,9 @@ import { AdventureExperience } from "@/components/adventure-experience";
 import { PlayHub } from "@/components/play-hub";
 import { presetDesign } from "@/lib/edition-design";
 import { Reader } from "@/components/reader";
+import { ArchiveSkeleton } from "@/components/vault-ui";
+import { ChatHall } from "@/components/chat-hall";
+import { PlayChat } from "@/components/play-chat";
 import { defaultVoice, storyEntry, type Adventure, type Player } from "@/lib/play";
 const now = "2026-10-14T10:00:00.000Z";
 const players: Player[] = [
@@ -11,7 +14,8 @@ const players: Player[] = [
   { user_id: "u2", name: "Liri", character: null, identity_name: "Maren" },
 ];
 function mockStory(edition: string, view: string, pages = false): Adventure {
-  const fresh = view === "lobby-new";
+  const setup = view.startsWith("setup");
+  const fresh = view === "lobby-new" || setup;
   return {
     id: "preview-story",
     owner_id: "u1",
@@ -27,6 +31,12 @@ function mockStory(edition: string, view: string, pages = false): Adventure {
     summary: "",
     revision: 3,
     created_at: now,
+    // "setup-3" opens the third step; "setup-guest" shows it to an invited player.
+    setup: setup
+      ? { step: Number(view.split("-")[1]) || 1, theme: view === "setup" || view === "setup-1" ? null : "pirate", quest: "custom" }
+      : fresh
+        ? { step: 4, done: true, theme: "pirate" }
+        : null,
     segments: fresh
       ? []
       : [
@@ -85,7 +95,47 @@ function writingStory(edition: string, pages: boolean): Adventure {
 }
 export function DesignPreview({ view, edition, pages = false }: { view: string; edition: string; pages?: boolean }) {
   const [story, setStory] = useState(() => (view === "writing" ? writingStory(edition, pages) : mockStory(edition, view, pages)));
+  const [cast, setCast] = useState(players);
   const noop = async () => {};
+  if (view === "skeleton") return <ArchiveSkeleton page="lobby" />;
+  if (view === "chat-hall")
+    return (
+      <ChatHall
+        me="u1"
+        initialHall={{
+          chats: [
+            { id: "c1", kind: "direct", title: "", created_at: now, partner: { id: "u2", name: "Liri" }, unread: 2, last: { text: "Liri has invited you to “The Salt Debt”.", kind: "invite", from: "u2", at: now } },
+            { id: "c2", kind: "direct", title: "", created_at: now, partner: { id: "u3", name: "Bram" }, unread: 0, last: { text: "Then the goose took the crown. I am not joking.", kind: "text", from: "u1", at: "2026-10-12T18:00:00.000Z" } },
+          ],
+          people: [
+            { id: "u4", name: "Cassia" },
+            { id: "u5", name: "Dorian" },
+            { id: "u6", name: "Elowen" },
+            { id: "u7", name: "Fenwick" },
+          ],
+        }}
+      />
+    );
+  if (view === "chat")
+    return (
+      <PlayChat
+        id="c1"
+        initialUser="u1"
+        initialData={{
+          chat: { title: "Luc & Liri", owner_id: "u1", kind: "direct" },
+          players: [
+            { user_id: "u1", name: "Luc" },
+            { user_id: "u2", name: "Liri" },
+          ],
+          messages: [
+            { id: "m1", user_id: "u2", name: "Liri", original: "Did you see what happened in the chapel?", content: "Did you see what happened in the chapel?", status: "sent", character: null, created_at: "2026-10-16T19:00:00.000Z" },
+            { id: "m2", user_id: "u1", name: "Luc", original: "yes and it was terrifying", content: "Aye, I saw it, and me blood ran colder than a kraken's breakfast!", status: "sent", meta: { mode: "rewrite", voice: "Pirate Captain" }, reply_to: "m1", character: null, created_at: "2026-10-16T19:01:00.000Z" },
+            { id: "m3", user_id: "u2", name: "Liri", original: "Liri has invited you to “The Salt Debt”.", content: "Liri has invited you to “The Salt Debt”.", status: "sent", kind: "invite", meta: { adventure: "preview-story", title: "The Salt Debt", theme: "pirate" }, character: null, created_at: now },
+            { id: "m4", user_id: "u1", name: "Luc", original: "distract her with a story about geese", content: null, status: "pending", meta: { mode: "instruct", voice: "Royal Herald" }, character: null, created_at: now },
+          ],
+        }}
+      />
+    );
   if (view === "reader") {
     // Long enough to span several A4 pages in every edition.
     const chapters = mockStory(edition, "play").segments.map((s) => s.narrative);
@@ -115,8 +165,8 @@ export function DesignPreview({ view, edition, pages = false }: { view: string; 
   return (
     <AdventureExperience
       story={story}
-      players={players}
-      user="u1"
+      players={cast}
+      user={view === "setup-guest" ? "u2" : "u1"}
       busy={false}
       generating={false}
       online
@@ -136,7 +186,12 @@ export function DesignPreview({ view, edition, pages = false }: { view: string; 
       onStatus={noop}
       onInvite={async () => "https://example.com/join/abc"}
       onArmChatGPT={noop}
-      onConfigure={async (settings) => setStory((s) => ({ ...s, ...settings }))}
+      onConfigure={async ({ aiMode, aiProvider, ...settings }) =>
+        setStory((s) => ({ ...s, ...settings, ai_mode: aiMode, ai_provider: aiProvider, revision: s.revision + 1 }))
+      }
+      onPlayer={async (player, c) =>
+        setCast((all) => all.map((p) => (p.user_id === player ? { ...p, identity_name: c.name, description: c.description, voice: c.voice } : p)))
+      }
       onInviteUser={noop}
     />
   );

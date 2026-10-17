@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { playApi } from "@/lib/play-client";
 import { supabase } from "@/lib/supabase";
 import { Icon } from "./icon";
+import { SkeletonLines } from "./vault-ui";
 export function PlayJoin({ token }: { token: string }) {
   const router = useRouter(),
     [signedIn, setSignedIn] = useState<boolean | null>(null),
@@ -45,7 +46,7 @@ export function PlayJoin({ token }: { token: string }) {
           </p>
         )}
         {signedIn === null ? (
-          <p className="lk-hint">Checking your sign-in…</p>
+          <SkeletonLines lines={1} label="Checking your sign-in" className="lk-join-skeleton" />
         ) : signedIn ? (
           <button
             className="lk-button is-primary"

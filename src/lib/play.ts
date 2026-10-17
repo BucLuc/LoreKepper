@@ -40,20 +40,77 @@ export type Voice = {
   narratorName?: string;
   persona?: string;
 };
+export const themeIds = [
+  "classic",
+  "medieval",
+  "pirate",
+  "ancient",
+  "crime",
+  "eccentric",
+] as const;
+// A ready-made quest from the worlds table, or one the AI suggested for this story.
+export type Quest = {
+  id: string;
+  theme?: string;
+  title: string;
+  pitch: string;
+  story: string;
+};
+export type StorySetup = {
+  step: number;
+  done?: boolean;
+  theme?: string | null;
+  // "preset:<id>", "idea:<n>", "custom", "none" (the narrator decides), or unset.
+  quest?: string | null;
+  ideas?: Quest[];
+  // The last Surprise me, replayed by everyone watching: n changes per spin.
+  spin?: { kind: "theme" | "quest" | "voice"; value: string; n: number } | null;
+};
+const clip = (v: unknown, max: number) =>
+  typeof v === "string" ? v.trim().slice(0, max) : "";
+export function storySetup(value: unknown): StorySetup | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as Record<string, unknown>;
+  const spin = v.spin as Record<string, unknown> | null | undefined;
+  return {
+    step: Math.min(4, Math.max(1, Math.round(Number(v.step) || 1))),
+    ...(v.done === true ? { done: true } : {}),
+    theme: themeIds.includes(v.theme as (typeof themeIds)[number])
+      ? (v.theme as string)
+      : null,
+    quest:
+      typeof v.quest === "string" &&
+      /^(preset:[a-z0-9-]{2,40}|idea:\d|custom|none)$/.test(v.quest)
+        ? v.quest
+        : null,
+    ideas: (Array.isArray(v.ideas) ? v.ideas : [])
+      .slice(0, 6)
+      .map((q: Record<string, unknown>, i: number) => ({
+        id: `idea:${i}`,
+        title: clip(q?.title, 80),
+        pitch: clip(q?.pitch, 200),
+        story: clip(q?.story, 1500),
+      }))
+      .filter((q) => q.title && q.story),
+    spin:
+      spin &&
+      ["theme", "quest", "voice"].includes(spin.kind as string) &&
+      typeof spin.value === "string"
+        ? {
+            kind: spin.kind as "theme" | "quest" | "voice",
+            value: spin.value.slice(0, 60),
+            n: Math.round(Number(spin.n) || 0),
+          }
+        : null,
+  };
+}
 export type NarratorPreset = {
   id: string;
   name: string;
-  mood: "pirate" | "medieval" | "comedic" | "atmospheric" | "wildcard";
+  mood: "classic" | "medieval" | "pirate" | "ancient" | "crime" | "eccentric";
   blurb: string;
   sample: string;
 };
-// One shared phrasing for both narrators (Lorekeeper's own and ChatGPT). A preset
-// is a writing voice: it lives in the prose, never in a storyteller who frames it.
-export function narratorLine(v: Partial<Voice>) {
-  return v.persona
-    ? `Write the story itself in this voice${v.narratorName ? ` (${v.narratorName})` : ""}: ${v.persona} The voice lives in the prose: no storyteller character, no frame, nobody talking to a listener or the reader.`
-    : "";
-}
 export const defaultVoice: Voice = {
   language: "English",
   style: "Modern",
@@ -84,6 +141,10 @@ export type Adventure = {
   status: "lobby" | "active" | "paused" | "completed";
   mode: string;
   ai_mode?: "api" | "chatgpt";
+  // "shared" or one of the creator's providers; null: their key, else shared.
+  ai_provider?: string | null;
+  // The setup wizard's progress; null for stories that open straight in the lobby.
+  setup?: StorySetup | null;
   world: string;
   voice: Voice;
   edition: string;
@@ -98,7 +159,13 @@ export type Adventure = {
   created_at?: string;
 };
 // A player's own language/style for their character; empty fields follow the story.
-export type PlayerVoice = { language?: string; style?: string };
+export type PlayerVoice = {
+  language?: string;
+  style?: string;
+  // A writing-voice preset id and the line it stands for ("talks like a pirate captain").
+  narrator?: string;
+  speech?: string;
+};
 export type Player = {
   user_id: string;
   name: string;
@@ -115,9 +182,24 @@ export function playerVoice(value: unknown): PlayerVoice | null {
   const style = styles.includes(v.style as (typeof styles)[number])
     ? (v.style as string)
     : "";
-  return language || style
-    ? { ...(language ? { language } : {}), ...(style ? { style } : {}) }
+  // A writing-voice preset for how this character talks; the server adds its text.
+  const narrator =
+    typeof v.narrator === "string" && /^[a-z0-9-]{2,40}$/.test(v.narrator)
+      ? v.narrator
+      : "";
+  return language || style || narrator
+    ? {
+        ...(language ? { language } : {}),
+        ...(narrator ? { narrator } : style ? { style } : {}),
+      }
     : null;
+}
+// "Write like a pirate captain." → "talks like a pirate captain".
+export function speechLine(persona: string) {
+  return persona
+    .trim()
+    .replace(/\.$/, "")
+    .replace(/^Write (?=like|in )/, "talks ");
 }
 export function voice(value: Partial<Voice> = {}): Voice {
   return {
@@ -133,9 +215,6 @@ export function voice(value: Partial<Voice> = {}): Voice {
       : "Default",
     scope: value.scope === "entire" ? "entire" : "dialogue",
   };
-}
-export function voicePrompt(v: Voice, character = false) {
-  return `Write in ${v.language}. Writing style: ${v.style}. ${character ? "Apply this voice to this character’s dialogue and portrayal only." : v.scope === "dialogue" ? "Keep narration in natural contemporary language; apply the writing style to dialogue only." : "Apply the writing style to narration and dialogue."} ${v.tone === "Default" ? "Choose emotion, drama and occasional humor naturally from the style and scene. Default does not mean emotionally neutral. Keep creative freedom." : `Emphasize a ${v.tone.toLowerCase()} tone.`} Vary vocabulary and rhythm; avoid catchphrases, forced jokes and repetition.`;
 }
 export function characterSnapshot(
   c: Character,
@@ -209,38 +288,4 @@ export function storyEntry(
       ],
     },
   ])[0];
-}
-export function parseTurn(text: string, players: string[], ending: boolean) {
-  const data = JSON.parse(
-    text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""),
-  );
-  if (
-    typeof data.narrative !== "string" ||
-    !data.narrative.trim() ||
-    data.narrative.length > 16000 ||
-    typeof data.summary !== "string" ||
-    data.summary.length > 12000 ||
-    !Array.isArray(data.questions)
-  )
-    throw new Error("AI returned an invalid story segment. Retry safely.");
-  const seen = new Set<string>();
-  const questions: Question[] = ending
-    ? []
-    : data.questions.map((q: Question) => {
-        if (
-          !players.includes(q.player) ||
-          seen.has(q.player) ||
-          typeof q.text !== "string" ||
-          !q.text.trim() ||
-          q.text.length > 2000
-        )
-          throw new Error(
-            "AI returned invalid player questions. Retry safely.",
-          );
-        seen.add(q.player);
-        return { player: q.player, text: q.text };
-      });
-  if (!ending && !questions.length)
-    throw new Error("AI did not provide a next question. Retry safely.");
-  return { narrative: data.narrative, summary: data.summary, questions };
 }

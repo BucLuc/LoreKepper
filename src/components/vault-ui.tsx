@@ -96,6 +96,59 @@ export function VaultMonument({ compact = false }: { compact?: boolean }) {
     </div>
   );
 }
+// Shimmering placeholders for content that is still on its way. The label is read
+// to screen readers only; nothing visible says "loading".
+export function SkeletonLines({
+  lines = 3,
+  label,
+  className = "",
+}: {
+  lines?: number;
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <div className={`sk-lines ${className}`} aria-busy="true">
+      {label && (
+        <span className="sr-only" role="status">
+          {label}
+        </span>
+      )}
+      {Array.from({ length: lines }, (_, i) => (
+        <div className="skeleton-bar" aria-hidden="true" key={i} />
+      ))}
+    </div>
+  );
+}
+export function SkeletonCards({
+  count = 3,
+  label,
+  className = "",
+  seal = true,
+}: {
+  count?: number;
+  label?: string;
+  className?: string;
+  seal?: boolean;
+}) {
+  return (
+    <>
+      {label && (
+        <span className="sr-only" role="status">
+          {label}
+        </span>
+      )}
+      {Array.from({ length: count }, (_, i) => (
+        <div className={`sk-card ${className}`} aria-hidden="true" key={i}>
+          {seal && <div className="skeleton-seal" />}
+          <div className="skeleton-bar sk-card-title" />
+          <div className="skeleton-bar" />
+          <div className="skeleton-bar sk-short" />
+        </div>
+      ))}
+    </>
+  );
+}
 export function ArchiveSkeleton({
   story = false,
   page = "home",
@@ -134,7 +187,7 @@ export function ArchiveSkeleton({
       aria-busy="true"
     >
       <span className="sr-only" role="status">
-        {story ? "Unrolling the legend…" : "Opening the archives…"}
+        {story ? "Unrolling the legend…" : page === "lobby" ? "Opening the story…" : "Opening the archives…"}
       </span>
       <div aria-hidden="true">
         {page === "login" ? (
@@ -152,7 +205,20 @@ export function ArchiveSkeleton({
         ) : (
           <>
             <div className="skeleton-bar sk-crumb" />
-            {page === "profile" ? (
+            {page === "lobby" ? (
+              <div className="sk-lobby">
+                <div className="skeleton-bar sk-title" />
+                <div className="skeleton-bar sk-subtitle" />
+                <div className="sk-lobby-grid">
+                  <aside>
+                    <SkeletonCards count={3} className="is-row" />
+                  </aside>
+                  <section className="sk-lobby-cards">
+                    <SkeletonCards count={10} seal={false} />
+                  </section>
+                </div>
+              </div>
+            ) : page === "profile" ? (
               <div className="sk-identity">
                 <div className="skeleton-seal" />
                 <div>{title}</div>
@@ -160,7 +226,7 @@ export function ArchiveSkeleton({
             ) : (
               title
             )}
-            {story ? (
+            {page === "lobby" ? null : story ? (
               <div className="skeleton-reader">
                 <aside>
                   <div className="skeleton-bar sk-small" />

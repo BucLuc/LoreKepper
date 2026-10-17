@@ -1972,6 +1972,80 @@
 .skeleton-collection .skeleton-cards {
   margin-top: 90px;
 }
+/* Inline placeholders: a few lines, or cards that sit in the grid they stand in for. */
+.sk-lines {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.sk-lines .skeleton-bar {
+  height: 10px;
+}
+.sk-lines .skeleton-bar:first-of-type {
+  width: 55%;
+  height: 14px;
+}
+.sk-lines .skeleton-bar:nth-of-type(3n) {
+  width: 75%;
+}
+.sk-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 140px;
+  padding: 20px;
+  border: 1px solid #c6a96b16;
+  border-radius: 4px;
+  background: #15160f;
+}
+.sk-card .skeleton-bar {
+  height: 10px;
+}
+.sk-card .skeleton-seal {
+  width: 42px;
+  height: 42px;
+  margin: 0;
+}
+.sk-card .sk-card-title {
+  width: 60%;
+  height: 18px;
+}
+.sk-card .sk-short {
+  width: 40%;
+}
+.sk-card.is-row {
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  min-height: 0;
+  padding: 14px 16px;
+}
+.sk-card.is-row .skeleton-bar:not(.sk-card-title) {
+  display: none;
+}
+.sk-lobby .sk-title {
+  height: 64px;
+}
+.sk-lobby-grid {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 32px;
+  margin-top: 28px;
+}
+.sk-lobby-grid aside {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.sk-lobby-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+@media (max-width: 860px) {
+  .sk-lobby-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @keyframes v-shimmer {
   to {
     background-position: -200% 0;
@@ -2657,4 +2731,38 @@ input:focus, select:focus, textarea:focus,
 .v-consent a {
   color: var(--gold);
   text-decoration: underline;
+}
+.lk-hub-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+.lk-hub-skeleton.is-stories .sk-card {
+  min-height: 300px;
+}
+.lk-chat-skeleton {
+  display: grid;
+  gap: 18px;
+  padding: 8px 0;
+}
+.lk-chat-skeleton .sk-lines {
+  width: min(420px, 70%);
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: #15160f;
+}
+.lk-chat-skeleton .sk-lines.is-mine {
+  justify-self: end;
+}
+.lk-chat-skeleton-names {
+  width: 160px;
+  margin-top: 6px;
+}
+.lk-join-skeleton {
+  max-width: 220px;
+}
+.lk-join-skeleton .skeleton-bar:first-of-type {
+  width: 100%;
+  height: 42px;
 }

@@ -141,3 +141,29 @@ Changes remain uncommitted in the requested checkout. No production database cha
 The original Groq starter model `llama-3.3-70b-versatile` is no longer available on the free/developer tier. Groq's deprecation notice lists its shutdown on 16 August 2026. The starter default and local shared configuration now use `openai/gpt-oss-120b`, verified against the configured account's active model list. A live sample story JSON request succeeded with HTTP 200. The UI and server share one provider-default registry, and unavailable-model errors now explain the model problem without suggesting every failure is an invalid key.
 
 If you previously saved the old model as a personal AI setting, update that model under AI access. If you deployed the old shared configuration, update `LORE_AI_MODEL` in your host environment and restart/redeploy. No new SQL migration is needed for this correction.
+
+## Update: story setup wizard (17 October 2026)
+
+New stories open in a four-step setup before the lobby; invited players watch it live (read-only), including every *Surprise me* spin.
+
+1. **The Fellowship** – invite players, name their characters, choose the AI: Lorekeeper's free shared AI (if `LORE_AI_KEY` is set), ChatGPT (the `?` explains the MCP flow), or any provider you saved a key for under AI access (one key per provider now).
+2. **The Realm** – the theme, i.e. the narrators' moods.
+3. **The Quest** – ready-made quests from the new `worlds` table (edit rows in Supabase), reworded freely for one story only; *Write your own*; *Conjure new quests* (AI ideas, kept only in this story); or *Let the narrator decide*.
+4. **The Voice** – the theme's writing voices, voices from other realms, and the story language.
+
+The lobby then only invites players and sets the display format (a full gallery with a live preview). Each player edits their own character sheet; the Session Master can edit everyone's. Once the first chapter exists, the database only accepts display changes. Stories without a setup (older ones, or saved from ChatGPT) open straight in the lobby.
+
+**Prompts:** Lorekeeper's own narrator (`src/lib/roleplay-prompt.ts`) follows the MCP server's prompt strategy: the same short, chat-like request ChatGPT gets from `get_roleplay`, plus one sentence on returning the question in `<lore-state>`. A test checks the two stay identical. The long rulebook and the resolved-action check are gone.
+
+**Fix:** creating a new story after leaving a lobby reopened the previous lobby (`cacheComponents` kept `/interactive/new` mounted with its old request). Each visit now creates a new story.
+
+**Apply:** run `supabase/migrations/202610170008_story_setup.sql` once in the SQL editor. The Edge Function is unchanged.
+
+## Update: chat rework (17 October 2026)
+
+- **One conversation per pair of users.** `/chat` is the Hall of Whispers: your conversations (newest first, last message, unread count) and every other adventurer to start one with. Old group chats stay readable in the list; new groups can no longer be created.
+- **Writing:** *As myself*, *Rewrite in a voice* (your words in a chosen writing voice and/or language) or *Let the quill write* (an instruction such as "distract him", optionally with marked messages as context). Voices use the same theme-filtered picker as the story setup; the AI is the shared one or any of your keys. These choices are remembered per browser.
+- **Replies** quote the original message; **Mark messages** (click, Shift+click for a stretch) and **Save to the gallery** stores them as a conversation entry in a collection.
+- **Story invitations:** choosing a companion in a lobby or the setup also posts an invitation card into your direct chat with them, linking to the lobby. Invitation links still work as before.
+
+**Apply:** run `supabase/migrations/202610170009_chat_rework.sql` once (after `…0008_story_setup.sql`). It adds message kinds, replies and read markers, and the `chat_hall` function.

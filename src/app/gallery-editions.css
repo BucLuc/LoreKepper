@@ -86,7 +86,14 @@
  .gallery-output .gallery-block .column{font-size:calc(var(--font)*.9);line-height:1.8}
  .gallery-output .gallery-block .column h1{font-size:27px}
  .gallery-output .gallery-block .column h2{font-size:24px}
- .gallery-output .gallery-block .page-head{left:25px;right:25px;font-size:9px}
+ /* The running head joins the flow above the text: positioned for an A4 page (and
+    lower in some editions), it would sit on the cover title once the margins shrink. */
+ .gallery-output .gallery-block.sheet .page-head{position:relative;inset:auto;margin:44px 40px 0;padding:0;border:0;background:none;font-size:9px;line-height:1.6}
+ .gallery-output .gallery-block .paper-body{margin-top:22px!important}
+ .gallery-output .gallery-block.sheet.t-gothic .page-head{margin-top:84px}
  .gallery-output .gallery-block .margin-note,.gallery-output .gallery-block .page-emblem{display:none}
  .gallery-output .gallery-block .cover-illustration{max-width:100%;height:auto}
+ .gallery-output .gallery-block .cover-title{font-size:clamp(26px,7.5cqw,45px);overflow-wrap:anywhere}
+ .gallery-output .gallery-block:is(.t-abbey,.t-gothic) .cover-title{font-size:clamp(28px,8.5cqw,51px)}
+ .gallery-output .gallery-block .cover-ribbon{min-width:0;max-width:100%;padding:10px 18px;letter-spacing:2px}
 }

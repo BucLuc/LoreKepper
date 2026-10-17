@@ -19,14 +19,28 @@ export async function generateAI(
   json = false,
   history: { role: "user" | "assistant"; content: string }[] = [],
   outputTokens?: number,
+  // "shared", one of the owner's providers, or nothing: their newest key, else shared.
+  choice?: string | null,
 ) {
-  const { data: settings, error } = await db
-    .from("ai_settings")
-    .select("*")
-    .eq("user_id", owner)
-    .maybeSingle();
-  if (error)
-    throw new Error("AI settings unavailable. Apply the play migration.");
+  let settings = null;
+  if (choice !== "shared") {
+    let query = db
+      .from("ai_settings")
+      .select("*")
+      .eq("user_id", owner)
+      .order("updated_at", { ascending: false })
+      .limit(1);
+    if (choice) query = query.eq("provider", choice);
+    const { data, error } = await query;
+    if (error)
+      throw new Error("AI settings unavailable. Apply the play migration.");
+    settings = data?.[0] || null;
+    if (choice && !settings)
+      throw new AIError(
+        `The Session Master's ${choice} key was removed. Add it again under AI access, or start a new story with another AI. Your story is saved.`,
+        422,
+      );
+  }
   const provider = settings?.provider || process.env.LORE_AI_PROVIDER || "groq";
   const config = providers[provider];
   if (!config) throw new Error("Unsupported AI provider.");

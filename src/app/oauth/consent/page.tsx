@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { OAuthConsent } from "@/components/oauth-consent";
+import { ArchiveSkeleton } from "@/components/vault-ui";
 async function Content({
   searchParams,
 }: {
@@ -12,7 +13,7 @@ export default function Page(props: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   return (
-    <Suspense fallback={<p>Loading…</p>}>
+    <Suspense fallback={<ArchiveSkeleton page="login" />}>
       <Content {...props} />
     </Suspense>
   );

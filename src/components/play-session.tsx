@@ -4,9 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { playApi } from "@/lib/play-client";
 import { supabase } from "@/lib/supabase";
 import { type Adventure, type Player, type Voice } from "@/lib/play";
-import type { LobbySettings } from "./adventure-lobby";
+import type { StorySettings } from "./story-form";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { AdventureExperience } from "./adventure-experience";
+import { ArchiveSkeleton } from "./vault-ui";
 type Data = { story: Adventure; players: Player[] };
 export function PlaySession({ id }: { id: string }) {
   const [data, setData] = useState<Data | null>(null),
@@ -17,6 +18,15 @@ export function PlaySession({ id }: { id: string }) {
     [now, setNow] = useState(0),
     [entered, setEntered] = useState(false),
     [typing, setTyping] = useState<Record<string, number>>({});
+  // Every visit opens in the lobby. With cacheComponents a story page stays mounted
+  // (hidden) after you leave; effects run again on return, so count visits here.
+  const [visit, setVisit] = useState(0);
+  useEffect(() => {
+    queueMicrotask(() => {
+      setVisit((v) => v + 1);
+      setEntered(false);
+    });
+  }, []);
   const realtime = useRef<RealtimeChannel | null>(null),
     lastTyping = useRef(0);
   const attempted = useRef("");
@@ -184,7 +194,7 @@ export function PlaySession({ id }: { id: string }) {
   }
   const revision = story?.revision;
   const configure = useCallback(
-    async (settings: LobbySettings) => {
+    async (settings: StorySettings) => {
       setBusy(true);
       setError("");
       try {
@@ -204,18 +214,21 @@ export function PlaySession({ id }: { id: string }) {
     [id, revision, load],
   );
   if (!data)
-    return (
+    return error ? (
       <main id="main" className="lk-page">
         <Link href="/interactive" className="lk-back">
           ← Adventure library
         </Link>
-        <div className="lk-loading" role={error ? "alert" : "status"}>
-          {error || "Opening the next page…"}
-        </div>
+        <p className="lk-alert" role="alert">
+          {error}
+        </p>
       </main>
+    ) : (
+      <ArchiveSkeleton page="lobby" />
     );
   return (
     <AdventureExperience
+      key={visit}
       story={data.story}
       players={data.players}
       user={user}
@@ -240,6 +253,11 @@ export function PlaySession({ id }: { id: string }) {
         })
       }
       onConfigure={configure}
+      onPlayer={async (player, cast) => {
+        // Not through action(): a failed save shows in the form that made it.
+        await playApi("configurePlayer", { id, player, ...cast });
+        await load();
+      }}
       onInviteUser={(person) =>
         action(async () => {
           await playApi("inviteUser", { id, person });

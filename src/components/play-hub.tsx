@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { supabase } from "@/lib/supabase";
 import { playApi } from "@/lib/play-client";
@@ -9,8 +8,7 @@ import { readerEditions } from "@/lib/reader-editions";
 import { editionPalettes } from "@/lib/edition-design";
 import { CharacterEditor, type PlayCollection } from "./character-editor";
 import { Icon } from "./icon";
-import { UserPicker, type PickedUser } from "./user-picker";
-import { Modal } from "./vault-ui";
+import { Modal, SkeletonCards } from "./vault-ui";
 type Home = {
   user: string;
   characters: Character[];
@@ -22,10 +20,9 @@ export function PlayHub({
   tab,
   initialHome,
 }: {
-  tab: "stories" | "characters" | "chat";
+  tab: "stories" | "characters";
   initialHome?: Home;
 }) {
-  const router = useRouter();
   const [home, setHome] = useState<Home | null>(initialHome || null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -35,10 +32,6 @@ export function PlayHub({
     [editor, setEditor] = useState<Character | "new" | null>(null),
     [importOpen, setImportOpen] = useState(false),
     [collection, setCollection] = useState(""),
-    [newChat, setNewChat] = useState(false),
-    [title, setTitle] = useState(""),
-    [chatKind, setChatKind] = useState("direct"),
-    [people, setPeople] = useState<PickedUser[]>([]),
     [doomed, setDoomed] = useState<Adventure | null>(null);
   const load = useCallback(async () => {
     setHome(await playApi("home"));
@@ -148,23 +141,17 @@ export function PlayHub({
           <span className="lk-kicker">
             {tab === "stories"
               ? "THE NEXT CHAPTER IS YOURS"
-              : tab === "characters"
-                ? "FAMILIAR FACES. NEW POSSIBILITIES."
-                : "GOOD COMPANY. QUESTIONABLE CONVERSATIONS."}
+              : "FAMILIAR FACES. NEW POSSIBILITIES."}
           </span>
           <h1>
             {tab === "stories"
               ? <>Your <em>adventures.</em></>
-              : tab === "characters"
-                ? "Your characters"
-                : "Chat"}
+              : "Your characters"}
           </h1>
           <p>
             {tab === "stories"
               ? "Return to a living story, or step into an entirely new one."
-              : tab === "characters"
-                ? "Create a personality once. Choose their voice anew in every story."
-                : "Talk as yourself, try a different voice, or step into character."}
+              : "Create a personality once. Choose their voice anew in every story."}
           </p>
         </div>
         {tab === "stories" ? (
@@ -175,7 +162,7 @@ export function PlayHub({
           >
             <Icon name="plus" /> New adventure
           </Link>
-        ) : tab === "characters" ? (
+        ) : (
           <button
             className="lk-button is-primary"
             onClick={() => setEditor("new")}
@@ -183,15 +170,7 @@ export function PlayHub({
           >
             <Icon name="plus" /> New character
           </button>
-        ) : tab === "chat" ? (
-          <button
-            className="lk-button is-primary"
-            onClick={() => setNewChat(true)}
-            disabled={!home}
-          >
-            <Icon name="plus" /> New conversation
-          </button>
-        ) : null}
+        )}
       </header>
       {error && (
         <p className="lk-alert" role="alert">
@@ -205,8 +184,8 @@ export function PlayHub({
         </p>
       )}
       {!home && !error && (
-        <div className="lk-loading" role="status">
-          Opening your library…
+        <div className={`lk-hub-skeleton is-${tab}`}>
+          <SkeletonCards count={6} seal={tab !== "stories"} label="Opening your library" />
         </div>
       )}
       {home && tab === "stories" && (
@@ -457,45 +436,6 @@ export function PlayHub({
           )}
         </>
       )}
-      {home && tab === "chat" && (
-        <>
-          <Search
-            value={search}
-            onChange={setSearch}
-            placeholder="Find a conversation…"
-          />
-          <section className="lk-conversation-list">
-            {home.chats
-              .filter((c) =>
-                c.title.toLowerCase().includes(search.toLowerCase()),
-              )
-              .map((c) => (
-                <Link href={`/chat/${c.id}`} key={c.id}>
-                  <span className="lk-conversation-icon">
-                    <Icon name="users" />
-                  </span>
-                  <div>
-                    <h2>{c.title}</h2>
-                    <p>
-                      {c.kind === "direct" ? "Direct message" : "Group chat"} ·{" "}
-                      {new Date(c.created_at).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                      })}
-                    </p>
-                  </div>
-                  <Icon name="arrow" />
-                </Link>
-              ))}
-            {!home.chats.length && (
-              <EmptyState
-                title="Pull up a chair"
-                text="Message a user directly or start a group with your friends."
-              />
-            )}
-          </section>
-        </>
-      )}
       {doomed && (
         <Modal
           open
@@ -552,75 +492,6 @@ export function PlayHub({
             setNotice("Character saved. Choose their voice in each adventure.");
           }}
         />
-      )}
-      {newChat && (
-        <Modal
-          open
-          title="Start a conversation"
-          onClose={() => {
-            if (!busy) setNewChat(false);
-          }}
-        >
-          <form
-            className="lk-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void run(async () => {
-                const r = await playApi("createChat", {
-                  title,
-                  kind: chatKind,
-                  people: people.map((p) => p.id),
-                });
-                router.push(`/chat/${r.id}`);
-              });
-            }}
-          >
-            <p className="lk-hint">
-              Choose a user to message directly, or gather several people in a
-              group.
-            </p>
-            <div className="lk-segments">
-              <button
-                type="button"
-                aria-pressed={chatKind === "direct"}
-                onClick={() => {
-                  setChatKind("direct");
-                  setPeople((p) => p.slice(0, 1));
-                }}
-              >
-                Direct message
-              </button>
-              <button
-                type="button"
-                aria-pressed={chatKind === "group"}
-                onClick={() => setChatKind("group")}
-              >
-                Group chat
-              </button>
-            </div>
-            <UserPicker
-              selected={people}
-              onChange={setPeople}
-              multiple={chatKind === "group"}
-            />
-            <label>
-              Conversation name
-              <input
-                autoFocus
-                maxLength={120}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Tales around the fire"
-              />
-            </label>
-            <button
-              className="lk-button is-primary"
-              disabled={busy || !people.length}
-            >
-              {busy ? "Creating…" : "Create conversation"} <Icon name="arrow" />
-            </button>
-          </form>
-        </Modal>
       )}
       {importOpen && (
         <Modal

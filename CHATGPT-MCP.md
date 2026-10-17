@@ -14,8 +14,7 @@ ChatGPT ──MCP (OAuth bearer)──▶ Edge Function lorekeeper-mcp ──ser
 |---|---|
 | `list_roleplays` | The user's recent stories and session IDs |
 | `get_roleplay` | Settings, players and the complete history (every chapter, question and answer) as Markdown |
-| `write_section` | Saves the chapter being written one section at a time, so players read along live (shown as a draft) |
-| `save_chapter` | Finishes the chapter (from the sections, or given whole) and adds its question. Works from the lobby, so "Begin" in Lorekeeper is optional. Checks the revision and waits for every answer. |
+| `save_chapter` | Saves the reply ChatGPT just wrote in the chat as the next chapter, plus its question. Works from the lobby, so "Begin" in Lorekeeper is optional. Checks the revision and waits for every answer. |
 | `save_roleplay` | Saves a roleplay played in ChatGPT as a continuable story, or updates one saved from the same chat |
 | `import_story` | Imports a Markdown story unchanged; long stories can be sent in parts |
 

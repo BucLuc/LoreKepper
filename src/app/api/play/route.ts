@@ -8,21 +8,20 @@ import {
   avatars,
   characterSnapshot,
   voice,
-  voicePrompt,
-  parseTurn,
   playerVoice,
+  storySetup,
+  themeIds,
+  speechLine,
   storyMarkdown,
   type Adventure,
   type Player,
   type Voice,
+  type PlayerVoice,
 } from "@/lib/play";
 import { readerEditions } from "@/lib/reader-editions";
 import { normalizeDesign } from "@/lib/edition-design";
-import {
-  storyRequest,
-  validateResolutions,
-  decodeNarratorOutput,
-} from "@/lib/story-narrator";
+import { storyRequest, decodeNarratorOutput } from "@/lib/story-narrator";
+import { THEME_HINTS } from "@/lib/roleplay-prompt";
 export const maxDuration = 120;
 function unwrap<T>(r: {
   data: T;
@@ -67,6 +66,33 @@ async function chatHistory(db: SupabaseClient, id: string) {
     if (batch.length < 500) break;
   }
   return rows;
+}
+// A player's character settings; a voice preset becomes a short line
+// ("talks like a pirate captain").
+async function castSettings(
+  admin: SupabaseClient,
+  p: { user: string; name?: unknown; description?: unknown; voice?: unknown },
+) {
+  let v: PlayerVoice | null = playerVoice(p.voice);
+  if (v?.narrator) {
+    const preset = (
+      await admin
+        .from("narrators")
+        .select("persona")
+        .eq("id", v.narrator)
+        .maybeSingle()
+    ).data;
+    v = preset ? { ...v, speech: speechLine(preset.persona) } : null;
+  }
+  return {
+    user: p.user,
+    name: typeof p.name === "string" ? p.name.trim().slice(0, 100) : "",
+    description:
+      typeof p.description === "string"
+        ? p.description.trim().slice(0, 2000)
+        : "",
+    voice: v,
+  };
 }
 export async function POST(req: Request) {
   const headers = { "Cache-Control": "no-store" };
@@ -184,6 +210,17 @@ export async function POST(req: Request) {
       );
     }
     if (b.action === "chat") {
+      // Opening a conversation marks it read (best effort: the key may be missing).
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY)
+        await createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY,
+          { auth: { persistSession: false, autoRefreshToken: false } },
+        )
+          .from("chat_players")
+          .update({ read_at: new Date().toISOString() })
+          .eq("chat_id", b.id)
+          .eq("user_id", user.id);
       const messages =
         b.all === true
           ? await chatHistory(db, b.id)
@@ -238,12 +275,12 @@ export async function POST(req: Request) {
     let result: unknown = {};
     switch (b.action) {
       case "aiSettings": {
-        const settings = unwrap(
+        const keys = unwrap(
           await admin
             .from("ai_settings")
             .select("provider,model")
             .eq("user_id", user.id)
-            .maybeSingle(),
+            .order("updated_at", { ascending: false }),
         );
         const usage = unwrap(
           await admin
@@ -253,25 +290,32 @@ export async function POST(req: Request) {
             .order("day", { ascending: false })
             .limit(1),
         );
-        result = { settings, usage, shared: !!process.env.LORE_AI_KEY };
+        result = { keys, usage, shared: !!process.env.LORE_AI_KEY };
         break;
       }
       case "saveAI":
-        if (b.remove)
+        if (b.remove) {
+          if (!providers[b.provider])
+            throw new Error("Choose a supported provider.");
           unwrap(
-            await admin.from("ai_settings").delete().eq("user_id", user.id),
+            await admin
+              .from("ai_settings")
+              .delete()
+              .eq("user_id", user.id)
+              .eq("provider", b.provider),
           );
-        else {
+        } else {
           if (!providers[b.provider])
             throw new Error("Choose a supported provider.");
           const previous = unwrap(
             await admin
               .from("ai_settings")
-              .select("encrypted_key,provider")
+              .select("encrypted_key")
               .eq("user_id", user.id)
+              .eq("provider", b.provider)
               .maybeSingle(),
           );
-          if (!b.key && (!previous || previous.provider !== b.provider))
+          if (!b.key && !previous)
             throw new Error("Enter a key for the selected provider.");
           unwrap(
             await admin.from("ai_settings").upsert({
@@ -281,6 +325,7 @@ export async function POST(req: Request) {
               encrypted_key: b.key
                 ? encrypt({ key: text(b.key, 500) }, "ai", user.id)
                 : previous.encrypted_key,
+              updated_at: new Date().toISOString(),
             }),
           );
         }
@@ -301,6 +346,7 @@ export async function POST(req: Request) {
             voice: voice(b.voice || { scope: "entire" }),
             edition,
             design: normalizeDesign(b.design, edition),
+            setup: { step: 1 },
           }),
         );
         try {
@@ -374,23 +420,15 @@ export async function POST(req: Request) {
         await member(db, b.id, false, user.id);
         const edition =
           readerEditions.find((e) => e.id === b.edition)?.id || "glorious";
-        if (!Array.isArray(b.identities) || b.identities.length > 8)
+        if (
+          b.identities !== undefined &&
+          (!Array.isArray(b.identities) || b.identities.length > 8)
+        )
           throw new Error("Invalid player settings.");
-        const identities = b.identities.map(
-          (p: {
-            user: string;
-            name?: string;
-            description?: string;
-            voice?: unknown;
-          }) => ({
-            user: p.user,
-            name: typeof p.name === "string" ? p.name.trim().slice(0, 100) : "",
-            description:
-              typeof p.description === "string"
-                ? p.description.trim().slice(0, 2000)
-                : "",
-            voice: playerVoice(p.voice),
-          }),
+        const identities = await Promise.all(
+          (b.identities || []).map((p: { user: string }) =>
+            castSettings(admin, p),
+          ),
         );
         // A narrator replaces the old writing style for the story as a whole; its
         // persona is copied in so the story keeps it even if the preset changes.
@@ -429,6 +467,10 @@ export async function POST(req: Request) {
           scope: "entire",
           ...narrator,
         };
+        const aiProvider =
+          b.aiProvider === "shared" || providers[b.aiProvider]
+            ? b.aiProvider
+            : null;
         result = unwrap(
           await admin.rpc("configure_adventure", {
             a: b.id,
@@ -445,10 +487,83 @@ export async function POST(req: Request) {
               edition,
               design: normalizeDesign(b.design, edition),
               ai_mode: b.aiMode === "chatgpt" ? "chatgpt" : "api",
+              ai_provider: aiProvider,
+              ...(b.setup !== undefined ? { setup: storySetup(b.setup) } : {}),
             },
             casts: identities,
           }),
         );
+        break;
+      }
+      case "configurePlayer": {
+        // Everyone sets up their own character; the creator may set up anyone's.
+        await member(db, b.id, false, user.id);
+        const s = unwrap(
+          await db.from("adventures").select("owner_id").eq("id", b.id).single(),
+        );
+        const target = typeof b.player === "string" ? b.player : user.id;
+        if (target !== user.id && s.owner_id !== user.id)
+          throw new Error("Only the creator can change another player's character.");
+        const cast = await castSettings(admin, { ...b, user: target });
+        unwrap(
+          await admin
+            .from("adventure_players")
+            .update({
+              identity_name: cast.name,
+              description: cast.description,
+              voice: cast.voice,
+              character: null,
+            })
+            .eq("adventure_id", b.id)
+            .eq("user_id", target)
+            .select("user_id")
+            .single(),
+        );
+        break;
+      }
+      case "aiOptions": {
+        const keys = unwrap(
+          await admin
+            .from("ai_settings")
+            .select("provider,model")
+            .eq("user_id", user.id)
+            .order("updated_at", { ascending: false }),
+        );
+        result = { keys, shared: !!process.env.LORE_AI_KEY };
+        break;
+      }
+      case "questIdeas": {
+        const s: Adventure = unwrap(
+          await db.from("adventures").select("*").eq("id", b.id).single(),
+        );
+        if (s.owner_id !== user.id)
+          throw new Error("Only the creator can conjure new quests.");
+        const theme = themeIds.includes(b.theme) ? b.theme : s.setup?.theme;
+        const avoid = Array.isArray(b.avoid)
+          ? b.avoid.filter((t: unknown) => typeof t === "string").slice(0, 20)
+          : [];
+        const output = await generateAI(
+          admin,
+          user.id,
+          `Return JSON: {"quests": [{"title": short title, "pitch": one teasing line, "story": the premise in 2-3 plain sentences, written by the player ("I …")}]}.`,
+          `Give me 3 fresh, fun ideas for a roleplay${theme ? ` (${THEME_HINTS[theme]})` : ""}.${avoid.length ? ` Not these: ${avoid.join("; ")}.` : ""}`,
+          1,
+          true,
+          [],
+          undefined,
+          s.ai_mode === "chatgpt" ? null : s.ai_provider,
+        );
+        let quests: unknown[] = [];
+        try {
+          const data = JSON.parse(
+            output.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""),
+          );
+          quests = Array.isArray(data.quests) ? data.quests : [];
+        } catch {}
+        const ideas = storySetup({ ideas: quests })!.ideas!;
+        if (!ideas.length)
+          throw new Error("The AI's ideas got lost in the fog. Try again.");
+        result = { ideas };
         break;
       }
       case "armChatGPT": {
@@ -467,6 +582,41 @@ export async function POST(req: Request) {
             person: b.person,
           }),
         );
+        // The invitation also lands in your direct chat with them. The player has
+        // already joined, so a failed message never undoes the invitation.
+        try {
+          const s = unwrap(
+            await admin
+              .from("adventures")
+              .select("title,setup")
+              .eq("id", b.id)
+              .single(),
+          );
+          const chat = unwrap(
+            await admin.rpc("create_user_chat", {
+              u: user.id,
+              people: [b.person],
+              chat_kind: "direct",
+              chat_title: "",
+            }),
+          );
+          const line = `${profile.name} has invited you to ${s.title ? `“${s.title}”` : "a new adventure"}.`;
+          unwrap(
+            await admin.from("chat_messages").insert({
+              id: randomUUID(),
+              chat_id: chat,
+              user_id: user.id,
+              name: profile.name,
+              original: line,
+              content: line,
+              kind: "invite",
+              meta: { adventure: b.id, title: s.title || "", theme: s.setup?.theme || null },
+              status: "sent",
+            }),
+          );
+        } catch (e) {
+          console.error("Invitation message not sent", e);
+        }
         break;
       }
       case "invite": {
@@ -568,11 +718,7 @@ export async function POST(req: Request) {
               .select("*")
               .eq("adventure_id", s.id),
           );
-          const { system, prompt, actions, history } = storyRequest(
-            fresh,
-            players,
-            ending,
-          );
+          const { system, prompt } = storyRequest(fresh, players, ending);
           const output = await generateAI(
             admin,
             fresh.owner_id,
@@ -580,29 +726,14 @@ export async function POST(req: Request) {
             prompt,
             6,
             false,
-            history,
+            [],
             9000,
+            fresh.ai_provider,
           );
-          const decoded = decodeNarratorOutput(output);
-          if (
-            !fresh.segments.length &&
-            ((!fresh.title &&
-              !(typeof decoded.title === "string" && decoded.title.trim())) ||
-              (!fresh.world &&
-                !(typeof decoded.world === "string" && decoded.world.trim())))
-          )
-            throw new Error(
-              "The narrator did not finish the world setup. Retry the opening.",
-            );
-          const turn = parseTurn(
-            JSON.stringify(decoded),
+          const turn = decodeNarratorOutput(
+            output,
             players.map((p) => p.user_id),
             ending,
-          );
-          const resolvedActions = validateResolutions(
-            decoded.resolvedActions,
-            turn.narrative,
-            actions,
           );
           const committed = unwrap(
             await admin.rpc("commit_adventure_scene", {
@@ -611,18 +742,11 @@ export async function POST(req: Request) {
               segment: {
                 narrative: turn.narrative,
                 questions: turn.questions,
-                resolvedActions,
                 created: new Date().toISOString(),
               },
-              story_title:
-                typeof decoded.title === "string"
-                  ? decoded.title.slice(0, 120)
-                  : "",
-              story_world:
-                typeof decoded.world === "string"
-                  ? decoded.world.slice(0, 6000)
-                  : "",
-              memory: turn.summary,
+              story_title: turn.title,
+              story_world: turn.world,
+              memory: turn.summary || fresh.summary,
               ending,
             }),
           );
@@ -644,13 +768,13 @@ export async function POST(req: Request) {
       }
       case "sendMessage": {
         const p = await member(db, b.id, true, user.id);
-        const original = text(b.message, 6000),
+        const mode: "plain" | "rewrite" | "instruct" = ["rewrite", "instruct"].includes(b.mode)
+            ? b.mode
+            : "plain",
+          original = text(b.message, 6000),
           id = text(b.messageId, 36);
         if (!/^[a-f0-9-]{36}$/i.test(id))
           throw new Error("Invalid message ID.");
-        const c = b.character ? await getCharacter(b.character) : null;
-        const v = voice(b.voice);
-        const transform = !!c || b.transform === true;
         const existing = unwrap(
           await db
             .from("chat_messages")
@@ -672,6 +796,40 @@ export async function POST(req: Request) {
         );
         if (recent.length >= 30)
           throw new Error("Please slow down; 30 messages per minute.");
+        // Replies and context must come from this conversation.
+        const ownMessages = async (ids: unknown[]) => {
+          const wanted = ids.filter((x): x is string => typeof x === "string").slice(0, 40);
+          return wanted.length
+            ? (unwrap(
+                await db
+                  .from("chat_messages")
+                  .select("id,name,original,content,character")
+                  .eq("chat_id", b.id)
+                  .in("id", wanted)
+                  .order("created_at"),
+              ) as { id: string; name: string; original: string; content: string | null; character: { name?: string } | null }[])
+            : [];
+        };
+        const replyTo =
+          typeof b.replyTo === "string" && (await ownMessages([b.replyTo])).length
+            ? b.replyTo
+            : null;
+        // A writing voice (a narrators preset) and a language for AI messages.
+        const language =
+          typeof b.language === "string" ? b.language.trim().slice(0, 60) : "";
+        const preset =
+          typeof b.voice === "string" && /^[a-z0-9-]{2,40}$/.test(b.voice)
+            ? (
+                await admin
+                  .from("narrators")
+                  .select("id,name,persona")
+                  .eq("id", b.voice)
+                  .maybeSingle()
+              ).data
+            : null;
+        if (mode === "rewrite" && !preset && !language)
+          throw new Error("Choose a voice or a language to rewrite in.");
+        const ai = mode !== "plain";
         unwrap(
           await admin.from("chat_messages").insert({
             id,
@@ -679,25 +837,59 @@ export async function POST(req: Request) {
             user_id: user.id,
             name: p.name,
             original,
-            content: transform ? null : original,
-            character: c,
-            voice: transform ? v : null,
-            status: transform ? "pending" : "sent",
+            content: ai ? null : original,
+            voice: ai
+              ? { narrator: preset?.id, name: preset?.name, language: language || undefined }
+              : null,
+            meta: ai ? { mode, voice: preset?.name || language } : null,
+            reply_to: replyTo,
+            status: ai ? "pending" : "sent",
           }),
         );
-        if (transform) {
+        if (ai) {
           try {
-            const transformed = await generateAI(
+            const people = unwrap(
+              await db.from("chat_players").select("user_id,name").eq("chat_id", b.id),
+            ) as { user_id: string; name: string }[];
+            const partner =
+              people
+                .filter((x) => x.user_id !== user.id)
+                .map((x) => x.name)
+                .join(" and ") || "my friend";
+            const how = [preset?.persona, language && `Write in ${language}.`]
+              .filter(Boolean)
+              .join(" ");
+            const context = (
+              await ownMessages(Array.isArray(b.context) ? b.context : [])
+            )
+              .map((m) => `${m.character?.name || m.name}: ${m.content || m.original}`)
+              .join("\n");
+            // Short on purpose, like the story prompts: what to do, in whose voice.
+            const [system, prompt] =
+              mode === "rewrite"
+                ? [
+                    `Rewrite my chat message. ${how} Keep what it says. Reply with the rewritten message only.`,
+                    original,
+                  ]
+                : [
+                    `You write my next chat message to ${partner}.${how ? ` ${how}` : ""} Reply with the message only.`,
+                    `${context ? `Our conversation so far:\n${context}\n\n` : ""}What to write: ${original}`,
+                  ];
+            const written = await generateAI(
               admin,
               user.id,
-              `Transform a message without answering it. Preserve exact meaning, facts, names, numbers and negations. Never add new claims. Return only the transformed message. ${voicePrompt(v, true)} ${c ? `Character: ${JSON.stringify(c)}` : ""}`,
-              original,
+              system,
+              prompt,
               1,
+              false,
+              [],
+              undefined,
+              b.aiProvider === "shared" || providers[b.aiProvider] ? b.aiProvider : null,
             );
             unwrap(
               await admin
                 .from("chat_messages")
-                .update({ content: transformed, status: "sent" })
+                .update({ content: written.trim().slice(0, 12000), status: "sent" })
                 .eq("id", id),
             );
           } catch (e) {
@@ -709,6 +901,10 @@ export async function POST(req: Request) {
           }
         }
         result = { id };
+        break;
+      }
+      case "chatHall": {
+        result = unwrap(await admin.rpc("chat_hall", { u: user.id }));
         break;
       }
       case "exportCollection": {

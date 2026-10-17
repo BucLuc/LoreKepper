@@ -22,7 +22,7 @@ import { exportFilename } from "@/lib/export-name";
 import { Hall } from "./hall";
 import { Reader } from "./reader";
 import { Icon, type IconName } from "./icon";
-import { ArchiveSkeleton, Modal, VaultMonument } from "./vault-ui";
+import { ArchiveSkeleton, Modal, SkeletonLines, VaultMonument } from "./vault-ui";
 type Collection = {
   id: string;
   name: string;
@@ -1033,7 +1033,7 @@ export function ArchiveApp({
               </Link>
             </>
           ) : !invitation ? (
-            <p>Checking your invitation…</p>
+            <SkeletonLines lines={4} label="Checking your invitation" />
           ) : (
             <>
               <h2>Begin your legend.</h2>

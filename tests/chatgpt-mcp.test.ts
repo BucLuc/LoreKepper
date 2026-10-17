@@ -36,6 +36,12 @@ async function setup() {
     "202610160003_chapter_drafts.sql",
     "202610170001_narrators.sql",
     "202610170002_writing_voices.sql",
+    "202610170003_fun_voices.sql",
+    "202610170004_unhinged_pirate_voice_only.sql",
+    "202610170005_one_line_voices.sql",
+    "202610170006_final_voices.sql",
+    "202610170007_voice_collection.sql",
+    "202610170008_story_setup.sql",
   ])
     await db.exec(
       await readFile(
@@ -117,7 +123,7 @@ test("MCP endpoint advertises OAuth discovery and requires a Lorekeeper token", 
     assert.match(init.result!.instructions!, /no game mechanics/);
     assert.deepEqual(
       (await send("tools/list")).result!.tools!.map((t) => t.name),
-      ["list_roleplays", "get_roleplay", "write_section", "save_chapter", "save_roleplay", "import_story"],
+      ["list_roleplays", "get_roleplay", "save_chapter", "save_roleplay", "import_story"],
     );
     const note = await handle(
       new Request(`${base}/functions/v1/lorekeeper-mcp`, {
@@ -137,12 +143,14 @@ test("Start/Continue: ChatGPT reads full history with answers and saves chapters
   const { db, tool } = await setup();
   try {
     const opening = await tool("get_roleplay", { sessionId: a });
-    assert.match(opening.content[0].text, /Language: Deutsch/);
-    assert.match(opening.content[0].text, /Kael .*A smuggler with a debt/);
-    assert.match(opening.content[0].text, /Player 2 \(playerId [^)]*; unnamed\).*speaks in Pirate — pirate talk/);
+    assert.match(opening.content[0].text, /Write in Deutsch\./);
+    assert.match(opening.content[0].text, /We play: Kael \(A smuggler with a debt\); Player 2\./);
+    assert.match(opening.content[0].text, /Player 2 talks in Pirate style\./);
+    assert.match(opening.content[0].text, /Start the story right away, no intro\./);
     // Account names ("Luc", "Mira") never reach ChatGPT.
     assert.doesNotMatch(JSON.stringify(opening), /Mira|Luc/);
-    assert.match(opening.content[0].text, /Write the opening chapter/);
+    assert.match(opening.content[0].text, /^Make a roleplay\. Set it here: A drowned city\nWe're 2 players and we make the choices\./);
+    assert.match(opening.content[0].text, /save it with save_chapter: sessionId 44444444-4444-4444-8444-444444444444, revision 0, chapter = your reply.*playerIds: Kael = 11111111/);
     assert.doesNotMatch(opening.content[0].text, /resolvedActions|lore-state|Chapter format/i);
     assert.equal(opening.structuredContent!.revision, 0);
 
@@ -177,10 +185,10 @@ test("Start/Continue: ChatGPT reads full history with answers and saves chapters
     await db.exec("set role service_role");
     const next = await tool("get_roleplay", { sessionId: a });
     assert.match(next.content[0].text, /Rain over the drowned city\./);
-    assert.match(next.content[0].text, /Kael answered:\*\* Ich klaue das Boot\./);
-    assert.match(next.content[0].text, /Player 2 answered:\*\* Ich singe\./);
+    assert.match(next.content[0].text, /> Was tust du\?\n\n\*\*Kael:\*\* Ich klaue das Boot\./);
+    assert.match(next.content[0].text, /\*\*Player 2:\*\* Ich singe\./);
     assert.doesNotMatch(next.content[0].text, /Mira|Luc/);
-    assert.match(next.content[0].text, /Write chapter 2/);
+    assert.match(next.content[0].text, /Continue from our choices\./);
 
     assert.match((await tool("save_chapter", { sessionId: a, revision: 0, chapter: "Stale", question: "?" })).content[0].text, /changed since you read it/);
     const second = await tool("save_chapter", {
@@ -221,7 +229,7 @@ test("Saving a ChatGPT roleplay creates a continuable story, idempotently, and i
     const players = (await db.query<{ identity_name: string }>("select * from adventure_players where adventure_id=$1", [id])).rows;
     assert.equal(players[0].identity_name, "Wren");
     // The saved roleplay continues like any Lorekeeper session.
-    assert.match((await tool("get_roleplay", { sessionId: id })).content[0].text, /Waiting for Wren to answer/);
+    assert.match((await tool("get_roleplay", { sessionId: id })).content[0].text, /I play Wren: A lighthouse keeper\.[\s\S]*I haven't answered in Lorekeeper yet/);
 
     const updated = await tool("save_roleplay", { ...args, sessionId: id, chapters: [...args.chapters.slice(0, 1), { ...args.chapters[1], answer: "Hello?" }, { markdown: "The stranger smiles.", question: "And then?" }] });
     assert.equal(updated.structuredContent!.sessionId, id);
@@ -257,66 +265,13 @@ test("Saving a ChatGPT roleplay creates a continuable story, idempotently, and i
   }
 });
 
-test("ChatGPT writes a chapter section by section; players read along, then it is finished with the question", async () => {
-  const { db, tool } = await setup();
-  try {
-    const story = () =>
-      db.query<{ status: string; draft: { parts: string[] } | null; segments: { narrative: string; questions: unknown[] }[]; revision: number }>("select * from adventures where id=$1", [a]).then((r) => r.rows[0]);
-    // The lobby was opened and paused; ChatGPT may still write (pausing only stops Lorekeeper's narrator).
-    await db.query("update adventures set status='paused' where id=$1", [a]);
-    const first = await tool("write_section", { sessionId: a, revision: 0, sectionNumber: 1, section: "Rain falls.", title: "Regen" });
-    assert.ok(!first.isError, first.content[0].text);
-    assert.equal((await story()).status, "active");
-    assert.ok((await tool("write_section", { sessionId: a, revision: 0, sectionNumber: 3, section: "Too early." })).isError);
-    await tool("write_section", { sessionId: a, revision: 0, sectionNumber: 2, section: "The bell rings." });
-    // A retried section is not added twice.
-    assert.equal((await tool("write_section", { sessionId: a, revision: 0, sectionNumber: 2, section: "The bell rings." })).structuredContent!.duplicate, true);
-    assert.deepEqual((await story()).draft, { parts: ["Rain falls.", "The bell rings."] });
-
-    // While a chapter is half written the lobby can't change, and ChatGPT can pick it up again.
-    await assert.rejects(
-      db.query("select configure_adventure($1,$2,0,$3,'[]')", [a, owner, JSON.stringify({ title: "x", world: "", voice: {}, edition: "glorious", design: {}, ai_mode: "chatgpt" })]),
-      /idle lobby/,
-    );
-    const reread = await tool("get_roleplay", { sessionId: a });
-    assert.match(reread.content[0].text, /Chapter 1 \(in progress, 2 sections saved\)[\s\S]*The bell rings\./);
-    assert.match(reread.content[0].text, /Go on with part 3/);
-
-    const done = await tool("save_chapter", { sessionId: a, revision: 0, question: "Was tust du?" });
-    assert.ok(!done.isError, done.content[0].text);
-    const saved = await story();
-    assert.equal(saved.draft, null);
-    assert.equal(saved.segments[0].narrative, "Rain falls.\n\nThe bell rings.");
-    assert.equal(saved.segments[0].questions.length, 2);
-    // Retrying the finish after it succeeded is harmless.
-    assert.equal((await tool("save_chapter", { sessionId: a, revision: 0, question: "Was tust du?" })).structuredContent!.duplicate, true);
-    // Between chapters an active ChatGPT story's lobby stays editable.
-    await db.query("select configure_adventure($1,$2,$3,$4,'[]')", [a, owner, saved.revision, JSON.stringify({ title: "Regen", world: "", voice: {}, edition: "codex", design: {}, ai_mode: "chatgpt" })]);
-  } finally {
-    await db.close();
-  }
-});
-
-test("get_roleplay keeps the next step short, and oversized parts are refused", async () => {
-  const { db, tool } = await setup();
-  try {
-    const view = await tool("get_roleplay", { sessionId: a });
-    assert.match(view.content[0].text, /## Next step\nWrite the opening chapter \(in Deutsch\)\. Revision 0\.$/);
-    const tooLong = await tool("write_section", { sessionId: a, revision: 0, sectionNumber: 1, section: "word ".repeat(1500) });
-    assert.ok(tooLong.isError);
-    assert.match(tooLong.content[0].text, /smaller parts/);
-  } finally {
-    await db.close();
-  }
-});
-
 test("a writing style gets a short hint for ChatGPT", async () => {
   const { db, tool } = await setup();
   try {
     await db.query(`update adventures set voice='{"language":"English","style":"Medieval","tone":"Default","scope":"entire"}' where id=$1`, [a]);
     const text = (await tool("get_roleplay", { sessionId: a })).content[0].text;
-    assert.match(text, /Writing style: Medieval — old-fashioned speech \(in English: thou/);
-    assert.match(text, /## Next step\nWrite the opening chapter \(in English, Medieval style\)\./);
+    assert.match(text, /Write in Medieval style \(old-fashioned speech/);
+    assert.match(text, /^Make a roleplay\./);
   } finally {
     await db.close();
   }
@@ -326,16 +281,62 @@ test("a chosen writing voice reaches ChatGPT as prose style, never as a framing 
   const { db, tool } = await setup();
   try {
     const preset = (await db.query<{ name: string; persona: string }>("select name,persona from narrators where id='pirate-captain'")).rows[0];
-    assert.ok((await db.query("select * from narrators where mood='medieval'")).rows.length >= 5);
+    assert.equal((await db.query("select * from narrators where mood='classic'")).rows.length, 2);
     await db.query("update adventures set voice=$2 where id=$1", [
       a,
       JSON.stringify({ language: "English", style: "Medieval", tone: "Default", scope: "entire", narrator: "pirate-captain", narratorName: preset.name, persona: preset.persona }),
     ]);
     const text = (await tool("get_roleplay", { sessionId: a })).content[0].text;
-    assert.match(text, /- Writing voice: Pirate Yarn — The whole story, narration and dialogue, in salty pirate English.*no storyteller character, no frame/);
-    assert.equal((await db.query("select * from narrators where id='pirate-parrot'")).rows.length, 0);
+    assert.match(text, /\nWrite in classic pirate English, with expressions like arrr, ye and matey, in lively, entertaining prose\.\n/);
+    assert.equal((await db.query("select * from narrators where id='pirate-yarn'")).rows.length, 0);
     assert.doesNotMatch(text, /Writing style/);
-    assert.match(text, /\(in English, in the Pirate Yarn voice\)/);
+    assert.doesNotMatch(text, /Medieval style/);
+    assert.doesNotMatch(text, /## |playerId \S+; unnamed/);
+  } finally {
+    await db.close();
+  }
+});
+
+test("a player can speak in a different voice than the story", async () => {
+  const { db, tool } = await setup();
+  try {
+    const ids = (await db.query<{ id: string }>("select id from narrators order by sort")).rows.map((r) => r.id);
+    assert.ok(ids.includes("absolute-cinema") && ids.includes("fed-up") && ids.includes("wild-west") && ids.includes("spaceship-ai"));
+    assert.ok(!ids.includes("posh-pirate") && !ids.includes("unhinged-pirate"));
+    assert.equal(ids.length, 24);
+    await db.query(`update adventures set voice='{"language":"English","style":"Modern","tone":"Default","scope":"entire","narrator":"wild-west","narratorName":"Wild West","persona":"Write like a dusty Wild West story with a drawl."}' where id=$1`, [a]);
+    await db.query(`update adventure_players set voice='{"narrator":"pirate-captain","speech":"talks like a pirate captain"}' where user_id=$1`, [player]);
+    const text = (await tool("get_roleplay", { sessionId: a })).content[0].text;
+    assert.match(text, /\nWrite like a dusty Wild West story with a drawl\.\n/);
+    assert.match(text, /\nPlayer 2 talks like a pirate captain\.\n/);
+    assert.doesNotMatch(text, /Kael talks/);
+  } finally {
+    await db.close();
+  }
+});
+
+test("a story set up in the wizard locks once begun", async () => {
+  const { db, tool } = await setup();
+  try {
+    const themes = (await db.query<{ theme: string }>("select distinct theme from worlds")).rows.map((r) => r.theme);
+    assert.equal(themes.length, 6);
+    const settings = (title: string) => JSON.stringify({ title, world: "", voice: { language: "English" }, edition: "light", design: {}, ai_mode: "api", ai_provider: "shared", setup: { step: 2 } });
+    await db.query("select configure_adventure($1,$2,0,$3,'[]')", [a, owner, settings("Before")]);
+    type Row = { title: string; edition: string; ai_provider: string; setup: { step: number } };
+    let s = (await db.query<Row>("select * from adventures where id=$1", [a])).rows[0];
+    assert.equal(s.title, "Before");
+    assert.equal(s.ai_provider, "shared");
+    assert.equal(s.setup.step, 2);
+    const r = (await tool("get_roleplay", { sessionId: a })).structuredContent!.revision as number;
+    await tool("save_chapter", { sessionId: a, revision: r, chapter: "It begins.", question: "Now?" });
+    // After the first chapter only the display can change.
+    await db.query("select configure_adventure($1,$2,$3,$4,'[]')", [a, owner, r + 1, settings("After")]);
+    s = (await db.query<Row>("select * from adventures where id=$1", [a])).rows[0];
+    assert.equal(s.title, "Before");
+    assert.equal(s.edition, "light");
+    // A key per provider.
+    await db.query("insert into ai_settings(user_id,provider,model,encrypted_key) values($1,'groq','m','k'),($1,'openai','m','k')", [owner]);
+    assert.equal((await db.query("select * from ai_settings where user_id=$1", [owner])).rows.length, 2);
   } finally {
     await db.close();
   }
